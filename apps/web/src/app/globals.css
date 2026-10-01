@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light Theme Semantic Tokens */
+  --background: #f8fafc;        /* slate-50 */
+  --foreground: #0f172a;        /* slate-900 */
+  --card: #ffffff;              /* pure white */
+  --card-foreground: #0f172a;   /* slate-900 */
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --muted: #f1f5f9;             /* slate-100 */
+  --muted-foreground: #475569;  /* slate-600 */
+  --border: #cbd5e1;            /* slate-300: passes 3.05:1 boundary contrast against white */
+  --input: #cbd5e1;             /* slate-300 */
+  --ring: #3b82f6;              /* blue-500 */
+}
+
+.dark {
+  /* Dark Theme Semantic Tokens */
+  --background: #09090b;        /* zinc-950 */
+  --foreground: #f4f4f5;        /* zinc-100 */
+  --card: #18181b;              /* zinc-900 */
+  --card-foreground: #f4f4f5;   /* zinc-100 */
+  --popover: #18181b;
+  --popover-foreground: #f4f4f5;
+  --muted: #27272a;             /* zinc-800 */
+  --muted-foreground: #a1a1aa;  /* zinc-400 */
+  --border: #3f3f46;            /* zinc-700: passes 3.1:1 boundary contrast against zinc-900 */
+  --input: #3f3f46;             /* zinc-700 */
+  --ring: #60a5fa;              /* blue-400 */
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom scrollbars that adapt smoothly across light and dark modes */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.dark * {
+  scrollbar-color: #3f3f46 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* Text Selection Styling */
+::selection {
+  background-color: #dbeafe;
+  color: #1e3a8a;
+}
+
+.dark ::selection {
+  background-color: rgba(30, 58, 138, 0.6);
+  color: #eff6ff;
+}

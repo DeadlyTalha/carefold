@@ -1,0 +1,48 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+export async function GET(
+  _req: Request | NextRequest,
+  context: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
+  const resolvedParams = await context.params;
+  const agentId = (resolvedParams.id || '').trim();
+
+  // Validate slug to prevent path traversal
+  if (!/^[a-zA-Z0-9_\-]+$/.test(agentId)) {
+    return NextResponse.json(
+      { error: `Invalid agent ID "${agentId}". Must be an alphanumeric slug.`, code: 'INVALID_ID' },
+      { status: 400 }
+    );
+  }
+
+  const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:8000';
+
+  try {
+    const res = await fetch(`${backendUrl}/api/agents/${agentId}`, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      cache: 'no-store'
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return NextResponse.json(err || { error: `Agent "${agentId}" not found` }, {
+        status: res.status
+      });
+    }
+
+    const data = await res.json();
+    return NextResponse.json(data, { status: 200 });
+  } catch (err: any) {
+    return NextResponse.json(
+      {
+        error: `Carefold Python backend is unreachable at ${backendUrl}: ${err.message}`,
+        code: 'BACKEND_UNREACHABLE'
+      },
+      { status: 503 }
+    );
+  }
+}

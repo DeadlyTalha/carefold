@@ -1,0 +1,254 @@
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import React from 'react';
+import { ChatMessageItem, type ChatMessage } from '@/components/ChatMessageItem';
+import { SAFE_REFUSAL_TEMPLATE } from '@/types/api';
+
+describe('ChatMessageItem Component', () => {
+  // Existing baseline tests
+  it('renders user message bubble in right-aligned container', () => {
+    const message: ChatMessage = {
+      id: 'm-1',
+      role: 'user',
+      content: 'What questions should I ask my doctor?'
+    };
+
+    render(<ChatMessageItem message={message} />);
+    expect(screen.getByTestId('chat-message-user')).toHaveTextContent('What questions should I ask my doctor?');
+  });
+
+  it('renders streaming indicator cursor when isStreaming is true', () => {
+    const message: ChatMessage = {
+      id: 'm-2',
+      role: 'assistant',
+      content: 'Generating your preparation list...',
+      isStreaming: true
+    };
+
+    render(<ChatMessageItem message={message} />);
+    expect(screen.getByTestId('streaming-indicator')).toBeInTheDocument();
+  });
+
+  it('embeds ToolTraceCard when assistant message includes toolTraces', () => {
+    const message: ChatMessage = {
+      id: 'm-3',
+      role: 'assistant',
+      content: 'I loaded your visit guide.',
+      toolTraces: [
+        {
+          id: 't-1',
+          tool: 'skill-docs',
+          status: 'completed',
+          input: { skill_id: 'visit-prep', doc: 'checklist.md' },
+          duration_ms: 15
+        }
+      ]
+    };
+
+    render(<ChatMessageItem message={message} />);
+    expect(screen.getByTestId('embedded-tool-traces')).toBeInTheDocument();
+    expect(screen.getByText('skill-docs')).toBeInTheDocument();
+  });
+
+  it('renders Safe Refusal badge, amber border, and template cleanly when refused', () => {
+    const message: ChatMessage = {
+      id: 'm-4',
+      role: 'assistant',
+      content: SAFE_REFUSAL_TEMPLATE,
+      isRefusal: true,
+      refusalReason: 'Prohibited clinical diagnosis request'
+    };
+
+    render(<ChatMessageItem message={message} />);
+
+    const container = screen.getByTestId('chat-message-refusal');
+    expect(container).toBeInTheDocument();
+    expect(container.className).toContain('border-amber-500');
+
+    expect(screen.getByTestId('safe-refusal-badge')).toHaveTextContent('Safety Refusal Gate: Protected Clinical Boundary');
+    expect(screen.getByTestId('refusal-reason-callout')).toHaveTextContent('Prohibited clinical diagnosis request');
+    expect(container).toHaveTextContent(SAFE_REFUSAL_TEMPLATE);
+  });
+
+  // -------------------------------------------------------------------------
+  // M9 Enhancements: Role Badges
+  // -------------------------------------------------------------------------
+  it('renders subtle "You" role badge on user message', () => {
+    const message: ChatMessage = {
+      id: 'm-u-role',
+      role: 'user',
+      content: 'Hello, need help.'
+    };
+
+    render(<ChatMessageItem message={message} />);
+    const roleBadge = screen.getByTestId('message-role-user');
+    expect(roleBadge).toBeInTheDocument();
+    expect(roleBadge).toHaveTextContent('You');
+  });
+
+  it('renders subtle "Carefold Assistant" role badge with Bot icon on assistant message', () => {
+    const message: ChatMessage = {
+      id: 'm-a-role',
+      role: 'assistant',
+      content: 'I can assist you with your health benefits.'
+    };
+
+    render(<ChatMessageItem message={message} />);
+    const roleBadge = screen.getByTestId('message-role-assistant');
+    expect(roleBadge).toBeInTheDocument();
+    expect(roleBadge).toHaveTextContent('Carefold Assistant');
+  });
+
+  // -------------------------------------------------------------------------
+  // M9 Enhancements: Theme-Aware Timestamps
+  // -------------------------------------------------------------------------
+  it('renders formatted timestamp with theme-aware text-blue-100 on user message', () => {
+    const message: ChatMessage = {
+      id: 'm-u-time',
+      role: 'user',
+      content: 'Timestamped user message',
+      timestamp: '2026-09-30T14:30:00Z'
+    };
+
+    render(<ChatMessageItem message={message} />);
+    const timestampEl = screen.getByTestId('message-timestamp');
+    expect(timestampEl).toBeInTheDocument();
+    expect(timestampEl.className).toContain('text-blue-100');
+  });
+
+  it('renders formatted timestamp with theme-aware slate/zinc classes on assistant message', () => {
+    const message: ChatMessage = {
+      id: 'm-a-time',
+      role: 'assistant',
+      content: 'Timestamped assistant message',
+      timestamp: '2026-09-30T14:30:00Z'
+    };
+
+    render(<ChatMessageItem message={message} />);
+    const timestampEl = screen.getByTestId('message-timestamp');
+    expect(timestampEl).toBeInTheDocument();
+    expect(timestampEl.className).toContain('text-slate-500');
+    expect(timestampEl.className).toContain('dark:text-zinc-400');
+  });
+
+  it('omits timestamp element when message.timestamp is missing or undefined', () => {
+    const message: ChatMessage = {
+      id: 'm-no-time',
+      role: 'assistant',
+      content: 'Message without timestamp'
+    };
+
+    render(<ChatMessageItem message={message} />);
+    expect(screen.queryByTestId('message-timestamp')).not.toBeInTheDocument();
+  });
+
+  it('handles invalid timestamp strings gracefully without throwing errors', () => {
+    const message: ChatMessage = {
+      id: 'm-invalid-time',
+      role: 'assistant',
+      content: 'Message with bad timestamp',
+      timestamp: 'invalid-date-string'
+    };
+
+    expect(() => render(<ChatMessageItem message={message} />)).not.toThrow();
+    expect(screen.queryByTestId('message-timestamp')).not.toBeInTheDocument();
+  });
+
+  // -------------------------------------------------------------------------
+  // M9 Enhancements: Bottom Toolbar Placement & Class Compliance
+  // -------------------------------------------------------------------------
+  it('positions action toolbar at the bottom of user message bubble without -top-3.5 or absolute', () => {
+    const message: ChatMessage = {
+      id: 'm-u-pos',
+      role: 'user',
+      content: 'Testing bottom toolbar positioning'
+    };
+
+    render(<ChatMessageItem message={message} />);
+    const toolbar = screen.getByTestId('message-action-toolbar');
+    expect(toolbar.className).not.toContain('absolute');
+    expect(toolbar.className).not.toContain('-top-');
+  });
+
+  it('positions action toolbar at the bottom of assistant message card within footer row', () => {
+    const message: ChatMessage = {
+      id: 'm-a-pos',
+      role: 'assistant',
+      content: 'Testing assistant bottom toolbar positioning'
+    };
+
+    render(<ChatMessageItem message={message} />);
+    const toolbar = screen.getByTestId('message-action-toolbar');
+    expect(toolbar.className).not.toContain('absolute');
+    expect(toolbar.className).not.toContain('-top-');
+  });
+
+  it('uses valid Tailwind v3 shadow-sm class instead of invalid shadow-xs', () => {
+    const userMsg: ChatMessage = { id: 'u-shadow', role: 'user', content: 'User shadow' };
+    const { container: userContainer } = render(<ChatMessageItem message={userMsg} />);
+    expect(userContainer.innerHTML).toContain('shadow-sm');
+    expect(userContainer.innerHTML).not.toContain('shadow-xs');
+
+    const assistantMsg: ChatMessage = { id: 'a-shadow', role: 'assistant', content: 'Assistant shadow' };
+    const { container: assistantContainer } = render(<ChatMessageItem message={assistantMsg} />);
+    expect(assistantContainer.innerHTML).toContain('shadow-sm');
+    expect(assistantContainer.innerHTML).not.toContain('shadow-xs');
+  });
+
+  // -------------------------------------------------------------------------
+  // Markdown Rendering & Asterisks Character Parsing Tests
+  // -------------------------------------------------------------------------
+  it('renders markdown italics and bold correctly without showing literal asterisk characters', () => {
+    const assistantMsg: ChatMessage = {
+      id: 'a-md-asterisk',
+      role: 'assistant',
+      content: 'Here is *italic text* and **bold text** and ***bold italic***.'
+    };
+    const { container } = render(<ChatMessageItem message={assistantMsg} />);
+
+    // Should contain formatted elements
+    const italicEl = container.querySelector('em');
+    expect(italicEl).toBeInTheDocument();
+    expect(italicEl).toHaveTextContent('italic text');
+
+    const boldEl = container.querySelector('strong');
+    expect(boldEl).toBeInTheDocument();
+    expect(boldEl).toHaveTextContent('bold text');
+
+    // Content should not show raw markdown asterisk characters
+    expect(container.textContent).not.toContain('*italic text*');
+    expect(container.textContent).not.toContain('**bold text**');
+  });
+
+  it('renders bullet list items starting with asterisk without showing raw asterisk', () => {
+    const assistantMsg: ChatMessage = {
+      id: 'a-md-list',
+      role: 'assistant',
+      content: 'Tips for your visit:\n* Bring your insurance card\n* Write down symptoms\n* Arrive 15 minutes early'
+    };
+    const { container } = render(<ChatMessageItem message={assistantMsg} />);
+
+    const ul = container.querySelector('ul');
+    expect(ul).toBeInTheDocument();
+    const lis = container.querySelectorAll('li');
+    expect(lis).toHaveLength(3);
+    expect(lis[0]).toHaveTextContent('Bring your insurance card');
+    expect(container.textContent).not.toContain('* Bring');
+  });
+
+  it('renders numbered lists correctly', () => {
+    const assistantMsg: ChatMessage = {
+      id: 'a-md-num-list',
+      role: 'assistant',
+      content: '1. First step\n2. Second step\n3. Third step'
+    };
+    const { container } = render(<ChatMessageItem message={assistantMsg} />);
+
+    const ol = container.querySelector('ol');
+    expect(ol).toBeInTheDocument();
+    const lis = container.querySelectorAll('li');
+    expect(lis).toHaveLength(3);
+    expect(lis[0]).toHaveTextContent('First step');
+  });
+});
+
