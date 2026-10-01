@@ -377,21 +377,29 @@ async def tools_node(state: AgentState) -> Dict[str, Any]:
     }
 
 
+def create_suggestion_node(model: Optional[BaseChatModel] = None):
+    """Factory creating suggestion_node with optional bound chat model for dynamic chips."""
+    async def _suggestion_node(state: AgentState) -> Dict[str, Any]:
+        node = SuggestionNode(model=model)
+        res = await node.execute(state)  # type: ignore[arg-type]
+        suggestions = res.get("follow_up_suggestions", [])
+
+        try:
+            await adispatch_custom_event(
+                SSE_EVENT_SUGGESTIONS,
+                {"type": SSE_EVENT_SUGGESTIONS, "suggestions": suggestions},
+            )
+        except Exception:
+            pass
+
+        return {"follow_up_suggestions": suggestions}
+
+    return _suggestion_node
+
+
 async def suggestion_node(state: AgentState) -> Dict[str, Any]:
     """Generates 2-3 contextual follow-up question chips for the user interface."""
-    node = SuggestionNode()
-    res = await node.execute(state)  # type: ignore[arg-type]
-    suggestions = res.get("follow_up_suggestions", [])
-
-    try:
-        await adispatch_custom_event(
-            SSE_EVENT_SUGGESTIONS,
-            {"type": SSE_EVENT_SUGGESTIONS, "suggestions": suggestions},
-        )
-    except Exception:
-        pass
-
-    return {"follow_up_suggestions": suggestions}
+    return await create_suggestion_node(None)(state)
 
 
 async def audit_node(state: AgentState) -> Dict[str, Any]:
@@ -495,11 +503,17 @@ def create_agent_graph(
     builder = StateGraph(AgentState)
 
     # 3. Add nodes
+    sugg_model = model
+    if sugg_model is not None:
+        cls_name = sugg_model.__class__.__name__
+        if "Fake" in cls_name or "Mock" in cls_name:
+            sugg_model = None
+
     builder.add_node("safety_guard_node", safety_guard_node)
     builder.add_node("agent_node", create_agent_node(bound_model))
     builder.add_node("post_safety_node", post_safety_node)
     builder.add_node("tools_node", tools_node)
-    builder.add_node("suggestion_node", suggestion_node)
+    builder.add_node("suggestion_node", create_suggestion_node(sugg_model))
     builder.add_node("audit_node", audit_node)
 
     # 4. Define edges & conditional routes

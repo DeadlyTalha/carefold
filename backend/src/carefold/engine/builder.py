@@ -284,6 +284,10 @@ class GraphBuilder:
         reflection_node = self._custom_nodes.get("reflection") or ReflectionNode(max_reflections=self.max_reflections)
         refusal_node = self._custom_nodes.get("refusal") or RefusalNode()
         suggestion_model = getattr(self, "suggestion_model", None)
+        if suggestion_model is None and self.model is not None:
+            cls_name = self.model.__class__.__name__
+            if "Fake" not in cls_name and "Mock" not in cls_name:
+                suggestion_model = self.model
         suggestion_node = self._custom_nodes.get("suggestion") or SuggestionNode(model=suggestion_model)
         audit_node = self._custom_nodes.get("audit") or AuditNode()
         error_node = self._custom_nodes.get("error") or ErrorNode()

@@ -30,16 +30,21 @@ persona_suggestions:
       - "Can you help me summarize my symptoms into a clear timeline?"
 
   benefits_guide:
-    cost_keywords: ["deductible", "out-of-pocket", "cost", "pay"]
+    cost_keywords: ["deductible", "out-of-pocket", "cost", "pay", "coinsurance", "copay"]
     cost_chips:
       - "How does my annual deductible affect my out-of-pocket costs?"
       - "What is the difference between copay and coinsurance?"
       - "What questions should I ask my insurer before a procedure?"
-    prior_auth_keywords: ["prior auth", "authorization", "referral"]
+    prior_auth_keywords: ["prior auth", "authorization", "referral", "precertification"]
     prior_auth_chips:
       - "How does the prior authorization process work?"
       - "What should I do if a prior authorization request is delayed?"
       - "How can I check if a specialist requires a referral?"
+    network_keywords: ["network", "in-network", "out-of-network", "provider", "facility"]
+    network_chips:
+      - "How do I confirm if a specialist is in my plan's network?"
+      - "What questions should I ask member services about out-of-network care?"
+      - "Can you explain how to find an in-network urgent care center?"
     default_chips:
       - "What questions should I ask member services about my coverage?"
       - "Can you explain the difference between in-network and out-of-network care?"
@@ -51,15 +56,262 @@ persona_suggestions:
       - "How can I track my daily hydration goal?"
       - "What are healthy alternatives to sugary drinks?"
       - "Help me save a daily wellness note for my habits."
-    sleep_keywords: ["sleep", "rest", "tired"]
+    sleep_keywords: ["sleep", "rest", "tired", "bedtime", "insomnia"]
     sleep_chips:
       - "What is a relaxing evening wind-down routine for better sleep?"
       - "How does screen time before bed affect sleep quality?"
       - "Help me log my sleep reflections for today."
+    movement_keywords: ["exercise", "walk", "step", "movement", "stretch"]
+    movement_chips:
+      - "What gentle daily movement routines can I start with?"
+      - "How can I track my daily step count consistently?"
+      - "Help me set an achievable weekly movement goal."
     default_chips:
       - "What small wellness habit can I start building this week?"
       - "How can I set realistic daily movement goals?"
       - "Help me record my daily wellness reflections."
+
+  claims_appeals_guide:
+    denial_keywords: ["denial", "denied", "reject", "appeal", "erisa", "dispute"]
+    denial_chips:
+      - "What are the standard timelines for submitting an ERISA appeal?"
+      - "What documents do I need from my doctor to support an appeal?"
+      - "How do I request a full copy of my claim file from the insurer?"
+    eob_keywords: ["eob", "explanation of benefits", "bill", "balance", "charge"]
+    eob_chips:
+      - "How do I compare my medical bill with the Explanation of Benefits?"
+      - "What questions should I ask the billing office about this charge?"
+      - "How can I check if this service was billed with the correct code?"
+    default_chips:
+      - "How do I start the first level internal appeal for a denied claim?"
+      - "What should I look for in my Explanation of Benefits (EOB)?"
+      - "Can you help me outline a draft appeal letter for my insurer?"
+
+  prior_auth_navigator:
+    step_therapy_keywords: ["step therapy", "fail first", "exception", "formulary"]
+    step_therapy_chips:
+      - "How does step therapy differ from standard prior authorization?"
+      - "What clinical documentation does my doctor need for an exception?"
+      - "How can I find out which medications were tried previously?"
+    delay_keywords: ["pending", "delay", "waiting", "status", "turnaround"]
+    delay_chips:
+      - "What is the typical turnaround time for prior authorization decisions?"
+      - "Can my physician request an expedited or urgent review?"
+      - "What questions should I ask the insurer when checking PA status?"
+    default_chips:
+      - "What information is typically required on a prior authorization form?"
+      - "How long does a prior authorization remain valid once approved?"
+      - "What are the next steps if a prior authorization request is denied?"
+
+  cardiology_guide:
+    bp_keywords: ["blood pressure", "hypertension", "systolic", "diastolic", "reading", "cuff"]
+    bp_chips:
+      - "What is the best way to keep a home blood pressure log?"
+      - "What questions should I ask my cardiologist about my BP readings?"
+      - "How often should I record my blood pressure throughout the week?"
+    palpitation_keywords: ["palpitation", "heartbeat", "flutter", "arrhythmia", "pulse"]
+    palpitation_chips:
+      - "What non-urgent questions should I ask about heart rhythm tracking?"
+      - "How can I document when palpitations occur to show my doctor?"
+      - "What lifestyle factors might contribute to pulse fluctuations?"
+    default_chips:
+      - "What questions should I prepare for my upcoming cardiology appointment?"
+      - "Can you help me organize a summary of my cardiovascular history?"
+      - "How should I track my daily symptoms and vitals for my clinician?"
+
+  pulmonology_guide:
+    inhaler_keywords: ["inhaler", "spacer", "albuterol", "puff", "dose", "technique"]
+    inhaler_chips:
+      - "What questions should I ask my pulmonologist about inhaler technique?"
+      - "How can I track how often I use my rescue inhaler each week?"
+      - "Help me prepare questions about managing seasonal respiratory triggers."
+    asthma_copd_keywords: ["asthma", "copd", "action plan", "peak flow", "wheeze"]
+    asthma_copd_chips:
+      - "What information should be included in an asthma action plan?"
+      - "How do I log my daily peak flow readings for my specialist?"
+      - "What questions can I ask about recognizing personal lung triggers?"
+    default_chips:
+      - "What questions should I ask my pulmonologist during my next visit?"
+      - "Can you help me structure a respiratory symptom log?"
+      - "How can I prepare a summary of my breathing patterns for my doctor?"
+
+  neurology_guide:
+    headache_keywords: ["headache", "migraine", "aura", "trigger", "temple"]
+    headache_chips:
+      - "What details are most helpful to log in a migraine diary?"
+      - "What questions should I ask my neurologist about headache frequency?"
+      - "How can I track potential food or environmental triggers?"
+    neuropathy_keywords: ["tingling", "numbness", "nerve", "neuropathy", "reflex"]
+    neuropathy_chips:
+      - "How can I clearly describe sensory changes to my neurologist?"
+      - "What questions should I ask about electromyography (EMG) preparation?"
+      - "Help me build a timeline of when tingling or numbness began."
+    default_chips:
+      - "What questions should I prepare for my neurological examination?"
+      - "Can you help me assemble a timeline of my neurological symptoms?"
+      - "How should I record symptom flare-ups ahead of my appointment?"
+
+  gastro_guide:
+    diet_keywords: ["food", "diet", "fodmap", "trigger", "dairy", "gluten", "meal"]
+    diet_chips:
+      - "How can I structure a 14-day digestive food and symptom diary?"
+      - "What questions should I ask my gastroenterologist about dietary triggers?"
+      - "How do I organize questions about food intolerances for my visit?"
+    procedure_keywords: ["colonoscopy", "endoscopy", "scope", "prep", "biopsy"]
+    procedure_chips:
+      - "What practical questions should I ask about colonoscopy prep instructions?"
+      - "What questions should I prepare regarding biopsy turnaround times?"
+      - "Help me create an appointment prep checklist for my endoscopy."
+    default_chips:
+      - "What questions should I prepare for my GI consultation?"
+      - "Help me build a structured journal of my digestive symptoms."
+      - "What non-clinical details should I share with my gastroenterologist?"
+
+  nephrology_guide:
+    lab_keywords: ["egfr", "creatinine", "kidney", "bun", "filtration", "proteinuria"]
+    lab_chips:
+      - "What questions should I ask my nephrologist about eGFR and creatinine trends?"
+      - "How do I organize a chronological table of my kidney function labs?"
+      - "What questions should I ask about routine monitoring intervals?"
+    fluid_keywords: ["fluid", "sodium", "salt", "swelling", "edema", "water intake"]
+    fluid_chips:
+      - "How can I accurately track my daily fluid and sodium intake?"
+      - "What questions should I ask about swelling in my ankles or legs?"
+      - "Help me prepare questions for a renal dietitian consultation."
+    default_chips:
+      - "What questions should I prioritize for my nephrology appointment?"
+      - "How can I prepare a concise log of my blood pressure and kidney labs?"
+      - "What non-clinical topics should I discuss regarding kidney health?"
+
+  endocrinology_guide:
+    glucose_keywords: ["glucose", "sugar", "a1c", "cgm", "insulin", "diabetes"]
+    glucose_chips:
+      - "What questions should I ask my endocrinologist about my A1C trend?"
+      - "How can I organize my CGM data highlights for my physician?"
+      - "What routine screenings should I discuss with my diabetes care team?"
+    thyroid_keywords: ["thyroid", "tsh", "hypothyroid", "hyperthyroid", "levothyroxine"]
+    thyroid_chips:
+      - "What questions should I ask about my recent thyroid lab panel?"
+      - "How can I document changes in energy or temperature sensitivity?"
+      - "Help me prepare non-clinical questions about thyroid medication timing."
+    default_chips:
+      - "What questions should I prioritize for my endocrine follow-up?"
+      - "Can you help me log my symptoms and lab history for my specialist?"
+      - "What questions should I ask about long-term metabolic health goals?"
+
+  ortho_guide:
+    joint_keywords: ["joint", "knee", "hip", "shoulder", "arthritis", "stiffness"]
+    joint_chips:
+      - "How can I track my joint mobility and pain scores throughout the day?"
+      - "What questions should I ask my orthopedic specialist about imaging?"
+      - "Help me prepare a list of physical activities that cause stiffness."
+    rehab_keywords: ["physical therapy", "pt", "exercise", "rehab", "recovery"]
+    rehab_chips:
+      - "What questions should I ask my physical therapist about home exercises?"
+      - "How do I log my rehabilitation milestones and range of motion?"
+      - "What questions can I prepare about return-to-activity timelines?"
+    default_chips:
+      - "What questions should I ask my orthopedic doctor about my symptoms?"
+      - "Can you help me prepare a musculoskeletal symptom timeline?"
+      - "How can I organize questions regarding conservative treatment options?"
+
+  derma_guide:
+    lesion_keywords: ["mole", "spot", "abcde", "skin", "lesion", "melanoma"]
+    lesion_chips:
+      - "What details should I note about mole changes using the ABCDE guide?"
+      - "What questions should I ask my dermatologist during a full-body skin exam?"
+      - "How can I take clear reference photos of skin lesions for my doctor?"
+    rash_keywords: ["rash", "eczema", "psoriasis", "itch", "topical", "cream"]
+    rash_chips:
+      - "How can I keep track of when rashes appear relative to new products?"
+      - "What non-clinical questions should I ask about applying topical treatments?"
+      - "Help me prepare an environmental exposure log for my dermatologist."
+    default_chips:
+      - "What questions should I prepare for my dermatology visit?"
+      - "Can you help me summarize my skin care routine for my provider?"
+      - "How do I organize questions about prescription topical instructions?"
+
+  oncology_navigator:
+    side_effect_keywords: ["chemo", "radiation", "nausea", "fatigue", "side effect"]
+    side_effect_chips:
+      - "What questions should I ask my oncology care team about fatigue?"
+      - "How can I structure a daily chemo side-effect tracking log?"
+      - "What questions should I ask regarding supportive care resources?"
+    clinical_trial_keywords: ["clinical trial", "trial", "research", "protocol", "eligibility"]
+    clinical_trial_chips:
+      - "What questions should I ask my oncologist about clinical trial options?"
+      - "How can I request my complete molecular profiling reports?"
+      - "What criteria should I discuss regarding trial eligibility?"
+    default_chips:
+      - "What questions should I prioritize for my multidisciplinary oncology visit?"
+      - "Help me prepare a list of questions for my medical oncologist."
+      - "How can I organize my pathology and imaging records in chronological order?"
+
+  rheuma_guide:
+    flare_keywords: ["flare", "stiffness", "lupus", "rheumatoid", "autoimmune", "swelling"]
+    flare_chips:
+      - "How can I record the duration of morning stiffness for my rheumatologist?"
+      - "What questions should I ask about monitoring inflammatory markers (ESR/CRP)?"
+      - "Help me structure a symptom journal tracking joint swelling and flares."
+    default_chips:
+      - "What questions should I prepare for my rheumatology consultation?"
+      - "How do I document daily functional limitations ahead of my visit?"
+      - "Can you help me organize a summary of my autoimmune flare history?"
+
+  urology_guide:
+    urinary_keywords: ["bladder", "urinary", "prostate", "frequency", "incontinence", "flow"]
+    urinary_chips:
+      - "How can I keep a 3-day bladder diary tracking intake and output?"
+      - "What questions should I ask my urologist about PSA test trends?"
+      - "Help me list questions regarding non-surgical bladder health strategies."
+    default_chips:
+      - "What questions should I prepare for my urology appointment?"
+      - "Can you help me structure a frequency-volume urinary chart?"
+      - "What non-clinical topics should I discuss regarding pelvic floor health?"
+
+  eye_guide:
+    vision_keywords: ["vision", "glaucoma", "macular", "cataract", "blur", "eye pressure"]
+    vision_chips:
+      - "What questions should I ask my ophthalmologist about visual field testing?"
+      - "How can I track subtle changes in my vision using an Amsler grid?"
+      - "Help me prepare a checklist of questions for cataract evaluation."
+    default_chips:
+      - "What questions should I prioritize for my comprehensive eye exam?"
+      - "How should I record recent visual symptoms ahead of my appointment?"
+      - "What non-clinical questions can I ask about prescription eye drops?"
+
+  ent_guide:
+    sinus_keywords: ["sinus", "tinnitus", "hearing", "ear", "throat", "congestion"]
+    sinus_chips:
+      - "What questions should I ask my ENT specialist about recurring sinus pressure?"
+      - "How can I track tinnitus pitch and intensity throughout the week?"
+      - "Help me prepare questions for an upcoming audiogram hearing evaluation."
+    default_chips:
+      - "What questions should I prepare for my otolaryngology (ENT) visit?"
+      - "Can you help me document a timeline of my ear and sinus symptoms?"
+      - "What details should I note about environmental allergies before my visit?"
+
+  records_coordinator:
+    records_keywords: ["records", "chart", "hipaa", "release", "request", "dossier"]
+    records_chips:
+      - "What is the standard procedure to request copies of my medical records?"
+      - "What should be included in a formal HIPAA medical record request letter?"
+      - "How can I organize records from multiple hospital systems into one binder?"
+    default_chips:
+      - "How do I request my complete medical chart from a previous provider?"
+      - "Can you help me draft a checklist of medical records to gather?"
+      - "How long are healthcare providers required to maintain medical records?"
+
+  formulary_guide:
+    tier_keywords: ["tier", "generic", "brand", "formulary", "pharmacy", "copay assistance"]
+    tier_chips:
+      - "What is the difference between Tier 1 generic and Tier 2 preferred drugs?"
+      - "How can I check if my prescription has an approved generic equivalent?"
+      - "Where can I find manufacturer copay assistance coupons for my medication?"
+    default_chips:
+      - "How do I check if a prescription is on my health plan formulary?"
+      - "What questions should I ask my pharmacist about generic options?"
+      - "What should I do if my medication moves to a higher non-preferred tier?"
 
 default_chips:
   - "Can you explain this in simpler terms?"

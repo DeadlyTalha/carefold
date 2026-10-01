@@ -345,56 +345,118 @@ class ResourceLoader:
         completion: str = "",
         tools_used: Optional[List[str]] = None,
     ) -> List[str]:
-        """Generates 2-3 contextual follow-up chips using patterns from prompts.yaml."""
+        """Generates 2-3 contextual follow-up chips based on agent persona, topic keywords, and tools."""
         tools_used = tools_used or []
-        aid = (agent_id or "").lower()
-        p_lower = (prompt or "").lower()
+        aid = (agent_id or "").lower().strip()
+        search_text = f"{(prompt or '').lower()} {(completion or '').lower()}".strip()
 
         s_data = self.get_prompts().get("suggestions", {})
         tool_s = s_data.get("tool_suggestions", {})
+        persona_s = s_data.get("persona_suggestions", {})
+
+        # 1. Resolve agent persona definition
+        aid_key = aid.replace("-", "_")
+        persona_def: Dict[str, Any] = {}
+        if aid_key in persona_s:
+            persona_def = persona_s[aid_key]
+        else:
+            # Check safe prefix/substring matching (prevent single-word false matches like "guide")
+            for k, pdef in persona_s.items():
+                if k == aid_key or (len(k) > 4 and k.split("_")[0] in aid_key):
+                    persona_def = pdef
+                    aid_key = k
+                    break
 
         chips: List[str] = []
-        for t in tools_used:
-            if t in tool_s and tool_s[t]:
-                chips = list(tool_s[t])
-                break
 
-        if not chips:
-            persona_s = s_data.get("persona_suggestions", {})
-            if "visit" in aid or "steward" in aid:
-                vs = persona_s.get("visit_steward", {})
-                if any(w in p_lower for w in vs.get("lab_keywords", [])):
-                    chips = list(vs.get("lab_chips", []))
-                elif any(w in p_lower for w in vs.get("med_keywords", [])):
-                    chips = list(vs.get("med_chips", []))
-                else:
-                    chips = list(vs.get("default_chips", []))
+        # 2. Topic/Keyword Matching for Resolved Persona (Highest Precedence)
+        if persona_def:
+            # Deterministic check for legacy baseline personas first to guarantee test stability
+            if aid_key == "visit_steward" or "visit" in aid or "steward" in aid:
+                if any(w in search_text for w in persona_def.get("lab_keywords", [])):
+                    chips = list(persona_def.get("lab_chips", []))
+                elif any(w in search_text for w in persona_def.get("med_keywords", [])):
+                    chips = list(persona_def.get("med_chips", []))
+            elif aid_key == "benefits_guide" or "benefit" in aid:
+                if any(w in search_text for w in persona_def.get("cost_keywords", [])):
+                    chips = list(persona_def.get("cost_chips", []))
+                elif any(w in search_text for w in persona_def.get("prior_auth_keywords", [])):
+                    chips = list(persona_def.get("prior_auth_chips", []))
+            elif aid_key == "habit_companion" or "habit" in aid:
+                if any(w in search_text for w in persona_def.get("water_keywords", [])):
+                    chips = list(persona_def.get("water_chips", []))
+                elif any(w in search_text for w in persona_def.get("sleep_keywords", [])):
+                    chips = list(persona_def.get("sleep_chips", []))
 
-            elif "benefit" in aid or "guide" in aid:
-                bg = persona_s.get("benefits_guide", {})
-                if any(w in p_lower for w in bg.get("cost_keywords", [])):
-                    chips = list(bg.get("cost_chips", []))
-                elif any(w in p_lower for w in bg.get("prior_auth_keywords", [])):
-                    chips = list(bg.get("prior_auth_chips", []))
-                else:
-                    chips = list(bg.get("default_chips", []))
+            # General dynamic keyword lookup for all expanded specialist personas
+            if not chips:
+                for k, val in persona_def.items():
+                    if k.endswith("_keywords") and isinstance(val, list):
+                        prefix = k[:-len("_keywords")]
+                        target_chips_key = f"{prefix}_chips"
+                        if any(w in search_text for w in val if isinstance(w, str)) and target_chips_key in persona_def:
+                            chips = list(persona_def[target_chips_key])
+                            break
 
-            elif "habit" in aid or "companion" in aid:
-                hc = persona_s.get("habit_companion", {})
-                if any(w in p_lower for w in hc.get("water_keywords", [])):
-                    chips = list(hc.get("water_chips", []))
-                elif any(w in p_lower for w in hc.get("sleep_keywords", [])):
-                    chips = list(hc.get("sleep_chips", []))
-                else:
-                    chips = list(hc.get("default_chips", []))
+        # 3. Contextual Tool Matching (If no specific topic keyword matched)
+        if not chips and tools_used:
+            for t in tools_used:
+                # workspace-note: note-taking follow-ups
+                if t == "workspace-note":
+                    if persona_def.get("note_chips"):
+                        chips = list(persona_def["note_chips"])
+                        break
+                    elif tool_s.get("workspace-note"):
+                        chips = list(tool_s["workspace-note"])
+                        break
+                # attach-read: document summary follow-ups
+                elif t == "attach-read":
+                    if persona_def.get("doc_chips"):
+                        chips = list(persona_def["doc_chips"])
+                        break
+                    elif tool_s.get("attach-read"):
+                        chips = list(tool_s["attach-read"])
+                        break
+                # skill-docs: domain guidelines
+                elif t == "skill-docs":
+                    # Only visit-steward uses appointment checklist chips for skill-docs
+                    if aid_key == "visit_steward" or "visit" in aid or "steward" in aid:
+                        if tool_s.get("skill-docs"):
+                            chips = list(tool_s["skill-docs"])
+                            break
+                    elif persona_def.get("skill_docs_chips"):
+                        chips = list(persona_def["skill_docs_chips"])
+                        break
+                    elif persona_def.get("default_chips"):
+                        chips = list(persona_def["default_chips"])
+                        break
+                # Any other tool registered in tool_suggestions
+                elif t in tool_s and tool_s[t]:
+                    chips = list(tool_s[t])
+                    break
 
+        # 4. Persona Default Chips (Fallback when no keyword or tool matched)
+        if not chips and persona_def:
+            default_persona_chips = persona_def.get("default_chips", [])
+            if default_persona_chips:
+                chips = list(default_persona_chips)
+
+        # 5. Global Tool Suggestions (For unknown/unregistered agents)
+        if not chips and tools_used:
+            for t in tools_used:
+                if t in tool_s and tool_s[t]:
+                    chips = list(tool_s[t])
+                    break
+
+        # 6. Global Defaults from YAML
         if chips:
-            return chips
+            return chips[:4]
 
         yaml_default = s_data.get("default_chips", [])
         if yaml_default:
-            return list(yaml_default)
+            return list(yaml_default)[:4]
 
+        # 7. Safe Hardcoded Fallback
         return [
             "Can you explain this in simpler terms?",
             "What questions should I ask my healthcare provider?",
