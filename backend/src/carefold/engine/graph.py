@@ -590,7 +590,10 @@ def create_sqlite_saver(db_path: Union[str, Path]) -> SqliteSaver:
     conn.execute(f"PRAGMA busy_timeout={SQLITE_BUSY_TIMEOUT_MS};")
     saver = SqliteSaver(conn)
 
-    if canon_path not in _INITIALIZED_DBS:
+    cursor = conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='checkpoints';")
+    table_exists = cursor.fetchone() is not None
+
+    if canon_path not in _INITIALIZED_DBS or not table_exists:
         conn.execute(f"PRAGMA journal_mode={SQLITE_JOURNAL_MODE};")
         saver.setup()
         _INITIALIZED_DBS.add(canon_path)
@@ -608,7 +611,7 @@ async def create_async_sqlite_saver(
     Features:
     - Enables WAL journal mode (PRAGMA journal_mode=WAL;) for concurrent reader/writer access.
     - Configures 10-second busy timeout (PRAGMA busy_timeout=10000;) to eliminate lock errors.
-    - Single-flight initialization guard (asyncio.Lock + initialized set) preventing concurrent DDL setup.
+    - Single-flight initialization guard (asyncio.Lock + table verification) preventing concurrent DDL setup.
     - Explicitly sets saver.is_setup = True to prevent redundant executescript DDL on checkpoint reads/writes.
     """
     path = Path(db_path)
@@ -619,12 +622,17 @@ async def create_async_sqlite_saver(
         await conn.execute(f"PRAGMA busy_timeout={SQLITE_BUSY_TIMEOUT_MS};")
         saver = AsyncSqliteSaver(conn)
 
-        if canon_path not in _INITIALIZED_DBS:
-            async with _get_db_lock(canon_path):
-                if canon_path not in _INITIALIZED_DBS:
-                    await conn.execute(f"PRAGMA journal_mode={SQLITE_JOURNAL_MODE};")
-                    await saver.setup()
-                    _INITIALIZED_DBS.add(canon_path)
+        async with _get_db_lock(canon_path):
+            async with conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='checkpoints';"
+            ) as cursor:
+                row = await cursor.fetchone()
+                table_exists = row is not None
+
+            if canon_path not in _INITIALIZED_DBS or not table_exists:
+                await conn.execute(f"PRAGMA journal_mode={SQLITE_JOURNAL_MODE};")
+                await saver.setup()
+                _INITIALIZED_DBS.add(canon_path)
 
         saver.is_setup = True
         yield saver
