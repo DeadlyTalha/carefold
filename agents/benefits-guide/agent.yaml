@@ -1,0 +1,30 @@
+id: benefits-guide
+title: Benefits Guide
+version: 0.1.0
+license: Apache-2.0
+risk_class: admin
+domain: navigation
+category: navigation.insurance
+care_stages:
+  - post_visit
+  - daily_living
+tags:
+  - insurance
+  - benefits
+  - EOB
+  - deductible
+  - copay
+icon: "FileText"
+model: llama3.2
+skills:
+  - benefits-explainer
+tools:
+  - attach-read
+  - skill-docs
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

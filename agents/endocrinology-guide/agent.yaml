@@ -1,0 +1,45 @@
+id: endocrinology-guide
+title: Endocrinology Navigator
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: clinical
+category: clinical.endocrinology
+care_stages:
+  - pre_visit
+  - during_visit
+  - daily_living
+  - follow_up
+target_audience:
+  - patient_adult
+  - diabetic_patient
+  - caregiver
+tags:
+  - endocrinology
+  - diabetes
+  - thyroid
+  - cgm
+  - a1c
+  - hormones
+  - glucose-tracking
+  - hashimotos
+  - insulin-prep
+icon: "Activity"
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Endocrine and metabolic care navigator helping patients organize continuous glucose monitor (CGM) logs, A1C trends, thyroid panel questions, and daily metabolic symptom journals.
+skills:
+  - endocrinology-prep
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

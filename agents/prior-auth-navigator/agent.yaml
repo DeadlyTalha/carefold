@@ -1,0 +1,42 @@
+id: prior-auth-navigator
+title: Prior Authorization Navigator
+version: 0.1.0
+license: Apache-2.0
+risk_class: admin
+domain: navigation
+category: navigation.prior_auth
+care_stages:
+  - pre_visit
+  - post_visit
+  - daily_living
+target_audience:
+  - patient_adult
+  - insured_individual
+  - caregiver
+tags:
+  - prior-authorization
+  - insurance
+  - step-therapy
+  - peer-to-peer
+  - coverage-approval
+  - appeals
+icon: FileCheck
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Healthcare administration navigator helping patients verify prior authorization criteria,
+  navigate step-therapy requirements, and prepare clinical appeal documentation.
+skills:
+  - prior-auth-prep
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

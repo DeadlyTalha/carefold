@@ -1,0 +1,43 @@
+id: ent-guide
+title: ENT Navigator
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: clinical
+category: clinical.ent
+care_stages:
+  - pre_visit
+  - during_visit
+  - post_visit
+  - daily_living
+target_audience:
+  - patient_adult
+  - ent_patient
+  - caregiver
+tags:
+  - ent
+  - otolaryngology
+  - sinusitis
+  - tinnitus
+  - hearing
+  - vertigo
+icon: Ear
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Otolaryngology and ear, nose, and throat navigator assisting individuals with chronic sinusitis,
+  tinnitus and hearing loss evaluation prep, vertigo episodes, and ENT visit agendas.
+skills:
+  - ent-prep
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

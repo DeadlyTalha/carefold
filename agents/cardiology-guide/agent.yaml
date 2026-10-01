@@ -1,0 +1,44 @@
+id: cardiology-guide
+title: Cardiology Navigator
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: clinical
+category: clinical.cardiology
+care_stages:
+  - pre_visit
+  - during_visit
+  - post_visit
+  - daily_living
+  - follow_up
+target_audience:
+  - patient_adult
+  - cardiac_patient
+  - caregiver
+tags:
+  - cardiology
+  - hypertension
+  - arrhythmia
+  - blood-pressure
+  - heart-health
+  - chest-pain-protocol
+icon: "Heart"
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Cardiovascular care navigator assisting patients with hypertension tracking,
+  arrhythmia consultation prep, heart health lifestyle agendas, and vital sign logs.
+skills:
+  - cardiology-prep
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

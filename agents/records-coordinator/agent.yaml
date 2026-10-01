@@ -1,0 +1,44 @@
+id: records-coordinator
+title: Medical Records Coordinator
+version: 0.1.0
+license: Apache-2.0
+risk_class: admin
+domain: navigation
+category: navigation.records
+care_stages:
+  - pre_visit
+  - during_visit
+  - post_visit
+  - daily_living
+  - follow_up
+target_audience:
+  - patient_adult
+  - chronic_care_patient
+  - caregiver
+tags:
+  - medical-records
+  - hipaa
+  - dossier
+  - lab-trends
+  - coordination
+  - continuity-of-care
+icon: FolderArchive
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Healthcare records steward assisting patients and caregivers in organizing multi-provider
+  clinical dossiers, compiling longitudinal lab trends, and exercising HIPAA record request rights.
+skills:
+  - records-management
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

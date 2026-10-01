@@ -1,0 +1,30 @@
+id: visit-steward
+title: Visit Steward
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: navigation
+category: navigation.appointments
+care_stages:
+  - pre_visit
+  - during_visit
+tags:
+  - visit-prep
+  - appointment
+  - checklist
+  - doctor
+icon: "Stethoscope"
+model: llama3.2
+skills:
+  - visit-prep
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

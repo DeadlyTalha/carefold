@@ -1,0 +1,44 @@
+id: oncology-navigator
+title: Oncology Care Steward
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: clinical
+category: clinical.oncology
+care_stages:
+  - pre_visit
+  - during_visit
+  - post_visit
+  - daily_living
+  - follow_up
+target_audience:
+  - patient_adult
+  - cancer_patient
+  - caregiver
+tags:
+  - oncology
+  - cancer
+  - chemotherapy
+  - tumor-board
+  - clinical-trials
+  - side-effects
+icon: Ribbon
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Compassionate oncology care steward assisting cancer patients and caregivers with
+  chemotherapy side-effect tracking, tumor board agenda preparation, and clinical trial discussions.
+skills:
+  - oncology-prep
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

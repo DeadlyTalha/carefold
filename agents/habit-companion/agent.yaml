@@ -1,0 +1,27 @@
+id: habit-companion
+title: Habit Companion
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: wellness
+category: wellness.habits
+care_stages:
+  - daily_living
+tags:
+  - habits
+  - hydration
+  - sleep
+  - checklist
+icon: "HeartPulse"
+model: llama3.2
+skills:
+  - habit-checkin
+tools:
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

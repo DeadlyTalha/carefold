@@ -1,0 +1,35 @@
+id: triage-auditor
+title: Automated Triage Auditor
+version: 0.1.0
+license: Apache-2.0
+risk_class: admin
+domain: clinical
+category: clinical.triage
+care_stages:
+  - pre_visit
+  - during_visit
+  - daily_living
+target_audience:
+  - internal_system
+tags:
+  - safety
+  - triage
+  - auditing
+  - red-flag-detector
+icon: ShieldAlert
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+hidden: true
+description: >-
+  Internal system infrastructure agent that continuously audits multi-turn conversation states
+  to detect latent clinical urgency, emerging red-flag symptoms, and mandatory safety escalations.
+skills: []
+tools: []
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

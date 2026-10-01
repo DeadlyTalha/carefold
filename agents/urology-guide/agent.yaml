@@ -1,0 +1,43 @@
+id: urology-guide
+title: Urology Navigator
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: clinical
+category: clinical.urology
+care_stages:
+  - pre_visit
+  - during_visit
+  - daily_living
+  - follow_up
+target_audience:
+  - patient_adult
+  - urology_patient
+  - caregiver
+tags:
+  - urology
+  - bladder
+  - urinary
+  - prostate
+  - psa
+  - voiding-diary
+icon: Droplets
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Urological health navigator assisting individuals with urinary symptoms, bladder tracking,
+  prostate health and PSA discussion prep, and urology appointment agendas.
+skills:
+  - urology-prep
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

@@ -1,0 +1,44 @@
+id: eye-guide
+title: Ophthalmology Navigator
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: clinical
+category: clinical.ophthalmology
+care_stages:
+  - pre_visit
+  - during_visit
+  - post_visit
+  - follow_up
+target_audience:
+  - patient_adult
+  - vision_patient
+  - senior
+  - caregiver
+tags:
+  - ophthalmology
+  - vision
+  - glaucoma
+  - macular-degeneration
+  - cataracts
+  - eye-exam
+icon: Eye
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Vision health and ophthalmology care navigator helping patients prepare for eye examinations,
+  monitor glaucoma and macular changes, and structure cataract surgery discussions.
+skills:
+  - vision-prep
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

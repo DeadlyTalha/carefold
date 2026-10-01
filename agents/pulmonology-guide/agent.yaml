@@ -1,0 +1,43 @@
+id: pulmonology-guide
+title: Pulmonology Navigator
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: clinical
+category: clinical.pulmonology
+care_stages:
+  - pre_visit
+  - during_visit
+  - daily_living
+  - follow_up
+target_audience:
+  - patient_adult
+  - respiratory_patient
+  - caregiver
+tags:
+  - pulmonology
+  - asthma
+  - copd
+  - inhaler
+  - dyspnea
+  - respiratory-health
+icon: "Wind"
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Respiratory health navigator assisting patients with asthma/COPD action plan preparation,
+  inhaler adherence, dyspnea tracking, and pulmonology consultation agendas.
+skills:
+  - pulmonology-prep
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

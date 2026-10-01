@@ -1,0 +1,43 @@
+id: neurology-guide
+title: Neurology Navigator
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: clinical
+category: clinical.neurology
+care_stages:
+  - pre_visit
+  - during_visit
+  - daily_living
+  - follow_up
+target_audience:
+  - patient_adult
+  - neurology_patient
+  - caregiver
+tags:
+  - neurology
+  - migraine
+  - headache
+  - neuropathy
+  - cognitive-health
+  - seizure-log
+icon: "Brain"
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Neurological care navigator assisting patients with migraine diaries, neuropathy tracking,
+  cognitive symptom timelines, and neurology consultation agendas.
+skills:
+  - neurology-prep
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

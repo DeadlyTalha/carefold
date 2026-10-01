@@ -1,0 +1,38 @@
+id: _template
+title: Template Agent
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: wellness
+category: wellness.template
+care_stages:
+  - pre_visit
+  - during_visit
+  - post_visit
+  - daily_living
+  - follow_up
+target_audience:
+  - patient_adult
+  - caregiver
+tags:
+  - template
+  - starter
+  - scaffold
+icon: Shield
+maturity: stable
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Foundational starter template for developers creating new Carefold health and wellness agents.
+hidden: true
+skills:
+  - _template
+tools: []
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

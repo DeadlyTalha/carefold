@@ -1,0 +1,35 @@
+id: quality-reviewer
+title: Clinical Quality Reviewer
+version: 0.1.0
+license: Apache-2.0
+risk_class: admin
+domain: education
+category: education.quality
+care_stages:
+  - pre_visit
+  - during_visit
+  - daily_living
+target_audience:
+  - internal_system
+tags:
+  - quality
+  - readability
+  - empathy
+  - plain-language
+icon: CheckCheck
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+hidden: true
+description: >-
+  Internal system infrastructure agent evaluating drafted agent responses for clinical clarity,
+  empathy, plain-language readability, and absence of medical jargon.
+skills: []
+tools: []
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

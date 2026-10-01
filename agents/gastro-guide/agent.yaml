@@ -1,0 +1,43 @@
+id: gastro-guide
+title: Gastroenterology Navigator
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: clinical
+category: clinical.gastroenterology
+care_stages:
+  - pre_visit
+  - during_visit
+  - post_visit
+  - daily_living
+target_audience:
+  - patient_adult
+  - gi_patient
+  - caregiver
+tags:
+  - gastroenterology
+  - ibs
+  - ibd
+  - colonoscopy-prep
+  - food-journal
+  - digestive-health
+icon: "Utensils"
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Digestive health care navigator assisting patients with IBS/IBD food and symptom journals,
+  colonoscopy/endoscopy preparation checklists, and gastroenterology visit agendas.
+skills:
+  - gastro-prep
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md

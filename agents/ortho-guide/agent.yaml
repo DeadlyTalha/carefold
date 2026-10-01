@@ -1,0 +1,44 @@
+id: ortho-guide
+title: Orthopedics Navigator
+version: 0.1.0
+license: Apache-2.0
+risk_class: wellness
+domain: clinical
+category: clinical.orthopedics
+care_stages:
+  - pre_visit
+  - during_visit
+  - post_visit
+  - follow_up
+target_audience:
+  - patient_adult
+  - orthopedic_patient
+  - caregiver
+tags:
+  - orthopedics
+  - joints
+  - musculoskeletal
+  - mobility-scale
+  - physical-therapy
+  - surgery-prep
+  - arthritis
+  - spine
+icon: "Bone"
+model: llama3.2
+can_delegate: false
+max_iterations: 3
+description: >-
+  Musculoskeletal care navigator assisting patients with joint pain and functional mobility logs, physical therapy tracking, and orthopedic surgery consultation preparation.
+skills:
+  - ortho-prep
+tools:
+  - attach-read
+  - skill-docs
+  - workspace-note
+forbidden:
+  - diagnose
+  - prescribe
+  - dose
+  - replace_emergency_care
+  - instruct_stop_medication
+persona: persona.md
