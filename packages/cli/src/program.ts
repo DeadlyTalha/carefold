@@ -1,0 +1,138 @@
+import { Command } from 'commander';
+import { initCommand } from './commands/init.js';
+import { agentListCommand, agentAddCommand, agentInspectCommand } from './commands/agent.js';
+import { skillListCommand, skillAddCommand } from './commands/skill.js';
+import { runCommand } from './commands/run.js';
+import { logCommand } from './commands/log.js';
+import { evalCommand } from './commands/eval.js';
+
+export function createProgram(): Command {
+  const program = new Command();
+
+  program
+    .name('carefold')
+    .description('Carefold CLI: Local-first runtime for specialist health agents')
+    .version('0.1.0');
+
+  // init [dir]
+  program
+    .command('init [dir]')
+    .description('Initialize a new Carefold workspace')
+    .option('-f, --force', 'Overwrite existing workspace configuration', false)
+    .option('--bare', 'Skip copying bundled reference agents and skills', false)
+    .option('--no-bundled', 'Skip copying bundled reference agents and skills')
+    .option('--provider <name>', 'Default model provider (default: ollama)')
+    .option('--model-url <url>', 'Ollama / OpenAI compatible endpoint URL')
+    .option('--model-name <name>', 'Model name (default: llama3.2)')
+    .action(async (dir, opts) => {
+      if (opts.bare) {
+        opts.bundled = false;
+      }
+      await initCommand(dir, opts);
+    });
+
+  // agent
+  const agentCmd = program
+    .command('agent')
+    .description('Manage and inspect installed specialist agents');
+
+  agentCmd
+    .command('list')
+    .description('List installed agents in workspace')
+    .option('-w, --workspace <path>', 'Path to Carefold workspace root')
+    .option('--json', 'Output agent list as JSON', false)
+    .option('--allow-clinical', 'Show and permit clinical assist agents', false)
+    .action(async (opts) => {
+      await agentListCommand(opts);
+    });
+
+  agentCmd
+    .command('add <name|path>')
+    .description('Add a reference agent or local agent pack to workspace')
+    .option('-w, --workspace <path>', 'Path to Carefold workspace root')
+    .option('-f, --force', 'Overwrite existing destination directory', false)
+    .action(async (nameOrPath, opts) => {
+      await agentAddCommand(nameOrPath, opts);
+    });
+
+  agentCmd
+    .command('inspect <id>')
+    .description('Inspect agent manifest, persona, skills, and tools')
+    .option('-w, --workspace <path>', 'Path to Carefold workspace root')
+    .option('--json', 'Output inspection data as JSON', false)
+    .action(async (id, opts) => {
+      await agentInspectCommand(id, opts);
+    });
+
+  // skill
+  const skillCmd = program
+    .command('skill')
+    .description('Manage and inspect installed specialist skills');
+
+  skillCmd
+    .command('list')
+    .description('List installed skills in workspace')
+    .option('-w, --workspace <path>', 'Path to Carefold workspace root')
+    .option('--json', 'Output skill list as JSON', false)
+    .option('--allow-clinical', 'Show and permit clinical assist skills', false)
+    .action(async (opts) => {
+      await skillListCommand(opts);
+    });
+
+  skillCmd
+    .command('add <name|path>')
+    .description('Add a reference skill or local skill pack to workspace')
+    .option('-w, --workspace <path>', 'Path to Carefold workspace root')
+    .option('-f, --force', 'Overwrite existing destination directory', false)
+    .action(async (nameOrPath, opts) => {
+      await skillAddCommand(nameOrPath, opts);
+    });
+
+  // run [prompt]
+  program
+    .command('run [prompt]')
+    .allowExcessArguments(true)
+    .description('Execute an agent or skill with a prompt')
+    .option('-a, --agent <id>', 'Agent ID to execute')
+    .option('-s, --skill <id>', 'Skill ID to execute')
+    .option('-p, --provider <name>', 'Override model provider (ollama, google, anthropic, openai, custom)')
+    .option('-m, --model <name>', 'Override model name')
+    .option('-k, --key <key>', 'Direct API key (prefer environment variables)')
+    .option('--mock', 'Use offline deterministic mock model client', false)
+    .option('--allow-clinical', 'Allow clinical assist agents or skills', false)
+    .option('-w, --workspace <path>', 'Carefold workspace root')
+    .option('--endpoint <url>', 'Override model endpoint URL')
+    .option('-j, --json', 'Output stream chunks as newline-delimited JSON', false)
+    .action(async (prompt, opts, cmd) => {
+      await runCommand(prompt, opts, cmd?.args);
+    });
+
+  // log
+  program
+    .command('log')
+    .description('Inspect recent audit log events')
+    .option('-n, --limit <number>', 'Number of recent events to display', '10')
+    .option('-e, --event <type>', 'Filter events by type (run, tool, refuse, error)')
+    .option('-f, --full', 'Show prompt and completion bodies if store_bodies is true', false)
+    .option('-w, --workspace <path>', 'Carefold workspace root')
+    .option('-j, --json', 'Output events as JSON', false)
+    .action(async (opts) => {
+      await logCommand(opts);
+    });
+
+  // eval
+  program
+    .command('eval')
+    .description('Run offline deterministic golden prompt evaluations')
+    .option('-a, --agent <id>', 'Evaluate specific agent')
+    .option('-s, --skill <id>', 'Evaluate specific skill')
+    .option('-p, --provider <name>', 'Provider to evaluate against (ollama, google, gemini, anthropic, claude, openai, custom, mock)', 'ollama')
+    .option('-w, --workspace <path>', 'Carefold workspace root')
+    .option('--python <path>', 'Path to python interpreter')
+    .option('--engine <type>', 'Evaluation engine (python | node)')
+    .action(async (opts) => {
+      await evalCommand(opts);
+    });
+
+  return program;
+}

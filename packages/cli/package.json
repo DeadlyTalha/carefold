@@ -1,0 +1,36 @@
+{
+  "name": "@carefold/cli",
+  "version": "0.1.0",
+  "description": "Carefold command line interface for managing specialist health agents, skills, and workspaces",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "carefold": "./bin/carefold.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "bin",
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@carefold/runner": "workspace:*",
+    "commander": "^13.1.0",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}
