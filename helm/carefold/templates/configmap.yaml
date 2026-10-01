@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "carefold.fullname" . }}
+  labels:
+    {{- include "carefold.labels" . | nindent 4 }}
+data:
+  carefold.config.json: |
+    {
+      "model": {
+        "baseUrl": {{ .Values.model.baseUrl | quote }},
+        "model": {{ .Values.model.name | quote }}
+      },
+      "allow_clinical": {{ .Values.config.allowClinical }},
+      "audit": { "store_bodies": {{ .Values.config.auditStoreBodies }} },
+      "telemetry": false
+    }

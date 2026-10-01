@@ -1,0 +1,17 @@
+apiVersion: v2
+name: carefold
+description: Local-first health skill runtime (Apache-2.0)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://carefold.dev
+sources:
+  - https://github.com/spectrayan/carefold
+keywords:
+  - agents
+  - health
+  - local-first
+  - skills
+maintainers:
+  - name: Spectrayan
+    url: https://carefold.dev

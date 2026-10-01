@@ -1,0 +1,58 @@
+# Default values. Ingress off. No cloud API keys.
+
+image:
+  repository: carefold
+  tag: dev
+  digest: ""          # prefer digest in production: sha256:...
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8080
+
+# Persistence is the workspace (skills, chats, audit.jsonl, sqlite)
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: ""
+  accessMode: ReadWriteOnce
+
+model:
+  # Point at an in-cluster Ollama, or a URL the operator already runs.
+  baseUrl: http://127.0.0.1:11434/v1
+  name: llama3.2
+  apiKey: ""          # leave empty for local
+
+config:
+  allowClinical: false
+  auditStoreBodies: false
+  telemetry: false    # public build must ignore true
+
+ingress:
+  enabled: false
+  className: ""
+  host: ""
+  tls: false
+  annotations: {}
+  # Warning: putting this on the public internet with PHI is the operator's problem.
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop: ["ALL"]

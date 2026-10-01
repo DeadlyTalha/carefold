@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "carefold.fullname" . }}
+  labels:
+    {{- include "carefold.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "carefold.name" . }}
+  template:
+    metadata:
+      labels:
+        {{- include "carefold.labels" . | nindent 8 }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: carefold
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{- if .Values.image.digest }}
+          # When digest is set, operators should pin in CI rather than rewrite this line.
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: CAREFOLD_DATA
+              value: /data
+            - name: CAREFOLD_MODEL_BASE_URL
+              value: {{ .Values.model.baseUrl | quote }}
+            - name: CAREFOLD_MODEL
+              value: {{ .Values.model.name | quote }}
+            - name: CAREFOLD_ALLOW_CLINICAL
+              value: {{ .Values.config.allowClinical | quote }}
+            - name: CAREFOLD_AUDIT_STORE_BODIES
+              value: {{ .Values.config.auditStoreBodies | quote }}
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "carefold.fullname" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
