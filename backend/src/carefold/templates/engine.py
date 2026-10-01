@@ -1,8 +1,7 @@
-"""Dynamic Handlebars template engine for prompts and system messages.
+"""Dynamic Handlebars template engine for prompts and system messages powered by pydantic-handlebars.
 
-Inspired by Spector's Handlebars template engine, this module enables
-domain-agnostic, data-driven system prompts, agent identity cards,
-and capability summaries without hardcoded string concatenations in Python.
+Integrates pydantic-handlebars with custom helpers, caching, and resolution
+for data-driven agent system prompts and catalog templates.
 """
 
 from __future__ import annotations
@@ -12,40 +11,38 @@ from pathlib import Path
 import threading
 from typing import Any, Callable, Dict, Optional, Union
 
+from pydantic import BaseModel
+from pydantic_handlebars import HandlebarsEnvironment
+
 from carefold.templates.helpers import BUILTIN_HELPERS
 
 logger = logging.getLogger(__name__)
 
-# Try importing pybars Compiler
-try:
-    from pybars import Compiler as PybarsCompiler
-    _PYBARS_AVAILABLE = True
-except ImportError:
-    _PYBARS_AVAILABLE = False
-    PybarsCompiler = None  # type: ignore[assignment,misc]
-
 
 class TemplateEngine:
-    """Handlebars template compiler and cache for dynamic prompt assembly."""
+    """Handlebars template compiler and cache wrapping pydantic-handlebars."""
 
     def __init__(self, templates_dir: Optional[Union[Path, str]] = None) -> None:
         if templates_dir:
             self.templates_dir = Path(templates_dir).resolve()
         else:
-            # Default to backend/src/carefold/resources/prompts/templates
             self.templates_dir = (
                 Path(__file__).parent.parent / "resources" / "prompts" / "templates"
             ).resolve()
 
-        self._compiler = PybarsCompiler() if _PYBARS_AVAILABLE else None
+        # Initialize pydantic-handlebars environment with extra helpers and HTML auto-escaping disabled
+        self._env = HandlebarsEnvironment(extra_helpers=True, auto_escape=False)
         self._compiled_cache: Dict[str, Any] = {}
-        self._helpers: Dict[str, Callable] = dict(BUILTIN_HELPERS)
         self._lock = threading.RLock()
+
+        # Register Carefold built-in helpers
+        for name, fn in BUILTIN_HELPERS.items():
+            self._env.register_helper(name, fn)
 
     def register_helper(self, name: str, helper_fn: Callable) -> None:
         """Registers a custom Handlebars helper function."""
         with self._lock:
-            self._helpers[name] = helper_fn
+            self._env.register_helper(name, helper_fn)
 
     def resolve_template_source(
         self,
@@ -53,11 +50,9 @@ class TemplateEngine:
         custom_dir: Optional[Union[Path, str]] = None,
     ) -> str:
         """Resolves template source string from file or returns raw string if contains Handlebars tags."""
-        # If it contains newlines or handlebars tags, treat as raw template content
         if "{{" in template_name_or_source and "}}" in template_name_or_source:
             return template_name_or_source
 
-        # Otherwise resolve from disk
         candidate_dirs = []
         if custom_dir:
             candidate_dirs.append(Path(custom_dir).resolve())
@@ -72,7 +67,6 @@ class TemplateEngine:
             if p.is_file():
                 return p.read_text(encoding="utf-8")
 
-        # Fallback check for exact name
         for d in candidate_dirs:
             p = d / template_name_or_source
             if p.is_file():
@@ -87,7 +81,7 @@ class TemplateEngine:
         template_name_or_source: str,
         custom_dir: Optional[Union[Path, str]] = None,
     ) -> Any:
-        """Compiles a Handlebars template and returns the callable renderer."""
+        """Compiles a Handlebars template and caches the compiled template object."""
         cache_key = f"{custom_dir}::{template_name_or_source}"
         if cache_key in self._compiled_cache:
             return self._compiled_cache[cache_key]
@@ -97,50 +91,38 @@ class TemplateEngine:
                 return self._compiled_cache[cache_key]
 
             source = self.resolve_template_source(template_name_or_source, custom_dir)
-            if self._compiler is not None:
-                compiled = self._compiler.compile(source)
-            else:
-                # Fallback simple string renderer if pybars is absent
-                compiled = self._fallback_compile(source)
-
+            compiled = self._env.compile(source)
             self._compiled_cache[cache_key] = compiled
             return compiled
 
     def render(
         self,
         template_name_or_source: str,
-        context: Dict[str, Any],
+        context: Union[Dict[str, Any], BaseModel],
         custom_dir: Optional[Union[Path, str]] = None,
     ) -> str:
         """Compiles (if needed) and renders a Handlebars template with the given context."""
-        renderer = self.compile(template_name_or_source, custom_dir)
+        compiled = self.compile(template_name_or_source, custom_dir)
         try:
-            if self._compiler is not None:
-                rendered = renderer(context, helpers=self._helpers)
-            else:
-                rendered = renderer(context)
+            rendered = compiled.render(context)
             return str(rendered).strip()
         except Exception as err:
             logger.warning(
-                "Error rendering Handlebars template '%s': %s; falling back to basic rendering",
+                "Error rendering Handlebars template '%s': %s; falling back to basic regex rendering",
                 template_name_or_source,
                 err,
             )
             return self._fallback_render(self.resolve_template_source(template_name_or_source, custom_dir), context)
 
-    def _fallback_compile(self, source: str) -> Callable[[Dict[str, Any]], str]:
-        """Provides basic variable replacement fallback if pybars is unavailable."""
-        def _render(ctx: Dict[str, Any]) -> str:
-            return self._fallback_render(source, ctx)
-        return _render
-
-    def _fallback_render(self, source: str, context: Dict[str, Any]) -> str:
+    def _fallback_render(self, source: str, context: Union[Dict[str, Any], BaseModel]) -> str:
         """Lightweight regex-based fallback for simple {{variable}} and {{{variable}}} interpolation."""
         import re
 
-        def _resolve_var(var_path: str, data: Dict[str, Any]) -> str:
+        data: Dict[str, Any] = context.model_dump() if isinstance(context, BaseModel) else dict(context)
+
+        def _resolve_var(var_path: str, d: Dict[str, Any]) -> str:
             parts = var_path.strip().split(".")
-            curr = data
+            curr = d
             for part in parts:
                 if isinstance(curr, dict):
                     curr = curr.get(part, "")
@@ -151,11 +133,8 @@ class TemplateEngine:
             return str(curr or "")
 
         res = source
-        # Triple-stash unescaped
-        res = re.sub(r"\{\{\{([\w\.]+)\}\}\}", lambda m: _resolve_var(m.group(1), context), res)
-        # Double-stash
-        res = re.sub(r"\{\{([\w\.]+)\}\}", lambda m: _resolve_var(m.group(1), context), res)
-        # Clean unhandled blocks
+        res = re.sub(r"\{\{\{([\w\.]+)\}\}\}", lambda m: _resolve_var(m.group(1), data), res)
+        res = re.sub(r"\{\{([\w\.]+)\}\}", lambda m: _resolve_var(m.group(1), data), res)
         res = re.sub(r"\{\{#[^}]+\}\}.*?\{\{/[^}]+\}\}", "", res, flags=re.DOTALL)
         return res.strip()
 
@@ -179,7 +158,7 @@ def get_template_engine(templates_dir: Optional[Union[Path, str]] = None) -> Tem
 
 def render_template(
     template_name_or_source: str,
-    context: Dict[str, Any],
+    context: Union[Dict[str, Any], BaseModel],
     custom_dir: Optional[Union[Path, str]] = None,
 ) -> str:
     """Convenience functional wrapper to render a template."""

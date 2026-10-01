@@ -257,3 +257,42 @@ def test_agent_manifest_inline_suggestions_override():
         assert any("cluster health" in c.lower() for c in chips_default)
     finally:
         reg_mod._registry_instance = orig_registry
+
+
+def test_pydantic_handlebars_model_rendering():
+    """Verifies that TemplateEngine natively renders Pydantic models directly."""
+    from pydantic import BaseModel, Field
+
+    class InvoiceItem(BaseModel):
+        description: str
+        amount: float
+
+    class Invoice(BaseModel):
+        invoice_number: str
+        customer: str
+        status: str = "PENDING"
+        items: list[InvoiceItem] = Field(default_factory=list)
+
+    inv = Invoice(
+        invoice_number="INV-2026-001",
+        customer="Acme Corp",
+        items=[
+            InvoiceItem(description="Cloud GPU Cluster", amount=1200.50),
+            InvoiceItem(description="Vector Storage", amount=150.00),
+        ],
+    )
+
+    template = """
+Invoice: {{invoice_number}} | Customer: {{customer}} | Status: {{status}}
+{{#each items}}
+- {{description}}: ${{amount}}
+{{/each}}
+"""
+    engine = get_template_engine()
+    rendered = engine.render(template, inv)
+
+    assert "Invoice: INV-2026-001" in rendered
+    assert "Customer: Acme Corp" in rendered
+    assert "- Cloud GPU Cluster: $1200.5" in rendered
+    assert "- Vector Storage: $150.0" in rendered
+

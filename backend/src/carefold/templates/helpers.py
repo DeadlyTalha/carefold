@@ -1,12 +1,16 @@
-"""Handlebars template helper functions for Carefold prompt and report templating."""
+"""Handlebars template helper functions for Carefold prompt and report templating with pydantic-handlebars."""
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Optional
+from typing import Any, Callable, Dict, Optional
 
 
-def helper_join(this: Any, items: Optional[Iterable[Any]], delimiter: str = ", ") -> str:
+def helper_join(*args: Any, **kwargs: Any) -> str:
     """Joins an iterable of items with a delimiter."""
+    if not args:
+        return ""
+    items = args[0]
+    delimiter = args[1] if len(args) > 1 else ", "
     if items is None:
         return ""
     if isinstance(items, str):
@@ -14,43 +18,55 @@ def helper_join(this: Any, items: Optional[Iterable[Any]], delimiter: str = ", "
     return delimiter.join(str(x) for x in items if x is not None)
 
 
-def helper_default(this: Any, value: Any, default_value: Any) -> Any:
+def helper_default(*args: Any, **kwargs: Any) -> Any:
     """Returns value if truthy, otherwise default_value."""
-    return value if value else default_value
-
-
-def helper_eq(this: Any, a: Any, b: Any) -> bool:
-    """Equality check."""
-    return str(a) == str(b)
-
-
-def helper_neq(this: Any, a: Any, b: Any) -> bool:
-    """Inequality check."""
-    return str(a) != str(b)
-
-
-def helper_upper(this: Any, value: Any) -> str:
-    """Converts string to uppercase."""
-    return str(value or "").upper()
-
-
-def helper_lower(this: Any, value: Any) -> str:
-    """Converts string to lowercase."""
-    return str(value or "").lower()
-
-
-def helper_first_line(this: Any, value: Any) -> str:
-    """Returns the first non-empty line from text."""
-    if not value:
+    if not args:
         return ""
-    for line in str(value).splitlines():
+    val = args[0]
+    fallback = args[1] if len(args) > 1 else ""
+    return val if val else fallback
+
+
+def helper_eq(*args: Any, **kwargs: Any) -> bool:
+    """Equality check."""
+    if len(args) < 2:
+        return False
+    return str(args[0]) == str(args[1])
+
+
+def helper_neq(*args: Any, **kwargs: Any) -> bool:
+    """Inequality check."""
+    if len(args) < 2:
+        return True
+    return str(args[0]) != str(args[1])
+
+
+def helper_upper(*args: Any, **kwargs: Any) -> str:
+    """Converts string to uppercase."""
+    if not args:
+        return ""
+    return str(args[0] or "").upper()
+
+
+def helper_lower(*args: Any, **kwargs: Any) -> str:
+    """Converts string to lowercase."""
+    if not args:
+        return ""
+    return str(args[0] or "").lower()
+
+
+def helper_first_line(*args: Any, **kwargs: Any) -> str:
+    """Returns the first non-empty line from text."""
+    if not args or not args[0]:
+        return ""
+    for line in str(args[0]).splitlines():
         line = line.strip()
         if line and not line.startswith("#"):
             return line
     return ""
 
 
-BUILTIN_HELPERS = {
+BUILTIN_HELPERS: Dict[str, Callable] = {
     "join": helper_join,
     "default": helper_default,
     "eq": helper_eq,
