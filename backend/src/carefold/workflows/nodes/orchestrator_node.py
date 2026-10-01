@@ -22,6 +22,7 @@ from carefold.constants.paths import AGENTS_DIR, SKILLS_DIR
 from carefold.memory.ports.catalog_port import CatalogPort
 from carefold.resources.loader import get_resource_loader
 from carefold.schemas.manifest import AgentManifest
+from carefold.templates.engine import render_template
 from carefold.workflows.nodes.base import BaseNode
 from carefold.workflows.state import AgentState, extract_text_content
 
@@ -153,7 +154,7 @@ class OrchestratorNode(BaseNode):
         return "\n".join(blocks)
 
     def _build_tier2_system_prompt(self, candidates: List[AgentManifest]) -> str:
-        """Assembles Tier-2 system prompt targeting candidate agents from catalog."""
+        """Assembles Tier-2 system prompt targeting candidate agents from catalog via Handlebars."""
         candidate_catalog = self._format_candidate_agents(candidates)
         prompts = get_resource_loader().get_prompts()
         base_prompt = (
@@ -165,21 +166,16 @@ class OrchestratorNode(BaseNode):
                 "Delegate to the single most appropriate specialist. Never answer domain-specific questions yourself."
             )
         )
-        return (
-            f"{base_prompt.strip()}\n\n"
-            f"## Candidate Specialist Agents:\n{candidate_catalog}\n\n"
-            f"## Routing & Skill Requirements Contract:\n"
-            f"1. Select the single most appropriate agent_id from the candidate list.\n"
-            f"2. Provide concise reasoning and specific instructions for the agent.\n"
-            f"3. If the user request requires specialized domain guidelines, procedures, or reference documents "
-            f"that are missing from the system (or if the target specialist is missing a required skill), "
-            f"specify the missing skill name/ID in 'missing_skill' and describe what is needed in 'missing_skill_description'.\n"
-            f"4. If specific reference documents, checklists, or tracking templates will be needed (e.g. 'symptom_log_template.md', 'checklist.md'), "
-            f"specify them in 'required_docs'. The hidden Skill Generator agent will proactively prepare and mount them before the specialist runs."
-        )
+        context = {
+            "base_prompt": base_prompt.strip(),
+            "heading": "Candidate Specialist Agents",
+            "catalog": candidate_catalog,
+            "target_list_name": "candidate list",
+        }
+        return render_template("orchestrator_routing_prompt", context)
 
     def _build_system_prompt(self, state: Dict[str, Any]) -> str:
-        """Assembles orchestrator system prompt incorporating dynamic agent catalog from registry."""
+        """Assembles orchestrator system prompt incorporating dynamic agent catalog from registry via Handlebars."""
         catalog = self.registry.format_agent_catalog(exclude=AGENT_ORCHESTRATOR)
         prompts = get_resource_loader().get_prompts()
         base_prompt = (
@@ -191,18 +187,13 @@ class OrchestratorNode(BaseNode):
                 "Delegate to the single most appropriate specialist. Never answer domain-specific questions yourself."
             )
         )
-        return (
-            f"{base_prompt.strip()}\n\n"
-            f"## Available Specialist Agents:\n{catalog}\n\n"
-            f"## Routing & Skill Requirements Contract:\n"
-            f"1. Select the single most appropriate agent_id from the catalog.\n"
-            f"2. Provide concise reasoning and specific instructions for the agent.\n"
-            f"3. If the user request requires specialized domain guidelines, procedures, or reference documents "
-            f"that are missing from the system (or if the target specialist is missing a required skill), "
-            f"specify the missing skill name/ID in 'missing_skill' and describe what is needed in 'missing_skill_description'.\n"
-            f"4. If specific reference documents, checklists, or tracking templates will be needed (e.g. 'symptom_log_template.md', 'checklist.md'), "
-            f"specify them in 'required_docs'. The hidden Skill Generator agent will proactively prepare and mount them before the specialist runs."
-        )
+        context = {
+            "base_prompt": base_prompt.strip(),
+            "heading": "Available Specialist Agents",
+            "catalog": catalog,
+            "target_list_name": "catalog",
+        }
+        return render_template("orchestrator_routing_prompt", context)
 
     def _resolve_pattern_fallback(self, state: Dict[str, Any], prompt_text: str) -> str:
         """Resolves target agent using attachments and externalized YAML routing patterns."""
