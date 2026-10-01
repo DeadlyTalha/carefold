@@ -235,7 +235,7 @@ def get_agent_registry(
         _registry_instance is None
         or force_reload
         or agents_dir is not None
-        or _registry_instance._agents_dir != target_agents_dir
+        or (hasattr(_registry_instance, "_agents_dir") and _registry_instance._agents_dir != target_agents_dir)
     ):
         _registry_instance = AgentRegistry(target_agents_dir, target_skills_dir)
     return _registry_instance

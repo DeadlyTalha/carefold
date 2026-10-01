@@ -39,13 +39,29 @@ class AgentNode(BaseNode):
         if self.system_prompt:
             return self.system_prompt
 
+        raw_aid = state.get("current_agent") or state.get("agent_id") or ""
+        agent_manifest = None
+        if raw_aid:
+            try:
+                from carefold.agents.registry import get_agent_registry
+                agent_manifest = get_agent_registry().get(raw_aid)
+            except Exception:
+                pass
+
+        if agent_manifest is not None:
+            from carefold.engine.prompt_builder import build_system_prompt
+            return build_system_prompt(agent_manifest)
+
         loader = get_resource_loader()
         prompts = loader.get_prompts()
-        agent_id = (state.get("current_agent") or state.get("agent_id") or "visit-steward").replace("-", "_")
+        agent_id = raw_aid.replace("-", "_") if raw_aid else "agent"
         agent_instructions = prompts.get("agents", {}).get(agent_id, "")
 
+        forbidden_rules = state.get("forbidden") or loader.get_refusal_patterns().get("default_forbidden_intents", [])
+        forbidden_str = ", ".join(forbidden_rules) if forbidden_rules else "policy prohibited actions"
+
         preamble = loader.get_safety_preamble_template().format(
-            forbidden_str="clinical diagnosis, dosing, triage replacement, treatment alteration"
+            forbidden_str=forbidden_str
         )
         if agent_instructions:
             return f"{preamble}\n\n# AGENT INSTRUCTIONS\n{agent_instructions}"

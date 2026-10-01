@@ -119,7 +119,7 @@ async def safety_guard_node(state: AgentState) -> Dict[str, Any]:
     res = await node.execute(state)  # type: ignore[arg-type]
 
     if res.get("is_refusal"):
-        reason = res.get("refusal_reason") or "forbidden_intent:medical_prohibited"
+        reason = res.get("refusal_reason") or state.get("default_refusal_reason") or "forbidden_intent:policy_prohibited"
         refuse_event = {
             "agent_id": state.get("agent_id") or state.get("current_agent", "unknown"),
             "event": "refuse",
@@ -181,7 +181,7 @@ async def post_safety_node(state: AgentState) -> Dict[str, Any]:
     res = await node.execute(state)  # type: ignore[arg-type]
 
     if res.get("is_refusal"):
-        reason = res.get("refusal_reason") or "forbidden_intent:medical_prohibited"
+        reason = res.get("refusal_reason") or state.get("default_refusal_reason") or "forbidden_intent:policy_prohibited"
         refuse_event = {
             "agent_id": state.get("agent_id") or state.get("current_agent", "unknown"),
             "event": "refuse",

@@ -1,19 +1,28 @@
 tool_suggestions:
   attach-read:
-    - "What specific questions should I ask my doctor about these results?"
-    - "Can you help me summarize this document for my appointment?"
-    - "Help me note any symptoms I should mention alongside these findings."
+    - "Can you help me summarize this document?"
+    - "What key details should I focus on in this document?"
+    - "Help me note any key points I should remember."
   workspace-note:
-    - "Would you like me to add more details to your saved visit note?"
-    - "Can you summarize the notes we saved for my appointment?"
-    - "What other questions should I prepare for my upcoming doctor visit?"
+    - "Would you like me to add more details to your saved note?"
+    - "Can you summarize the notes we saved so far?"
+    - "What other items should I prepare or record?"
   skill-docs:
-    - "Help me walk through the appointment preparation checklist step by step."
-    - "What questions from the reference guide should I prioritize?"
-    - "Can you help me draft a personal agenda for my clinician visit?"
+    - "Can you summarize the key guidelines from this reference?"
+    - "What points from the reference documentation should I prioritize?"
+    - "Can you explain these instructions in simpler terms?"
 
 persona_suggestions:
   visit_steward:
+    tools:
+      skill-docs:
+        - "Help me walk through the appointment preparation checklist step by step."
+        - "What questions from the reference guide should I prioritize?"
+        - "Can you help me draft a personal agenda for my clinician visit?"
+      workspace-note:
+        - "Would you like me to add more details to your saved visit note?"
+        - "Can you summarize the notes we saved for my appointment?"
+        - "What other questions should I prepare for my upcoming doctor visit?"
     lab_keywords: ["lab", "blood", "test", "result"]
     lab_chips:
       - "What questions should I ask about my lab results?"

@@ -21,6 +21,10 @@ class AgentDomain(str, Enum):
     THERAPY = "therapy"
     NAVIGATION = "navigation"
     EDUCATION = "education"
+    FINANCE = "finance"
+    RETAIL = "retail"
+    OPERATIONS = "operations"
+    GENERAL = "general"
 
 
 class AgentMaturity(str, Enum):
@@ -78,6 +82,8 @@ class AgentManifest(BaseModel):
     forbidden: List[str] = Field(default_factory=list)
     persona: Union[str, AgentPersonaObject]
     persona_file: Optional[str] = None
+    prompt_template: Optional[str] = None
+    suggestions: Optional[Dict[str, Any]] = None
 
     @field_validator("id")
     @classmethod

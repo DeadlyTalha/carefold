@@ -1,0 +1,31 @@
+{{#if safety_preamble}}
+{{{safety_preamble}}}
+
+{{/if}}
+# AGENT PERSONA: {{manifest.title}}
+{{#if persona}}
+{{{persona}}}
+{{/if}}
+{{#if orchestrator_instructions}}
+
+# ORCHESTRATOR CONTEXT & INSTRUCTIONS
+{{{orchestrator_instructions}}}
+{{/if}}
+{{#if has_generated_skills}}
+
+# DYNAMICALLY GENERATED SKILLS (PROVIDED BY ORCHESTRATOR)
+{{#each generated_skills}}
+## GENERATED SKILL: {{name}}
+{{#if description}}Description: {{description}}
+{{/if}}{{#if instructions}}Instructions:
+{{{instructions}}}
+{{/if}}{{#if ref_text}}
+
+Reference Material:
+{{{ref_text}}}
+{{/if}}
+{{#unless @last}}
+
+{{/unless}}
+{{/each}}
+{{/if}}

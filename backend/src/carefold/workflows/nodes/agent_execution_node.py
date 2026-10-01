@@ -59,7 +59,7 @@ class AgentExecutionNode(BaseNode):
         return self._registry
 
     def _resolve_system_prompt(self, manifest: Any, state: Dict[str, Any]) -> str:
-        """Assembles the agent persona and safety contract prompt."""
+        """Assembles the agent persona and safety contract prompt using Handlebars."""
         persona = ""
         if isinstance(manifest.persona, str):
             persona = manifest.persona
@@ -72,45 +72,56 @@ class AgentExecutionNode(BaseNode):
 
         loader = get_resource_loader()
         forbidden_rules = getattr(manifest, "forbidden", []) or []
-        forbidden_str = (
-            ", ".join(forbidden_rules)
-            if forbidden_rules
-            else "clinical diagnosis, dosing, triage replacement, treatment alteration"
-        )
+        if not forbidden_rules:
+            forbidden_rules = loader.get_refusal_patterns().get("default_forbidden_intents", [])
+
+        forbidden_str = ", ".join(forbidden_rules) if forbidden_rules else "policy prohibited actions"
         safety_preamble = loader.get_safety_preamble_template().format(
             forbidden_str=forbidden_str
         )
 
         orchestrator_instructions = state.get("orchestrator_instructions", "")
-        orch_section = ""
-        if orchestrator_instructions:
-            orch_section = f"\n\n# ORCHESTRATOR CONTEXT & INSTRUCTIONS\n{orchestrator_instructions.strip()}"
 
         # Inject dynamically generated skills passed from orchestrator
-        generated_skills = list(state.get("generated_skills") or [])
+        generated_skills_raw = list(state.get("generated_skills") or [])
         single_gen = state.get("generated_skill")
-        if single_gen and single_gen not in generated_skills:
-            generated_skills.append(single_gen)
+        if single_gen and single_gen not in generated_skills_raw:
+            generated_skills_raw.append(single_gen)
 
-        if generated_skills:
-            gen_texts = []
-            for gs in generated_skills:
-                if isinstance(gs, dict):
-                    name = gs.get("name") or gs.get("id") or "Dynamic Skill"
-                    desc = gs.get("description", "")
-                    inst = gs.get("instructions", "")
-                    refs = gs.get("references", {})
-                    ref_text = ""
-                    if isinstance(refs, dict) and refs:
-                        ref_text = "\n\nReference Material:\n" + "\n".join(f"### {fname}\n{fbody}" for fname, fbody in refs.items())
-                    gen_texts.append(f"## GENERATED SKILL: {name}\nDescription: {desc}\nInstructions:\n{inst}{ref_text}")
-                elif isinstance(gs, str):
-                    gen_texts.append(f"## GENERATED SKILL:\n{gs}")
+        processed_skills = []
+        for gs in generated_skills_raw:
+            if isinstance(gs, dict):
+                refs = gs.get("references", {})
+                ref_text = ""
+                if isinstance(refs, dict) and refs:
+                    ref_text = "\n".join(f"### {fname}\n{fbody}" for fname, fbody in refs.items())
+                processed_skills.append({
+                    "name": gs.get("name") or gs.get("id") or "Dynamic Skill",
+                    "id": gs.get("id") or "dynamic_skill",
+                    "description": gs.get("description", ""),
+                    "instructions": gs.get("instructions", ""),
+                    "ref_text": ref_text,
+                })
+            elif isinstance(gs, str):
+                processed_skills.append({
+                    "name": "Dynamic Skill",
+                    "id": "dynamic_skill",
+                    "description": "",
+                    "instructions": gs,
+                    "ref_text": "",
+                })
 
-            if gen_texts:
-                orch_section += "\n\n# DYNAMICALLY GENERATED SKILLS (PROVIDED BY ORCHESTRATOR)\n" + "\n\n".join(gen_texts)
+        context = {
+            "safety_preamble": safety_preamble,
+            "manifest": manifest,
+            "persona": persona.strip(),
+            "orchestrator_instructions": orchestrator_instructions.strip() if orchestrator_instructions else "",
+            "generated_skills": processed_skills,
+            "has_generated_skills": bool(processed_skills),
+        }
 
-        return f"{safety_preamble}\n\n# AGENT PERSONA: {manifest.title}\n{persona.strip()}{orch_section}"
+        from carefold.templates.engine import render_template
+        return render_template("agent_execution_prompt", context)
 
     def _resolve_tools(self, agent_id: str, manifest: Any, state: Dict[str, Any]) -> List[Any]:
         """Resolves tool definitions or instances authorized for this agent."""

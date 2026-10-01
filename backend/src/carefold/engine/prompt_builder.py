@@ -1,32 +1,23 @@
-"""Agent system prompt assembler."""
+"""Agent system prompt assembler powered by Handlebars templates."""
 
 from __future__ import annotations
 
-from typing import List, Sequence
-from carefold.resources.loader import get_resource_loader
+from typing import Any, Dict, List, Optional, Sequence
 from carefold.safety.prompt import build_safety_preamble
 from carefold.schemas.manifest import AgentManifest, SkillManifest
+from carefold.templates.engine import render_template
 
 
 def build_system_prompt(
     agent: AgentManifest,
     skills: Sequence[SkillManifest] = (),
     effective_tools: Sequence[str] = (),
+    template_name: Optional[str] = None,
 ) -> str:
-    """Builds the comprehensive system prompt including safety contract, persona, tools, and skills."""
+    """Builds the comprehensive system prompt using dynamic Handlebars templates."""
     safety_preamble = build_safety_preamble(agent, skills)
 
-    # Load system prompt section templates from external resources
-    loader = get_resource_loader()
-    system_prompts = loader.get_prompts().get("system", {})
-    persona_header = system_prompts.get("persona_section_header", "# AGENT PERSONA & INSTRUCTIONS")
-    capabilities_header = system_prompts.get("capabilities_section_header", "# AVAILABLE CAPABILITIES")
-    skills_header = system_prompts.get("skills_section_header", "# SKILL INSTRUCTION PACKS")
-    tools_sandboxed_fmt = system_prompts.get("tools_summary_sandboxed", "Available Tools (Sandboxed): {tools}")
-    tools_none_str = system_prompts.get("tools_summary_none", "Available Tools: None (Conversational Only)")
-    skill_fmt = system_prompts.get("skill_section_format", "### Skill: {name} ({id})\n{instructions}")
-
-    # Persona text
+    # Persona text resolution
     if isinstance(agent.persona, str):
         persona_text = agent.persona.strip()
     elif isinstance(agent.persona, dict):
@@ -54,37 +45,41 @@ def build_system_prompt(
             lines.append(f"Instructions: {instructions}")
         persona_text = "\n".join(lines)
 
-    # Skills instructions
-    skill_sections: List[str] = []
-    for skill in skills:
-        if skill.instructions and skill.instructions.strip():
-            rendered_skill = skill_fmt.format(
-                name=skill.name,
-                id=skill.id,
-                instructions=skill.instructions.strip(),
-            )
-            skill_sections.append(rendered_skill)
-
     # Tools summary
     if effective_tools:
-        tools_summary = tools_sandboxed_fmt.format(tools=", ".join(effective_tools))
+        tools_summary = f"Available Tools (Sandboxed): {', '.join(effective_tools)}"
     else:
-        tools_summary = tools_none_str
+        tools_summary = "Available Tools: None (Conversational Only)"
 
-    sections = [
-        safety_preamble,
-        "",
-        persona_header,
-        f"Agent ID: {agent.id}",
-        f"Title: {agent.title}",
-        f"Risk Class: {agent.risk_class.value}",
-        persona_text,
-        "",
-        capabilities_header,
-        tools_summary,
+    # Skills data
+    skill_items = [
+        {
+            "id": s.id,
+            "name": s.name,
+            "instructions": s.instructions.strip() if s.instructions else "",
+        }
+        for s in skills
+        if s.instructions and s.instructions.strip()
     ]
 
-    if skill_sections:
-        sections.extend(["", skills_header, "\n\n".join(skill_sections)])
+    context: Dict[str, Any] = {
+        "agent": {
+            "id": agent.id,
+            "title": agent.title,
+            "version": agent.version,
+            "domain": agent.domain.value if hasattr(agent.domain, "value") else str(agent.domain),
+            "category": agent.category,
+        },
+        "risk_class": agent.risk_class.value if hasattr(agent.risk_class, "value") else str(agent.risk_class),
+        "persona_text": persona_text,
+        "tools_summary": tools_summary,
+        "skills": skill_items,
+        "has_skills": bool(skill_items),
+        "safety_preamble": safety_preamble,
+    }
 
-    return "\n".join(sections)
+    resolved_template = template_name or getattr(agent, "prompt_template", None) or "system_prompt"
+    return render_template(resolved_template, context)
+
+
+__all__ = ["build_system_prompt"]

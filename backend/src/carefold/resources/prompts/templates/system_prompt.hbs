@@ -1,0 +1,25 @@
+{{#if safety_preamble}}
+{{{safety_preamble}}}
+
+{{/if}}
+# AGENT PERSONA & INSTRUCTIONS
+Agent ID: {{agent.id}}
+Title: {{agent.title}}
+Risk Class: {{risk_class}}
+{{#if persona_text}}
+{{{persona_text}}}
+{{/if}}
+
+# AVAILABLE CAPABILITIES
+{{tools_summary}}
+{{#if has_skills}}
+
+# SKILL INSTRUCTION PACKS
+{{#each skills}}
+### Skill: {{name}} ({{id}})
+{{{instructions}}}
+{{#unless @last}}
+
+{{/unless}}
+{{/each}}
+{{/if}}

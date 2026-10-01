@@ -10,11 +10,14 @@ Loads and caches:
 from __future__ import annotations
 
 import collections
+import logging
 from pathlib import Path
 import re
 import threading
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 import yaml
+
+logger = logging.getLogger(__name__)
 
 
 class RefusalPattern(NamedTuple):
@@ -88,7 +91,11 @@ class ResourceLoader:
         if "composed_prompts" in self._cache:
             return self._cache["composed_prompts"]
 
-        base_prompts = dict(self.load_yaml("prompts.yaml"))
+        try:
+            base_prompts = dict(self.load_yaml("prompts.yaml"))
+        except FileNotFoundError:
+            base_prompts = {}
+
         prompts_dir = self.resources_dir / "prompts"
         if not prompts_dir.is_dir():
             return base_prompts
@@ -354,10 +361,28 @@ class ResourceLoader:
         tool_s = s_data.get("tool_suggestions", {})
         persona_s = s_data.get("persona_suggestions", {})
 
+        # 0. Check if the agent manifest defines inline suggestions
+        manifest_suggestions: Optional[Dict[str, Any]] = None
+        try:
+            from carefold.agents.registry import get_agent_registry
+            registry = get_agent_registry()
+            agent_obj = registry.get(aid) or registry.get(aid.replace("-", "_"))
+            if agent_obj and getattr(agent_obj, "suggestions", None):
+                manifest_suggestions = agent_obj.suggestions
+        except Exception as e:
+            logger.debug("Could not inspect agent registry for inline suggestions: %s", e)
+
         # 1. Resolve agent persona definition
         aid_key = aid.replace("-", "_")
         persona_def: Dict[str, Any] = {}
-        if aid_key in persona_s:
+        if manifest_suggestions and isinstance(manifest_suggestions, dict):
+            if aid_key in manifest_suggestions:
+                persona_def = dict(manifest_suggestions[aid_key])
+            elif "persona_suggestions" in manifest_suggestions and aid_key in manifest_suggestions["persona_suggestions"]:
+                persona_def = dict(manifest_suggestions["persona_suggestions"][aid_key])
+            else:
+                persona_def = dict(manifest_suggestions)
+        elif aid_key in persona_s:
             persona_def = persona_s[aid_key]
         else:
             # Check safe prefix/substring matching (prevent single-word false matches like "guide")
@@ -369,71 +394,45 @@ class ResourceLoader:
 
         chips: List[str] = []
 
-        # 2. Topic/Keyword Matching for Resolved Persona (Highest Precedence)
+        # 2. Dynamic Topic/Keyword Matching for Resolved Persona (Highest Precedence)
         if persona_def:
-            # Deterministic check for legacy baseline personas first to guarantee test stability
-            if aid_key == "visit_steward" or "visit" in aid or "steward" in aid:
-                if any(w in search_text for w in persona_def.get("lab_keywords", [])):
-                    chips = list(persona_def.get("lab_chips", []))
-                elif any(w in search_text for w in persona_def.get("med_keywords", [])):
-                    chips = list(persona_def.get("med_chips", []))
-            elif aid_key == "benefits_guide" or "benefit" in aid:
-                if any(w in search_text for w in persona_def.get("cost_keywords", [])):
-                    chips = list(persona_def.get("cost_chips", []))
-                elif any(w in search_text for w in persona_def.get("prior_auth_keywords", [])):
-                    chips = list(persona_def.get("prior_auth_chips", []))
-            elif aid_key == "habit_companion" or "habit" in aid:
-                if any(w in search_text for w in persona_def.get("water_keywords", [])):
-                    chips = list(persona_def.get("water_chips", []))
-                elif any(w in search_text for w in persona_def.get("sleep_keywords", [])):
-                    chips = list(persona_def.get("sleep_chips", []))
+            for k, val in persona_def.items():
+                if k.endswith("_keywords") and isinstance(val, list):
+                    prefix = k[:-len("_keywords")]
+                    target_chips_key = f"{prefix}_chips"
+                    if any(w.lower() in search_text for w in val if isinstance(w, str)) and target_chips_key in persona_def:
+                        chips = list(persona_def[target_chips_key])
+                        break
 
-            # General dynamic keyword lookup for all expanded specialist personas
-            if not chips:
-                for k, val in persona_def.items():
-                    if k.endswith("_keywords") and isinstance(val, list):
-                        prefix = k[:-len("_keywords")]
-                        target_chips_key = f"{prefix}_chips"
-                        if any(w in search_text for w in val if isinstance(w, str)) and target_chips_key in persona_def:
-                            chips = list(persona_def[target_chips_key])
-                            break
-
-        # 3. Contextual Tool Matching (If no specific topic keyword matched)
+        # 3. Contextual Tool Matching (Data-driven, zero hardcoded tool/agent names)
         if not chips and tools_used:
+            persona_tools = persona_def.get("tools") or persona_def.get("tool_suggestions") or {}
             for t in tools_used:
-                # workspace-note: note-taking follow-ups
-                if t == "workspace-note":
-                    if persona_def.get("note_chips"):
-                        chips = list(persona_def["note_chips"])
-                        break
-                    elif tool_s.get("workspace-note"):
-                        chips = list(tool_s["workspace-note"])
-                        break
-                # attach-read: document summary follow-ups
-                elif t == "attach-read":
-                    if persona_def.get("doc_chips"):
-                        chips = list(persona_def["doc_chips"])
-                        break
-                    elif tool_s.get("attach-read"):
-                        chips = list(tool_s["attach-read"])
-                        break
-                # skill-docs: domain guidelines
-                elif t == "skill-docs":
-                    # Only visit-steward uses appointment checklist chips for skill-docs
-                    if aid_key == "visit_steward" or "visit" in aid or "steward" in aid:
-                        if tool_s.get("skill-docs"):
-                            chips = list(tool_s["skill-docs"])
-                            break
-                    elif persona_def.get("skill_docs_chips"):
-                        chips = list(persona_def["skill_docs_chips"])
-                        break
-                    elif persona_def.get("default_chips"):
-                        chips = list(persona_def["default_chips"])
-                        break
-                # Any other tool registered in tool_suggestions
-                elif t in tool_s and tool_s[t]:
-                    chips = list(tool_s[t])
+                t_clean = t.replace("-", "_")
+                # A. Persona-specific tool chips
+                if t in persona_tools and persona_tools[t]:
+                    chips = list(persona_tools[t])
                     break
+                elif f"{t_clean}_chips" in persona_def and persona_def[f"{t_clean}_chips"]:
+                    chips = list(persona_def[f"{t_clean}_chips"])
+                    break
+
+            # B. If no persona-specific tool override, check persona defaults before generic global tools
+            if not chips:
+                if persona_def.get("default_chips"):
+                    # For interactive document reading or note saving, check if global tool suggestions apply
+                    for t in tools_used:
+                        if t in ("workspace-note", "attach-read") and t in tool_s and tool_s[t]:
+                            chips = list(tool_s[t])
+                            break
+                    if not chips:
+                        chips = list(persona_def["default_chips"])
+                else:
+                    # Unregistered / custom agent: check global tool suggestions
+                    for t in tools_used:
+                        if t in tool_s and tool_s[t]:
+                            chips = list(tool_s[t])
+                            break
 
         # 4. Persona Default Chips (Fallback when no keyword or tool matched)
         if not chips and persona_def:

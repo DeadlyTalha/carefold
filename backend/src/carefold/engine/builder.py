@@ -296,7 +296,7 @@ class GraphBuilder:
         async def _input_guardrail_wrapper(state: AgentState) -> Dict[str, Any]:
             res = await (input_guard_node(state) if callable(input_guard_node) else input_guard_node.execute(state))
             if res.get("is_refusal") or res.get("refused"):
-                reason = res.get("refusal_reason") or "forbidden_intent:medical_prohibited"
+                reason = res.get("refusal_reason") or state.get("default_refusal_reason") or "forbidden_intent:policy_prohibited"
                 try:
                     await adispatch_custom_event(
                         SSE_EVENT_REFUSAL,
@@ -434,7 +434,7 @@ class GraphBuilder:
         async def _output_guardrail_wrapper(state: AgentState) -> Dict[str, Any]:
             res = await (output_guard_node(state) if callable(output_guard_node) else output_guard_node.execute(state))
             if res.get("is_refusal") or res.get("refused"):
-                reason = res.get("refusal_reason") or "forbidden_intent:medical_prohibited"
+                reason = res.get("refusal_reason") or state.get("default_refusal_reason") or "forbidden_intent:policy_prohibited"
                 try:
                     await adispatch_custom_event(
                         SSE_EVENT_REFUSAL,
