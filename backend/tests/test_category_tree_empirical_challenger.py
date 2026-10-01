@@ -219,7 +219,6 @@ class TestCategoryTreeHierarchyEmpirical:
     @pytest.mark.asyncio
     async def test_get_category_tree_many_agents_stress(self, adapter: SqliteCatalogAdapter) -> None:
         """Challenge 1.6: Stress test with 60 agents across domains and subcategories."""
-        domains = list(AgentDomain)
         categories = {
             AgentDomain.CLINICAL: ["clinical.pediatrics.allergy", "clinical.cardiology", "clinical.neurology.pediatric"],
             AgentDomain.THERAPY: ["therapy.cbt", "therapy.physical.rehab", "therapy.speech"],
@@ -227,6 +226,7 @@ class TestCategoryTreeHierarchyEmpirical:
             AgentDomain.NAVIGATION: ["navigation.insurance.claims", "navigation.insurance.preauth", "navigation.transport"],
             AgentDomain.EDUCATION: ["education.diabetes", "education.heart_disease", "education.asthma"],
         }
+        domains = list(categories.keys())
 
         agent_count = 0
         for domain in domains:
