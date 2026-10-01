@@ -132,3 +132,104 @@ def test_graph_builder_attaches_model_to_suggestion_node():
     # When building, suggestion_node is instantiated
     graph = builder.build()
     assert graph is not None
+
+
+def test_multi_turn_suggestion_variation_and_deduplication():
+    """Verifies that follow-up suggestions dynamically vary across conversation turns and never repeat asked questions."""
+    loader = get_resource_loader()
+
+    # Turn 1: Initial query about deductible
+    t1_prompt = "What is my deductible?"
+    t1_chips = loader.get_follow_up_suggestions(
+        agent_id="benefits-guide",
+        prompt=t1_prompt,
+        completion="Your deductible is $1500 per year before insurance kicks in.",
+        user_queries=[t1_prompt],
+    )
+    assert len(t1_chips) >= 2
+    assert any("deductible" in c.lower() for c in t1_chips)
+
+    # Turn 2: User clicks the first suggestion chip
+    clicked_chip = t1_chips[0]
+    t2_chips = loader.get_follow_up_suggestions(
+        agent_id="benefits-guide",
+        prompt=clicked_chip,
+        completion="Copays are fixed fees while coinsurance is a percentage of the total bill.",
+        user_queries=[t1_prompt, clicked_chip],
+    )
+    assert len(t2_chips) >= 2
+    # The clicked chip MUST NOT be suggested again
+    assert clicked_chip not in t2_chips
+    # The initial question MUST NOT be suggested again
+    assert t1_prompt not in t2_chips
+
+
+@pytest.mark.asyncio
+async def test_cardiology_guide_skill_alias_resolution(tmp_path):
+    """Verifies that cardiology-guide agent requesting skill_id='cardiology' aliases to 'cardiology-prep'."""
+    from carefold.schemas.manifest import AgentManifest
+    from carefold.tools.skill_docs import execute_skill_docs
+
+    class MockContext:
+        def __init__(self, ws, agent):
+            self.workspace_root = ws
+            self.skills_dir = ws / "skills"
+            self.agent = agent
+
+    # Create mock skill directory with real reference document
+    ws = tmp_path / "workspace"
+    ref_dir = ws / "skills" / "cardiology-prep" / "references"
+    ref_dir.mkdir(parents=True, exist_ok=True)
+    agenda_file = ref_dir / "cardiology_visit_agenda.md"
+    agenda_file.write_text("# Cardiology Visit Agenda\n1. Review blood pressure log.", encoding="utf-8")
+
+    agent = AgentManifest(
+        id="cardiology-guide",
+        title="Cardiology Navigator",
+        skills=["cardiology-prep"],
+        persona="Role",
+    )
+    ctx = MockContext(ws, agent)
+
+    # Invocation with short alias 'cardiology'
+    res = await execute_skill_docs(
+        {"skill_id": "cardiology", "doc": "cardiology_visit_agenda.md"},
+        ctx,
+    )
+    assert res.success is True, f"Expected success but got error: {res.error}"
+    assert res.output["skill_id"] == "cardiology-prep"
+    assert "Review blood pressure log" in res.output["content"]
+
+
+@pytest.mark.asyncio
+async def test_skill_docs_dynamic_synthesis_on_missing_reference(tmp_path):
+    """Verifies that missing documents or directories are dynamically synthesized rather than returning hard errors."""
+    from carefold.schemas.manifest import AgentManifest
+    from carefold.tools.skill_docs import execute_skill_docs
+
+    class MockContext:
+        def __init__(self, ws, agent):
+            self.workspace_root = ws
+            self.skills_dir = ws / "skills"
+            self.agent = agent
+
+    ws = tmp_path / "workspace"
+    (ws / "skills").mkdir(parents=True, exist_ok=True)
+
+    agent = AgentManifest(
+        id="cardiology-guide",
+        title="Cardiology Navigator",
+        skills=["cardiology-prep"],
+        persona="Role",
+    )
+    ctx = MockContext(ws, agent)
+
+    # Request a document that does not exist on disk
+    res = await execute_skill_docs(
+        {"skill_id": "cardiology-prep", "doc": "untracked_guideline.md"},
+        ctx,
+    )
+    assert res.success is True
+    assert "Cardiology Prep" in res.output["content"]
+    assert "Carefold Boundary & Safety Disclosures" in res.output["content"]
+

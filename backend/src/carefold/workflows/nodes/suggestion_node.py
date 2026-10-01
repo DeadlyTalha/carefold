@@ -44,13 +44,19 @@ class SuggestionNode(BaseNode):
         agent_id = str(state.get("current_agent") or state.get("agent_id") or "visit-steward")
         messages: List[Any] = state.get("messages", [])
 
-        prompt_text = ""
-        completion_text = str(state.get("output", ""))
+        user_queries: List[str] = []
+        for m in messages:
+            if isinstance(m, HumanMessage):
+                q = str(m.content or "").strip()
+                if q:
+                    user_queries.append(q)
+            elif isinstance(m, dict) and m.get("role") in ("user", "human"):
+                q = str(m.get("content", "")).strip()
+                if q:
+                    user_queries.append(q)
 
-        for m in reversed(messages):
-            if isinstance(m, HumanMessage) or (isinstance(m, dict) and m.get("role") in ("user", "human")):
-                prompt_text = str(getattr(m, "content", "") if isinstance(m, HumanMessage) else m.get("content", ""))
-                break
+        prompt_text = user_queries[-1] if user_queries else ""
+        completion_text = str(state.get("output", ""))
 
         if not completion_text:
             for m in reversed(messages):
@@ -76,16 +82,34 @@ class SuggestionNode(BaseNode):
                 resp = await self.model.ainvoke([SystemMessage(content=rendered_prompt)])
                 content = str(getattr(resp, "content", "") or "").strip()
 
+                raw_extracted: List[str] = []
                 parsed = None
                 try:
                     parsed = json.loads(content)
                 except Exception:
                     match = re.search(r"\[.*\]", content, re.DOTALL)
                     if match:
-                        parsed = json.loads(match.group(0))
+                        try:
+                            parsed = json.loads(match.group(0))
+                        except Exception:
+                            parsed = None
 
                 if isinstance(parsed, list):
-                    chips = [str(c).strip() for c in parsed if isinstance(c, str) and c.strip()][:4]
+                    raw_extracted = [str(c).strip() for c in parsed if isinstance(c, str) and c.strip()]
+                else:
+                    lines = [re.sub(r"^[\d\.\-\*\•\s]+", "", l).strip(' "\'') for l in content.splitlines()]
+                    raw_extracted = [l for l in lines if l and len(l) > 6 and l.endswith("?")]
+
+                # Filter out questions already asked by the user in this conversation
+                lower_prior = {q.lower().strip() for q in user_queries}
+                filtered_chips: List[str] = []
+                for c in raw_extracted:
+                    c_clean = c.strip()
+                    c_low = c_clean.lower()
+                    if c_low not in lower_prior and not any(c_low in q or q in c_low for q in lower_prior if len(q) > 12):
+                        filtered_chips.append(c_clean)
+
+                chips = filtered_chips[:3]
             except Exception as err:
                 logger.debug("Dynamic suggestion generation failed: %s; falling back to curated chips", err)
 
@@ -96,8 +120,9 @@ class SuggestionNode(BaseNode):
                 prompt=prompt_text,
                 completion=completion_text,
                 tools_used=tools_used,
+                user_queries=user_queries,
             )
-            chips = list(raw_chips)[:4]
+            chips = list(raw_chips)[:3]
 
         return {
             "follow_up_suggestions": chips,

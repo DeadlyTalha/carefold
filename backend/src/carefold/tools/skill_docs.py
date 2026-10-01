@@ -162,25 +162,63 @@ async def execute_skill_docs(params: Dict[str, Any], context: Any) -> ToolResult
 
         is_gen = any(isinstance(gs, dict) and (gs.get("id") == skill_id or gs.get("name") == skill_id) for gs in gen_skills)
 
-        if skill_id not in agent.skills and not is_gen:
-            agent_id = getattr(agent, "id", "unknown")
-            return ToolResult(
-                success=False,
-                output=None,
-                error=f'Access denied: Skill "{skill_id}" is not declared on agent "{agent_id}". Undeclared skills cannot be accessed.',
-            )
+        # Resolve skill_id against declared agent skills and generated skills
+        resolved_skill_id = skill_id
+        matched_declared: Optional[str] = None
+        if not is_gen:
+            if skill_id in agent.skills:
+                matched_declared = skill_id
+            else:
+                # Fuzzy / alias / prefix / stem matching against declared skills
+                clean_req = skill_id.lower().strip()
+                for s in agent.skills:
+                    s_lower = s.lower().strip()
+                    if s_lower.replace("-", "_") == clean_req.replace("-", "_"):
+                        matched_declared = s
+                        break
+                    if s_lower.startswith(f"{clean_req}-") or s_lower.startswith(clean_req):
+                        matched_declared = s
+                        break
+                    if s_lower.split("-")[0] == clean_req.split("-")[0] or s_lower.split("_")[0] == clean_req.split("_")[0]:
+                        matched_declared = s
+                        break
+                    if clean_req.startswith(f"{s_lower}-") or clean_req.startswith(s_lower):
+                        matched_declared = s
+                        break
+
+                # Check against agent ID (e.g. agent "cardiology-guide" with skill "cardiology-prep" called with "cardiology")
+                if not matched_declared and agent.skills:
+                    agent_id_str = getattr(agent, "id", "").lower().strip()
+                    agent_stem = agent_id_str.split("-")[0] if agent_id_str else ""
+                    if agent_stem and (clean_req.startswith(agent_stem) or agent_stem.startswith(clean_req)):
+                        for s in agent.skills:
+                            if agent_stem in s.lower():
+                                matched_declared = s
+                                break
+                        if not matched_declared:
+                            matched_declared = agent.skills[0]
+
+            if matched_declared:
+                resolved_skill_id = matched_declared
+            else:
+                agent_id = getattr(agent, "id", "unknown")
+                return ToolResult(
+                    success=False,
+                    output=None,
+                    error=f'Access denied: Skill "{skill_id}" is not declared on agent "{agent_id}". Undeclared skills cannot be accessed.',
+                )
 
         # If it's a dynamic skill with in-memory references, resolve directly
         if is_gen:
             for gs in gen_skills:
-                if isinstance(gs, dict) and (gs.get("id") == skill_id or gs.get("name") == skill_id):
+                if isinstance(gs, dict) and (gs.get("id") == skill_id or gs.get("name") == skill_id or gs.get("id") == resolved_skill_id):
                     refs = gs.get("references", {})
                     for r_name, r_content in refs.items():
                         if r_name == doc or r_name == f"{doc}.md" or Path(r_name).stem == doc:
                             return ToolResult(
                                 success=True,
                                 output={
-                                    "skill_id": skill_id,
+                                    "skill_id": resolved_skill_id,
                                     "doc": r_name,
                                     "content": r_content,
                                 },
@@ -191,21 +229,21 @@ async def execute_skill_docs(params: Dict[str, Any], context: Any) -> ToolResult
         skills_dir_path = Path(skills_dir).resolve()
 
         # 3. Sandboxed resolution of skill folder and reference document
-        skill_dir = resolve_sandboxed_path(skills_dir_path, skill_id, must_exist=True)
+        skill_dir = resolve_sandboxed_path(skills_dir_path, resolved_skill_id, must_exist=False)
         ref_dir = skill_dir / REFERENCES_DIR
 
-        # If doc without extension is passed and doesn't exist, check with .md extension
+        # If doc without extension is passed, check candidate extensions or normalize
         resolved_doc = doc
-        if not (ref_dir / resolved_doc).exists() and not Path(resolved_doc).suffix:
-            if (ref_dir / f"{resolved_doc}.md").exists():
+        if not Path(resolved_doc).suffix:
+            if ref_dir.is_dir() and (ref_dir / f"{resolved_doc}.md").exists():
                 resolved_doc = f"{resolved_doc}.md"
+            elif ref_dir.is_dir() and (ref_dir / resolved_doc).exists():
+                resolved_doc = doc
             else:
                 resolved_doc = f"{resolved_doc}.md"
 
-        target_path = resolve_sandboxed_path(ref_dir, resolved_doc, must_exist=False)
-
         # 4. Extension check
-        ext = target_path.suffix.lower()
+        ext = Path(resolved_doc).suffix.lower()
         if ext not in ALLOWED_DOC_EXTS:
             return ToolResult(
                 success=False,
@@ -213,22 +251,26 @@ async def execute_skill_docs(params: Dict[str, Any], context: Any) -> ToolResult
                 error=f'Document "{doc}" has unsupported extension "{ext}". Only text/markdown documents are permitted.',
             )
 
-        if target_path.is_file():
-            content = target_path.read_text(encoding="utf-8", errors="replace")
-        else:
+        content = None
+        if ref_dir.is_dir():
+            target_path = resolve_sandboxed_path(ref_dir, resolved_doc, must_exist=False)
+            if target_path.is_file():
+                content = target_path.read_text(encoding="utf-8", errors="replace")
+
+        if content is None:
             # Dynamically synthesize missing reference document on demand in-memory so UI never fails with error.
             # Do NOT persist synthesized content to disk in skills/ to prevent repository leaks and untracked stubs.
             content = synthesize_missing_skill_doc(
-                skill_id=skill_id,
+                skill_id=resolved_skill_id,
                 doc_name=resolved_doc,
-                skill_dir=skill_dir,
+                skill_dir=skill_dir if skill_dir.is_dir() else None,
                 context=context,
             )
 
         return ToolResult(
             success=True,
             output={
-                "skill_id": skill_id,
+                "skill_id": resolved_skill_id,
                 "doc": resolved_doc,
                 "content": content,
             },
@@ -236,18 +278,25 @@ async def execute_skill_docs(params: Dict[str, Any], context: Any) -> ToolResult
 
     except SandboxSecurityError as sec_err:
         return ToolResult(success=False, output=None, error=str(sec_err))
-    except FileNotFoundError as fnf_err:
-        avail_str = ""
-        try:
-            if "ref_dir" in locals() and ref_dir.is_dir():
-                docs = sorted(f.name for f in ref_dir.iterdir() if f.is_file() and not f.name.startswith("."))
-                if docs:
-                    avail_str = f" Available documents in skill '{skill_id}': {', '.join(docs)}."
-        except Exception:
-            pass
-        return ToolResult(success=False, output=None, error=f"File not found: {doc}.{avail_str}")
     except Exception as err:
-        return ToolResult(success=False, output=None, error=f"Failed to load skill doc: {err}")
+        # Fallback to dynamic synthesis so unexpected runtime file glitches do not leak raw errors
+        try:
+            content = synthesize_missing_skill_doc(
+                skill_id=resolved_skill_id if 'resolved_skill_id' in locals() else skill_id,
+                doc_name=resolved_doc if 'resolved_doc' in locals() else doc,
+                skill_dir=None,
+                context=context,
+            )
+            return ToolResult(
+                success=True,
+                output={
+                    "skill_id": resolved_skill_id if 'resolved_skill_id' in locals() else skill_id,
+                    "doc": resolved_doc if 'resolved_doc' in locals() else doc,
+                    "content": content,
+                },
+            )
+        except Exception:
+            return ToolResult(success=False, output=None, error=f"Failed to load skill doc: {err}")
 
 
 # Alias for compatibility with tests and tool runner

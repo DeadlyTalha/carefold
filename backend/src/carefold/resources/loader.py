@@ -351,8 +351,9 @@ class ResourceLoader:
         prompt: str = "",
         completion: str = "",
         tools_used: Optional[List[str]] = None,
+        user_queries: Optional[Sequence[str]] = None,
     ) -> List[str]:
-        """Generates 2-3 contextual follow-up chips based on agent persona, topic keywords, and tools."""
+        """Generates 2-4 contextual follow-up chips based on agent persona, topic keywords, tools, and conversation history."""
         tools_used = tools_used or []
         aid = (agent_id or "").lower().strip()
         search_text = f"{(prompt or '').lower()} {(completion or '').lower()}".strip()
@@ -392,75 +393,120 @@ class ResourceLoader:
                     aid_key = k
                     break
 
-        chips: List[str] = []
+        matched_category_chips: List[str] = []
+        other_persona_chips: List[str] = []
+        tool_matched_chips: List[str] = []
+        default_persona_chips: List[str] = []
 
-        # 2. Dynamic Topic/Keyword Matching for Resolved Persona (Highest Precedence)
+        # 2. Dynamic Topic/Keyword Matching for Resolved Persona
         if persona_def:
+            matched_keys = []
             for k, val in persona_def.items():
                 if k.endswith("_keywords") and isinstance(val, list):
                     prefix = k[:-len("_keywords")]
                     target_chips_key = f"{prefix}_chips"
-                    if any(w.lower() in search_text for w in val if isinstance(w, str)) and target_chips_key in persona_def:
-                        chips = list(persona_def[target_chips_key])
-                        break
+                    hit_count = sum(1 for w in val if isinstance(w, str) and w.lower() in search_text)
+                    if hit_count > 0 and target_chips_key in persona_def:
+                        matched_keys.append((hit_count, target_chips_key))
+                    elif target_chips_key in persona_def:
+                        for c in persona_def[target_chips_key]:
+                            if c not in other_persona_chips:
+                                other_persona_chips.append(c)
 
-        # 3. Contextual Tool Matching (Data-driven, zero hardcoded tool/agent names)
-        if not chips and tools_used:
-            persona_tools = persona_def.get("tools") or persona_def.get("tool_suggestions") or {}
-            for t in tools_used:
-                t_clean = t.replace("-", "_")
-                # A. Persona-specific tool chips
-                if t in persona_tools and persona_tools[t]:
-                    chips = list(persona_tools[t])
-                    break
-                elif f"{t_clean}_chips" in persona_def and persona_def[f"{t_clean}_chips"]:
-                    chips = list(persona_def[f"{t_clean}_chips"])
-                    break
+            matched_keys.sort(key=lambda x: x[0], reverse=True)
+            for _, t_key in matched_keys:
+                for c in persona_def.get(t_key, []):
+                    if c not in matched_category_chips:
+                        matched_category_chips.append(c)
 
-            # B. If no persona-specific tool override, check persona defaults before generic global tools
-            if not chips:
-                if persona_def.get("default_chips"):
-                    # For interactive document reading or note saving, check if global tool suggestions apply
+            # 3. Contextual Tool Matching
+            if tools_used:
+                persona_tools = persona_def.get("tools") or persona_def.get("tool_suggestions") or {}
+                for t in tools_used:
+                    t_clean = t.replace("-", "_")
+                    if t in persona_tools and persona_tools[t]:
+                        tool_matched_chips.extend(persona_tools[t])
+                    elif f"{t_clean}_chips" in persona_def and persona_def[f"{t_clean}_chips"]:
+                        tool_matched_chips.extend(persona_def[f"{t_clean}_chips"])
+
+                if not tool_matched_chips:
                     for t in tools_used:
                         if t in ("workspace-note", "attach-read") and t in tool_s and tool_s[t]:
-                            chips = list(tool_s[t])
-                            break
-                    if not chips:
-                        chips = list(persona_def["default_chips"])
-                else:
-                    # Unregistered / custom agent: check global tool suggestions
-                    for t in tools_used:
-                        if t in tool_s and tool_s[t]:
-                            chips = list(tool_s[t])
-                            break
+                            tool_matched_chips.extend(tool_s[t])
 
-        # 4. Persona Default Chips (Fallback when no keyword or tool matched)
-        if not chips and persona_def:
-            default_persona_chips = persona_def.get("default_chips", [])
-            if default_persona_chips:
-                chips = list(default_persona_chips)
+            for c in persona_def.get("default_chips", []):
+                if c not in default_persona_chips:
+                    default_persona_chips.append(c)
 
-        # 5. Global Tool Suggestions (For unknown/unregistered agents)
-        if not chips and tools_used:
+        # Assemble candidate pool in priority order
+        pool: List[str] = []
+        for c in matched_category_chips:
+            if c not in pool:
+                pool.append(c)
+        for c in tool_matched_chips:
+            if c not in pool:
+                pool.append(c)
+        for c in default_persona_chips:
+            if c not in pool:
+                pool.append(c)
+        for c in other_persona_chips:
+            if c not in pool:
+                pool.append(c)
+
+        if not pool and tools_used:
             for t in tools_used:
                 if t in tool_s and tool_s[t]:
-                    chips = list(tool_s[t])
-                    break
+                    for c in tool_s[t]:
+                        if c not in pool:
+                            pool.append(c)
 
-        # 6. Global Defaults from YAML
-        if chips:
-            return chips[:4]
+        if not pool:
+            pool = list(s_data.get("default_chips", [])) or [
+                "Can you explain this in simpler terms?",
+                "What questions should I ask my healthcare provider?",
+                "Help me save a note summarizing these points.",
+            ]
 
-        yaml_default = s_data.get("default_chips", [])
-        if yaml_default:
-            return list(yaml_default)[:4]
+        # 4. Turn-awareness and deduplication against prior queries
+        prior_queries = list(user_queries or [])
+        if prompt and prompt not in prior_queries:
+            prior_queries.append(prompt)
 
-        # 7. Safe Hardcoded Fallback
-        return [
-            "Can you explain this in simpler terms?",
-            "What questions should I ask my healthcare provider?",
-            "Help me save a note summarizing these points.",
-        ]
+        def _was_asked(chip: str) -> bool:
+            c_low = chip.strip().lower()
+            for q in prior_queries:
+                q_low = q.strip().lower()
+                if not q_low:
+                    continue
+                if c_low == q_low or c_low in q_low or q_low in c_low:
+                    return True
+                c_words = set(re.findall(r"\w+", c_low)) - {"what", "how", "can", "you", "i", "my", "the", "a", "an", "is", "about", "to", "for", "in", "do", "me", "this"}
+                q_words = set(re.findall(r"\w+", q_low)) - {"what", "how", "can", "you", "i", "my", "the", "a", "an", "is", "about", "to", "for", "in", "do", "me", "this"}
+                if c_words and len(c_words & q_words) >= max(2, len(c_words) - 1):
+                    return True
+            return False
+
+        filtered_pool = [c for c in pool if not _was_asked(c)]
+        if len(filtered_pool) >= 2:
+            active_pool = filtered_pool
+        else:
+            active_pool = pool
+
+        # 5. Dynamic turn-based rotation so subsequent conversation turns vary suggestions
+        turn_count = len(user_queries) if user_queries else 1
+        if turn_count > 1 and len(active_pool) > 4:
+            offset = (turn_count - 1) % len(active_pool)
+            active_pool = active_pool[offset:] + active_pool[:offset]
+
+        # 6. Deduplicate while preserving order and limit to 3 chips (F-30: 2-3 chips)
+        result: List[str] = []
+        for c in active_pool:
+            if c not in result:
+                result.append(c)
+            if len(result) >= 3:
+                break
+
+        return result
 
     # =========================================================================
     # 5. Error Convenience Accessors

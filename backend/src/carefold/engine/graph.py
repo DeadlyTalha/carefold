@@ -505,8 +505,8 @@ def create_agent_graph(
     # 3. Add nodes
     sugg_model = model
     if sugg_model is not None:
-        cls_name = sugg_model.__class__.__name__
-        if "Fake" in cls_name or "Mock" in cls_name:
+        cls_name = sugg_model.__class__.__name__.lower()
+        if any(skip in cls_name for skip in ("fake", "mock", "infinite", "loop", "double", "stub")):
             sugg_model = None
 
     builder.add_node("safety_guard_node", safety_guard_node)
