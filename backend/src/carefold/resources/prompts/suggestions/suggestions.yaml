@@ -1,0 +1,67 @@
+tool_suggestions:
+  attach-read:
+    - "What specific questions should I ask my doctor about these results?"
+    - "Can you help me summarize this document for my appointment?"
+    - "Help me note any symptoms I should mention alongside these findings."
+  workspace-note:
+    - "Would you like me to add more details to your saved visit note?"
+    - "Can you summarize the notes we saved for my appointment?"
+    - "What other questions should I prepare for my upcoming doctor visit?"
+  skill-docs:
+    - "Help me walk through the appointment preparation checklist step by step."
+    - "What questions from the reference guide should I prioritize?"
+    - "Can you help me draft a personal agenda for my clinician visit?"
+
+persona_suggestions:
+  visit_steward:
+    lab_keywords: ["lab", "blood", "test", "result"]
+    lab_chips:
+      - "What questions should I ask about my lab results?"
+      - "Help me organize a checklist for my appointment."
+      - "What symptoms should I track before my doctor visit?"
+    med_keywords: ["medication", "pill", "prescript", "drug"]
+    med_chips:
+      - "What non-clinical questions can I ask about my medications?"
+      - "Help me prepare a list of my current supplements for my doctor."
+      - "How can I organize my daily medication schedule?"
+    default_chips:
+      - "What questions should I ask my doctor during my visit?"
+      - "Help me prepare a checklist for my appointment."
+      - "Can you help me summarize my symptoms into a clear timeline?"
+
+  benefits_guide:
+    cost_keywords: ["deductible", "out-of-pocket", "cost", "pay"]
+    cost_chips:
+      - "How does my annual deductible affect my out-of-pocket costs?"
+      - "What is the difference between copay and coinsurance?"
+      - "What questions should I ask my insurer before a procedure?"
+    prior_auth_keywords: ["prior auth", "authorization", "referral"]
+    prior_auth_chips:
+      - "How does the prior authorization process work?"
+      - "What should I do if a prior authorization request is delayed?"
+      - "How can I check if a specialist requires a referral?"
+    default_chips:
+      - "What questions should I ask member services about my coverage?"
+      - "Can you explain the difference between in-network and out-of-network care?"
+      - "How do I check if a preventive screening is covered at 100%?"
+
+  habit_companion:
+    water_keywords: ["water", "hydrat"]
+    water_chips:
+      - "How can I track my daily hydration goal?"
+      - "What are healthy alternatives to sugary drinks?"
+      - "Help me save a daily wellness note for my habits."
+    sleep_keywords: ["sleep", "rest", "tired"]
+    sleep_chips:
+      - "What is a relaxing evening wind-down routine for better sleep?"
+      - "How does screen time before bed affect sleep quality?"
+      - "Help me log my sleep reflections for today."
+    default_chips:
+      - "What small wellness habit can I start building this week?"
+      - "How can I set realistic daily movement goals?"
+      - "Help me record my daily wellness reflections."
+
+default_chips:
+  - "Can you explain this in simpler terms?"
+  - "What questions should I ask my healthcare provider?"
+  - "Help me save a note summarizing these points."

@@ -1,0 +1,54 @@
+# ============================================================================
+# Carefold Safety Disclaimers and Intended Use Notices
+# ============================================================================
+
+# Intended Use metadata (F-02 requirement)
+intended_use:
+  description: >-
+    Carefold agents provide wellness and care navigation assistance.
+    They do not provide clinical diagnosis, medical treatment, or emergency care.
+  mandatory_lines:
+    - "Not a clinician and not emergency care"
+    - "If this is an emergency, contact local emergency services"
+    - "Do not change medication without the prescribing clinician"
+
+# Canonical Safe Refusal Response (CF-S13, lines 174-176 in PROJECT.md)
+safe_refusal_template: >-
+  I am a wellness and care navigation assistant, not a licensed medical professional or emergency service. I cannot diagnose conditions, prescribe medications, or alter medical treatments. Please consult a qualified healthcare provider or contact emergency services immediately if you are experiencing a medical emergency.
+
+# Header disclaimer for chat interface and UI banners
+disclaimer_header_text: >-
+  Carefold agents provide wellness and care navigation assistance. They do not provide clinical diagnosis, medical treatment, or emergency care.
+
+# 3 Mandatory Intended-Use Statements for agent & skill SKILL.md/agent.yaml validation
+mandatory_intended_use_lines:
+  - "Not a clinician and not emergency care"
+  - "If this is an emergency, contact local emergency services"
+  - "Do not change medication without the prescribing clinician"
+
+# Standard refusal clauses for guardrail nodes
+standard_refusal_clauses:
+  not_clinician: "Not a clinician and not emergency care."
+  emergency_notice: "If this is an emergency, contact local emergency services immediately."
+  medication_warning: "Do not change medication without the prescribing clinician."
+
+# Clinical assist risk class warnings
+clinical_assist_warning: >-
+  Agent '{agent_id}' is a clinical_assist agent. Explicit user consent (allow_clinical=true) is required.
+
+clinical_assist_unauthorized: >-
+  Agent '{agent_id}' is classified as clinical_assist. Execution is forbidden without explicit clinical consent (allow_clinical=True).
+
+# Health insurance and benefit coverage disclaimers
+coverage_guarantee_disclaimer: >-
+  Carefold provides educational information and care navigation assistance. We cannot guarantee specific insurance coverage, benefit determination, or claim payment. Always verify coverage and prior authorization requirements directly with your health plan administrator.
+
+general_guidance_disclaimer: >-
+  The information provided is for general guidance and educational purposes only. Benefit plan terms, coverage criteria, and clinical guidelines vary by insurer and policy. Please consult your health plan or healthcare provider for specific determinations.
+
+# Refusal category descriptions for audit logging and metadata
+refusal_reasons:
+  diagnose: "Clinical diagnosis and condition labeling"
+  dose: "Medication dosing and prescription calculation"
+  replace_emergency_care: "Emergency triage diversion and acute care replacement"
+  instruct_stop_medication: "Medication discontinuation and treatment alteration"

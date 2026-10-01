@@ -1,0 +1,85 @@
+"""Health check endpoint."""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from pathlib import Path
+import time
+from typing import Any, Dict
+from fastapi import APIRouter
+import httpx
+
+from carefold.config import settings
+from carefold.constants.api import HTTP_OK, ROUTE_HEALTH
+from carefold.constants.defaults import DEFAULT_VERSION
+from carefold.constants.models import HEALTH_CHECK_TIMEOUT_SECONDS, OLLAMA_MODELS_PATH
+from carefold.schemas.health import HealthResponse, OllamaHealthStatus, WorkspaceInfo
+
+router = APIRouter(tags=["Health"])
+
+START_TIME = time.time()
+
+
+@router.get(ROUTE_HEALTH, response_model=HealthResponse)
+async def get_health() -> HealthResponse:
+    """Returns system health, model reachability, and workspace stats."""
+    uptime = time.time() - START_TIME
+    ws_root = settings.workspace_root
+    agents_dir = settings.get_agents_dir()
+    skills_dir = settings.get_skills_dir()
+
+    agents_count = len([d for d in agents_dir.iterdir() if d.is_dir() and not d.name.startswith(".")]) if agents_dir.is_dir() else 0
+    skills_count = len([d for d in skills_dir.iterdir() if d.is_dir() and not d.name.startswith(".")]) if skills_dir.is_dir() else 0
+
+    workspace_info = WorkspaceInfo(
+        root=str(ws_root),
+        agentsCount=agents_count,
+        skillsCount=skills_count,
+    )
+
+    # Check Ollama connectivity
+    ollama_status: OllamaHealthStatus
+    try:
+        async with httpx.AsyncClient(timeout=HEALTH_CHECK_TIMEOUT_SECONDS) as client:
+            res = await client.get(f"{settings.ollama_url.rstrip('/')}{OLLAMA_MODELS_PATH}")
+            if res.status_code == HTTP_OK:
+                data = res.json()
+                models = [m.get("id") for m in data.get("data", []) if "id" in m]
+                ollama_status = OllamaHealthStatus(
+                    status="connected",
+                    endpoint=settings.ollama_url,
+                    reachable=True,
+                    activeModel=settings.default_model,
+                    availableModels=models,
+                    error=None,
+                )
+            else:
+                ollama_status = OllamaHealthStatus(
+                    status="unreachable",
+                    endpoint=settings.ollama_url,
+                    reachable=False,
+                    activeModel=settings.default_model,
+                    availableModels=[],
+                    error=f"HTTP {res.status_code}",
+                )
+    except Exception as err:
+        ollama_status = OllamaHealthStatus(
+            status="unreachable",
+            endpoint=settings.ollama_url,
+            reachable=False,
+            activeModel=settings.default_model,
+            availableModels=[],
+            error=str(err),
+        )
+
+    overall_status = "ok" if ollama_status.reachable else "degraded"
+
+    return HealthResponse(
+        status=overall_status,
+        version=DEFAULT_VERSION,
+        uptime=round(uptime, 2),
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        modelReachable=ollama_status.reachable,
+        workspace=workspace_info,
+        ollama=ollama_status,
+    )

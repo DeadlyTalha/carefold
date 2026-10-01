@@ -1,0 +1,329 @@
+"""Unified agent execution node for all specialist agents (F-48).
+
+Loads agent persona, forbidden constraints, and tool allowlists dynamically from
+AgentRegistry, binds resolved tools via ToolRegistry, invokes the model, and
+routes conditionally to 'tools' or 'output_guardrail'.
+"""
+
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Sequence, Union
+
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import (
+    AIMessage,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
+
+from carefold.agents.registry import AgentRegistry, get_agent_registry
+from carefold.config import settings
+from carefold.constants.agents import DEFAULT_ROUTING_FALLBACK_AGENT
+from carefold.constants.paths import AGENTS_DIR, SKILLS_DIR
+from carefold.loaders.agent_loader import load_agent
+from carefold.resources.loader import get_resource_loader
+from carefold.schemas.manifest import AgentManifest
+from carefold.tools.registry import CLOSED_TOOL_DEFINITIONS
+from carefold.workflows.nodes.base import BaseNode
+from carefold.workflows.state import AgentState
+
+logger = logging.getLogger(__name__)
+
+
+class AgentExecutionNode(BaseNode):
+    """Unified execution node handling all specialist agents discovered in AgentRegistry."""
+
+    def __init__(
+        self,
+        model: Optional[BaseChatModel] = None,
+        registry: Optional[AgentRegistry] = None,
+        tool_registry: Optional[Any] = None,
+        default_tools: Optional[Sequence[Any]] = None,
+        name: str = "agent_execution",
+    ) -> None:
+        super().__init__(name=name)
+        self.model = model
+        self._registry = registry
+        self.tool_registry = tool_registry
+        self.default_tools = list(default_tools) if default_tools is not None else None
+
+    @property
+    def registry(self) -> AgentRegistry:
+        """Lazily resolves AgentRegistry from workspace root if not explicitly injected."""
+        if self._registry is None:
+            self._registry = get_agent_registry()
+        return self._registry
+
+    def _resolve_system_prompt(self, manifest: Any, state: Dict[str, Any]) -> str:
+        """Assembles the agent persona and safety contract prompt."""
+        persona = ""
+        if isinstance(manifest.persona, str):
+            persona = manifest.persona
+        elif hasattr(manifest.persona, "instructions") and manifest.persona.instructions:
+            persona = manifest.persona.instructions
+        elif hasattr(manifest.persona, "role") and manifest.persona.role:
+            persona = manifest.persona.role
+        elif isinstance(manifest.persona, dict):
+            persona = manifest.persona.get("instructions") or manifest.persona.get("role") or ""
+
+        loader = get_resource_loader()
+        forbidden_rules = getattr(manifest, "forbidden", []) or []
+        forbidden_str = (
+            ", ".join(forbidden_rules)
+            if forbidden_rules
+            else "clinical diagnosis, dosing, triage replacement, treatment alteration"
+        )
+        safety_preamble = loader.get_safety_preamble_template().format(
+            forbidden_str=forbidden_str
+        )
+
+        orchestrator_instructions = state.get("orchestrator_instructions", "")
+        orch_section = ""
+        if orchestrator_instructions:
+            orch_section = f"\n\n# ORCHESTRATOR CONTEXT & INSTRUCTIONS\n{orchestrator_instructions.strip()}"
+
+        # Inject dynamically generated skills passed from orchestrator
+        generated_skills = list(state.get("generated_skills") or [])
+        single_gen = state.get("generated_skill")
+        if single_gen and single_gen not in generated_skills:
+            generated_skills.append(single_gen)
+
+        if generated_skills:
+            gen_texts = []
+            for gs in generated_skills:
+                if isinstance(gs, dict):
+                    name = gs.get("name") or gs.get("id") or "Dynamic Skill"
+                    desc = gs.get("description", "")
+                    inst = gs.get("instructions", "")
+                    refs = gs.get("references", {})
+                    ref_text = ""
+                    if isinstance(refs, dict) and refs:
+                        ref_text = "\n\nReference Material:\n" + "\n".join(f"### {fname}\n{fbody}" for fname, fbody in refs.items())
+                    gen_texts.append(f"## GENERATED SKILL: {name}\nDescription: {desc}\nInstructions:\n{inst}{ref_text}")
+                elif isinstance(gs, str):
+                    gen_texts.append(f"## GENERATED SKILL:\n{gs}")
+
+            if gen_texts:
+                orch_section += "\n\n# DYNAMICALLY GENERATED SKILLS (PROVIDED BY ORCHESTRATOR)\n" + "\n\n".join(gen_texts)
+
+        return f"{safety_preamble}\n\n# AGENT PERSONA: {manifest.title}\n{persona.strip()}{orch_section}"
+
+    def _resolve_tools(self, agent_id: str, manifest: Any, state: Dict[str, Any]) -> List[Any]:
+        """Resolves tool definitions or instances authorized for this agent."""
+        effective_tool_names: List[str] = []
+        if state.get("effective_tools") is not None:
+            effective_tool_names = list(state["effective_tools"])
+        elif hasattr(self.registry, "get_effective_tools") and self.registry.get(agent_id) is not None:
+            effective_tool_names = self.registry.get_effective_tools(agent_id)
+        elif hasattr(self.registry, "_effective_tools") and agent_id in self.registry._effective_tools:
+            effective_tool_names = list(self.registry._effective_tools[agent_id])
+        elif manifest is not None and getattr(manifest, "tools", None) is not None:
+            effective_tool_names = list(manifest.tools)
+        elif self.default_tools is not None:
+            effective_tool_names = [
+                t.name if hasattr(t, "name") else (t.get("name") if isinstance(t, dict) else str(t))
+                for t in self.default_tools
+            ]
+
+        # Add tools from generated skills if present
+        generated_skills = list(state.get("generated_skills") or [])
+        if state.get("generated_skill") and state.get("generated_skill") not in generated_skills:
+            generated_skills.append(state.get("generated_skill"))
+        for gs in generated_skills:
+            if isinstance(gs, dict) and gs.get("tools"):
+                for t in gs["tools"]:
+                    if t not in effective_tool_names:
+                        effective_tool_names.append(t)
+
+        if self.tool_registry is not None and hasattr(self.tool_registry, "resolve"):
+            return self.tool_registry.resolve(effective_tool_names)
+
+        resolved: List[Any] = []
+        for t_name in effective_tool_names:
+            if t_name in CLOSED_TOOL_DEFINITIONS:
+                resolved.append(CLOSED_TOOL_DEFINITIONS[t_name])
+            elif self.tool_registry and hasattr(self.tool_registry, "get"):
+                t_obj = self.tool_registry.get(t_name)
+                if t_obj is not None:
+                    resolved.append(t_obj)
+        return resolved
+
+    async def execute(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Executes the active agent's prompt, binds tools, and triggers model invocation."""
+        raw_agent_id = str(
+            state.get("current_agent")
+            or state.get("agent_id")
+            or DEFAULT_ROUTING_FALLBACK_AGENT
+        ).strip()
+
+        # Check raw ID first (preserves leading underscores like _template)
+        agent_id = raw_agent_id
+        manifest = self.registry.get(agent_id)
+
+        if manifest is None:
+            # Try normalized (lowercase, replace _ with - only if not leading _)
+            if not raw_agent_id.startswith("_"):
+                normalized_id = raw_agent_id.lower().replace("_", "-")
+            else:
+                normalized_id = raw_agent_id.lower()
+            manifest = self.registry.get(normalized_id)
+            if manifest is not None:
+                agent_id = normalized_id
+
+        # Check workspace_root from state if manifest still not found
+        if manifest is None and state.get("workspace_root"):
+            ws_agent_dir = Path(state["workspace_root"]) / "agents" / agent_id
+            if ws_agent_dir.is_dir():
+                try:
+                    ws_skills_dir = Path(state["workspace_root"]) / "skills"
+                    manifest, eff_tools, _ = load_agent(
+                        ws_agent_dir, ws_skills_dir if ws_skills_dir.is_dir() else None
+                    )
+                    if hasattr(self.registry, "_agents"):
+                        self.registry._agents[agent_id] = manifest
+                        self.registry._effective_tools[agent_id] = eff_tools
+                except Exception as err:
+                    logger.debug("Failed loading agent '%s' from state workspace_root: %s", agent_id, err)
+
+        # Fallback synthesis for dynamically configured / test agents
+        if manifest is None:
+            if (
+                state.get("messages")
+                or state.get("effective_tools") is not None
+                or self.default_tools is not None
+                or self.model is not None
+                or state.get("model") is not None
+            ):
+                fallback_tools = (
+                    list(state["effective_tools"])
+                    if state.get("effective_tools") is not None
+                    else (
+                        [
+                            t.name if hasattr(t, "name") else (t.get("name") if isinstance(t, dict) else str(t))
+                            for t in self.default_tools
+                        ]
+                        if self.default_tools is not None
+                        else []
+                    )
+                )
+                manifest = AgentManifest(
+                    id=agent_id,
+                    title=agent_id.replace("-", " ").title(),
+                    version="0.1.0",
+                    risk_class="wellness",
+                    skills=[],
+                    tools=fallback_tools,
+                    persona={"role": f"Assistant ({agent_id})", "instructions": ""},
+                )
+            else:
+                err_msg = f"Unknown or unregistered agent ID: '{agent_id}'"
+                logger.error(err_msg)
+                return {
+                    "error": err_msg,
+                    "next_step": "error",
+                }
+
+        # 1. Assemble system prompt
+        system_prompt = self._resolve_system_prompt(manifest, state)
+
+        # 2. Resolve tools
+        tools = self._resolve_tools(agent_id, manifest, state)
+        if state.get("effective_tools") is not None:
+            effective_tool_names = list(state["effective_tools"])
+        elif hasattr(self.registry, "get_effective_tools") and self.registry.get(agent_id) is not None:
+            effective_tool_names = self.registry.get_effective_tools(agent_id)
+        elif manifest is not None and getattr(manifest, "tools", None) is not None:
+            effective_tool_names = list(manifest.tools)
+        elif self.default_tools is not None:
+            effective_tool_names = [
+                t.name if hasattr(t, "name") else (t.get("name") if isinstance(t, dict) else str(t))
+                for t in self.default_tools
+            ]
+        else:
+            effective_tool_names = [
+                t.name if hasattr(t, "name") else (t.get("name") if isinstance(t, dict) else str(t))
+                for t in tools
+            ]
+
+        # 3. Build messages list
+        raw_messages = list(state.get("messages", []))
+        lc_messages: List[BaseMessage] = []
+        for m in raw_messages:
+            if isinstance(m, BaseMessage):
+                lc_messages.append(m)
+            elif isinstance(m, dict):
+                role = m.get("role", "")
+                content = str(m.get("content", ""))
+                if role == "system":
+                    lc_messages.append(SystemMessage(content=content))
+                elif role in ("assistant", "ai"):
+                    lc_messages.append(AIMessage(content=content, tool_calls=m.get("tool_calls", [])))
+                elif role == "tool":
+                    lc_messages.append(
+                        ToolMessage(content=content, tool_call_id=m.get("tool_call_id", "call_0"))
+                    )
+                else:
+                    lc_messages.append(HumanMessage(content=content))
+
+        # Prepend system prompt if not already present
+        if system_prompt and not (lc_messages and isinstance(lc_messages[0], SystemMessage)):
+            lc_messages = [SystemMessage(content=system_prompt)] + lc_messages
+
+        # 4. Resolve and bind model
+        model = self.model or state.get("model")
+        if model is None:
+            fallback_msg = AIMessage(content="I am ready to assist with your healthcare administration.")
+            return {
+                "messages": [fallback_msg],
+                "output": fallback_msg.content,
+                "tool_calls": [],
+                "current_agent": agent_id,
+                "agent_id": agent_id,
+                "effective_tools": effective_tool_names,
+                "next_step": "output_guardrail",
+            }
+
+        bound_model = model
+        if tools and hasattr(model, "bind_tools") and callable(model.bind_tools):
+            try:
+                bound_model = model.bind_tools(tools)
+            except (NotImplementedError, Exception) as err:
+                logger.debug("Model bind_tools not supported or skipped: %s", err)
+                bound_model = model
+
+        # 5. Invoke model
+        try:
+            if hasattr(bound_model, "ainvoke"):
+                response = await bound_model.ainvoke(lc_messages)
+            else:
+                response = bound_model.invoke(lc_messages)
+        except Exception as exc:
+            logger.error("AgentExecutionNode model invocation failed: %s", exc)
+            return {
+                "error": str(exc),
+                "error_exception": exc,
+                "next_step": "error",
+            }
+
+        if not isinstance(response, BaseMessage):
+            response = AIMessage(content=str(response))
+
+        tool_calls = getattr(response, "tool_calls", []) or []
+        next_step = "tools" if tool_calls else "output_guardrail"
+
+        return {
+            "messages": [response],
+            "output": getattr(response, "content", ""),
+            "tool_calls": tool_calls,
+            "current_agent": agent_id,
+            "agent_id": agent_id,
+            "effective_tools": effective_tool_names,
+            "next_step": next_step,
+        }
+
+
+__all__ = ["AgentExecutionNode"]

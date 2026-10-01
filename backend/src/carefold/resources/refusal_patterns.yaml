@@ -1,0 +1,346 @@
+building_blocks:
+  common_conditions_list:
+  - adhd
+  - add
+  - depression
+  - major depressive
+  - major depressive disorder
+  - bipolar
+  - bipolar disorder
+  - cancer
+  - diabetes
+  - type 1 diabetes
+  - type 2 diabetes
+  - hypertension
+  - high blood pressure
+  - asthma
+  - autism
+  - autism spectrum
+  - schizophrenia
+  - ptsd
+  - covid(?:-19)?
+  - pneumonia
+  - bronchitis
+  - 'strep(?: throat)?'
+  - shingles
+  - arthritis
+  - osteoarthritis
+  - rheumatoid arthritis
+  - 'anxiety(?: disorder)?'
+  - flu
+  - influenza
+  - infection
+  - lupus
+  - leukemia
+  - lymphoma
+  - melanoma
+  - "alzheimer['\u2019]?s?"
+  - dementia
+  - "parkinson['\u2019]?s?"
+  - "crohn['\u2019]?s?"
+  - 'celiac(?: disease)?'
+  - fibromyalgia
+  - gout
+  - migraines?
+  - concussions?
+  - stroke
+  - heart attack
+  - (?:congestive\s+)?heart failure
+  - heart failure
+  - myocardial infarction
+  - sepsis
+  - mono(?:nucleosis)?
+  - sinusitis
+  - tonsillitis
+  - gastritis
+  - ulcers?
+  - gerd
+  - acid reflux
+  - ibs
+  - copd
+  - emphysema
+  - anemia
+  - neuropathy
+  - appendicitis
+  - diverticulitis
+  - cirrhosis
+  - hepatitis
+  - meningitis
+  - rabies
+  - malaria
+  - cholera
+  - syphilis
+  - epilepsy
+  - pulmonary\s+embolism
+  - kidney\s+failure
+  - renal\s+failure
+  - measles
+  - tetanus
+  - ebola
+  - tuberculosis
+  - hiv
+  - aids
+  - plague
+  - anthrax
+  - pertussis
+  - deep\s+vein\s+thrombosis
+  - organ\s+failure
+  - liver\s+failure
+  - respiratory\s+failure
+  - diabetic\s+ketoacidosis
+  - acute\s+kidney\s+injury
+  - kidney\s+injury
+  - aortic\s+aneurysm
+  - brain\s+aneurysm
+  - aneurysms?
+  - cardiac\s+arrest
+  - internal\s+bleeding
+  - gastrointestinal\s+bleeding
+  - gi\s+bleed
+  - subarachnoid\s+hemorrhage
+  - intracranial\s+hemorrhage
+  - brain\s+hemorrhage
+  - hemorrhage
+  - ischemic\s+stroke
+  - hemorrhagic\s+stroke
+  - anaphylaxis
+  - anaphylactic\s+shock
+  - septic\s+shock
+  - cardiogenic\s+shock
+  - carbon\s+monoxide\s+poisoning
+  - pneumothorax
+  - atrial\s+fibrillation
+  - ventricular\s+tachycardia
+  - arrhythmias?
+  - hypertensive\s+crisis
+  - hypertensive\s+emergency
+  - bacterial\s+pneumonia
+  - viral\s+pneumonia
+  - coronary\s+artery\s+disease
+  - chickenpox
+  - mumps
+  - rubella
+  - croup
+  - whooping\s+cough
+  - psoriasis
+  - eczema
+  - scabies
+  - vertigo
+  - tinnitus
+  - sciatica
+  - jaundice
+  - gallstones
+  - kidney\s+stones
+  - bone\s+fracture
+  - fractures?
+  - cataracts?
+  - macular\s+degeneration
+  - heat\s+stroke
+  - sunstroke
+  - frostbite
+  - hypothermia
+  - hyperthermia
+  - sickle\s+cell(?:\s+anemia|\s+disease)?
+  - anorexia
+  - bulimia
+  - peptic\s+ulcers?
+  - stomach\s+ulcers?
+  - gastric\s+ulcers?
+  - chlamydia
+  - gonorrhea
+  - herpes
+  - hpv
+  - scurvy
+  - rickets
+  - multiple\s+sclerosis
+  - als
+  - amyotrophic\s+lateral\s+sclerosis
+  - pcos
+  - polycystic\s+ovary\s+syndrome
+  - mrsa
+  - "huntington['\u2019]s(?:\\s+disease)?"
+  - cerebral\s+palsy
+  - (?:lung|breast|colon|prostate|skin|pancreatic|ovarian|bone|liver|kidney|bladder|brain|stomach|cervical|uterine|testicular|thyroid|blood)\s+cancers?|cancers?
+  - urinary\s+tract\s+infection|uti|irritable\s+bowel\s+syndrome|ibs|inflammatory\s+bowel\s+disease|ibd|gastroesophageal\s+reflux(?:\s+disease)?|gerd|cystic\s+fibrosis|sleep\s+apnea
+  - chronic\s+obstructive\s+pulmonary\s+disease|restless\s+legs(?:\s+syndrome)?|myasthenia\s+gravis
+  - "graves['\u2019](?:\\s+disease)?|hashimoto['\u2019]s(?:\\s+(?:disease|thyroiditis))?|hodgkin['\u2019]s(?:\\s+lymphoma)?|non[- ]hodgkin(?:['\u2019]s)?(?:\\s+lymphoma)?|sjogren['\u2019]s(?:\\s+syndrome)?|crohn['\u2019]s(?:\\s+disease)?|parkinson['\u2019]s(?:\\s+disease)?|alzheimer['\u2019]s(?:\\s+disease)?|meniere['\u2019]s(?:\\s+disease)?|raynaud['\u2019]s(?:\\s+disease)?|addison['\u2019]s(?:\\s+disease)?|cushing['\u2019]s(?:\\s+disease)?"
+  single_num: (?:\d+(?:\.\d+)?|(?:\d+)?\.\d+|\d+\s*\/\s*\d+)
+  fraction_or_num: (?:(?:one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+and\s+(?:a\s+)?(?:half|quarter|1\/2|1\/4|3\/4)|three\s+quarters(?:\s+(?:of\s+)?a)?|<SINGLE_NUM>|(?:a\s+)?half(?:\s+(?:of\s+)?a)?|(?:a\s+)?quarter(?:\s+(?:of\s+)?a)?|one-?half|one-?quarter|one|two|three|four|five|six|seven|eight|nine|ten)
+  numeric_quantity: "(?:<FRACTION_OR_NUM>\\s*(?:to|or|[-\u2014\u2013]|--)\\s*<FRACTION_OR_NUM>|<FRACTION_OR_NUM>|(?:(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty|hundred|thousand)\\s*(?:to|or|[-\u2014\u2013]|--)?\\s*){1,5})"
+  provider_role: (?:(?:licensed|qualified|certified|medical)\s+)?(?:doctor|clinician|physician|professional|practitioner|healthcare\s+provider)
+  disclaimer_med_target: (?:(?:current\s+|prescribed\s+)?(?:meds?|medications?|drugs?|prescriptions?|insulin|blood\s+thinners?|fentanyl|metformin|lisinopril|atorvastatin|prednisone|albuterol|coumadin|plavix|keppra|dilantin|prograf|cellcept|tacrolimus|cyclosporine|mycophenolate|any\s+medication|any\s+prescribed\s+medication))
+  all_cessation_drugs: insulin|metformin|lisinopril|levothyroxine|atorvastatin|amlodipine|metoprolol|omeprazole|losartan|albuterol|gabapentin|hydrochlorothiazide|sertraline|simvastatin|montelukast|escitalopram|acetaminophen|ibuprofen|aspirin|prednisone|antibiotics?|steroids?|amoxicillin|penicillin|ciprofloxacin|azithromycin|doxycycline|alprazolam|clonazepam|xanax|warfarin|eliquis|blood\s+thinners?|anticoagulants?|painkillers?|coumadin|plavix|xarelto|lipitor|zoloft|prozac|lexapro|norvasc|prilosec|synthroid|glucophage|adderall|ritalin|lyrica|cymbalta|fentanyl|morphine|oxycodone|hydrocodone|methadone|buprenorphine|oxycontin|percocet|vicodin|keppra|dilantin|tegretol|depakote|lamictal|levetiracetam|phenytoin|carbamazepine|lamotrigine|divalproex|prograf|cellcept|tacrolimus|cyclosporine|mycophenolate|chemotherapy|chemo|radiation|dialysis|inhalers?|statins?|antidepressants?|blood\s+pressure\s+(?:meds?|medications?|pills?)|heart\s+(?:meds?|medications?|pills?)|immunosuppressants?|anticonvulsants?|anti-?epileptics?|opioids?|narcotics?
+  all_kinships: patient|patients|client|clients|child|children|kids?|baby|babies|daughter|daughters|son|sons|infant|infants|toddler|toddlers|newborn|newborns|mother|mothers|mom|moms|father|fathers|dad|dads|parents?|husband|husbands|wife|wives|partner|partners|spouse|spouses|brother|brothers|sister|sisters|grandmother|grandmothers|grandfather|grandfathers|grandma|grandmas|grandpa|grandpas|aunt|aunts|uncle|uncles|cousin|cousins|nephew|nephews|niece|nieces|grandson|grandsons|granddaughter|granddaughters|grandchild|grandchildren|grandkid|grandkids|twins?|stepson|stepsons|stepdaughter|stepdaughters|stepchild|stepchildren|stepmother|stepmothers|stepmom|stepmoms|stepfather|stepfathers|stepdad|stepdads|stepbrother|stepbrothers|stepsister|stepsisters|mother[- ]in[- ]law|mothers[- ]in[- ]law|father[- ]in[- ]law|fathers[- ]in[- ]law|son[- ]in[- ]law|sons[- ]in[- ]law|daughter[- ]in[- ]law|daughters[- ]in[- ]law|brother[- ]in[- ]law|brothers[- ]in[- ]law|sister[- ]in[- ]law|sisters[- ]in[- ]law
+  kinship_modifier: (?:(?:\d+[- ](?:years?|months?|days?|weeks?)[- ]old|\d+\s*yo|[a-z]{2,15}(?:-[a-z]{2,15})?)\s+){0,2}
+  caregiver_recipient: "(?:(?:(?:to|for)\\s+)?(?:you|them|him|her|yourself|y['\u2019]?all|someone|somebody|anyone|anybody|a\\s+person|one|a\\s+patient|the\\s+patient|this\\s+patient|our\\s+patient|(?:(?:your|their|his|her|my|our|y['\u2019]?all(?:['\u2019]s)?)\\s+)?<KINSHIP_MODIFIER>(?:<ALL_KINSHIPS>)|(?:the|a|an|this|our)\\s+<KINSHIP_MODIFIER>(?:<ALL_KINSHIPS>))\\s+)?"
+  dosing_recipient: <CAREGIVER_RECIPIENT>
+  family_possessive_determiners: "(?:(?:all|any)\\s+(?:of\\s+)?(?:your|the|their|his|her|my|our|y['\u2019]?all(?:['\u2019]s)?)\\s+|(?:your|the|their|his|her|my|our|y['\u2019]?all(?:['\u2019]s)?|(?:someone|somebody|anyone|anybody|a\\s+person|one|y['\u2019]?all)['\u2019]s|(?:a|an|the|this|our)\\s+<KINSHIP_MODIFIER>(?:<ALL_KINSHIPS>)['\u2019]s?|(?:your|their|his|her|my|our|y['\u2019]?all(?:['\u2019]s)?)\\s+<KINSHIP_MODIFIER>(?:<ALL_KINSHIPS>)['\u2019]s?)\\s+|all\\s+|any\\s+)?"
+  diagnostic_subjects: "(?:you|y['\u2019]?all|he|she|they|one|someone|somebody|anyone|anybody|(?:a|the|this)\\s+person|(?:the|this|our|a|an)\\s+<KINSHIP_MODIFIER>(?:<ALL_KINSHIPS>)|(?:your|their|his|her|our|my|y['\u2019]?all(?:['\u2019]s)?)\\s+<KINSHIP_MODIFIER>(?:<ALL_KINSHIPS>))"
+  confirm_subjects: (?:i|we|<DIAGNOSTIC_SUBJECTS>)
+  subject_qualifier: (?:\s+(?:with|who\s+has|presenting\s+with|experiencing|showing|having)\s+[a-z0-9\s\-%,.<>]{2,40})?
+  dosing_units: (?:mg|milligrams?|g|grams?|mcg|ug|micrograms?|ml|milliliters?|cc|units?|iu|tablets?|capsules?|pills?|caplets?|drops?|puffs?|sprays?|teaspoons?|tablespoons?|tbsp|tsp|patches?|patch|meq|milliequivalents?|suppositor(?:y|ies)|teaspoonfuls?|tablespoonfuls?|vials?|ampules?|ampoules?|lozenges?)
+  condition_tail: "(?:<COMMON_CONDITIONS>|[a-z]{3,20}(?:itis|osis|emia|aemia|oma|pathy)|(?:[a-z'\u2019\\-]{3,20}\\s+)?(?:syndrome|disease|disorder|thyroiditis|lymphoma|infection|deficiency|failure|injury|aneurysms?|arrest|shock|bleeding|bleed|hemorrhage|crisis|arrhythmias?))"
+normalization:
+  html_strip: <[^>]+>
+  markdown_strip: '[~*_`#]'
+  ellipses_strip: "\\.{2,}|\u2026"
+  quote_normalize: "[\u2018\u2019\u201b\u0092\u02bc]"
+  sentence_split: (?<=[.!?\n])\s+
+default_forbidden_intents:
+- diagnose
+- prescribe
+- dose
+- replace_emergency_care
+- instruct_stop_medication
+disclaimer_clauses:
+- id: past_medical_history
+  description: Past medical history and family history disclosures
+  pattern: "\\b(?:(?:ever\\s+)?since\\s+)?(?:i\\s+was|i\\s+have\\s+been|i['\u2019]ve\\s+been|(?:my\\s+[a-z0-9\\-\\s]{1,30}|he|she|they)\\s+was)\\s+diagnosed\\s+with\\b"
+- id: doctor_diagnosis_inquiry
+  description: Doctor diagnosis inquiries and checklists
+  pattern: "\\b(?:(?:(?:questions?|inquir(?:y|ies)|concerns?|tips?|notes?|checklist|topics?|agenda|guidance)\\s+(?:(?:of\\s+topics?\\s+)?(?:to\\s+discuss\\s+)?(?:for|with)\\s+(?:my|a|the|our)\\s+(?:doctor|pediatrician|clinician|physician)\\s+)?(?:about|regarding|following|on|for|discussing|for\\s+discussing)\\s+(?:(?:a|an|the|this|my|our|their|his|her)\\s+|(?:(?:your|their|his|her|my|our|a|the|this)\\s+)?[a-z\\-]+['\u2019]s\\s+))|(?:(?:(?:questions?|inquir(?:y|ies)|concerns?|tips?|notes?|checklist)\\s+(?:for\\s+(?:my|a|the|our)\\s+doctor\\s+)?(?:about|regarding|following|on|for)\\s+)?(?:(?:my|our|their|his|her)\\s+|(?:(?:your|their|his|her|my|our|a|the|this)\\s+)?[a-z\\-]+['\u2019]s\\s+)))diagnosis\\s+of\\b"
+- id: hydration_instructions
+  description: Legitimate hydration and water intake wellness instructions
+  pattern: \b(?:take|drink|consume|ingest|sip)\s+(?:\d+[\d\s\/\.,-]*\s*(?:ml|milliliters?|l|liters?|oz|ounces?|cups?|glasses?)\s+(?:of\s+)?)?(?:water|fluids?)(?:\s+(?:daily|every\s+day|for\s+hydration))?\b
+- id: emergency_room_navigation
+  description: Insurance, cost, criteria, and navigation questions regarding emergency care
+  pattern: \b(?:what\s+is\s+the\s+(?:deductible|cost|copay|coverage)\s+for\s+an?\s+emergency\s+room(?:\s+visit)?|when\s+should\s+(?:someone|i|a\s+person)\s+go\s+to\s+the\s+emergency\s+room|should\s+i\s+go\s+to\s+the\s+emergency\s+room\s+or\s+urgent\s+care)\b
+- id: cannot_diagnose_multi_verb
+  description: Negative assertion of ability to diagnose conditions, prescribe medications, or alter medical treatments
+  pattern: "\\b(?:(?:the\\s+agent\\s+is\\s+)?(?:programmed|designed)\\s+to\\s+refuse[^,.]*,?\\s*such\\s+as\\s+|(?:i\\s+|we\\s+|this\\s+(?:assistant|bot|app)\\s+|carefold\\s+)?(?:cannot|can['\u2019]t|am\\s+not\\s+able\\s+to|are\\s+not\\s+able\\s+to|is\\s+not\\s+able\\s+to|unable\\s+to|not\\s+(?:permitted|allowed)\\s+to|do\\s+not|never))\\s*(?:(?:diagnos(?:e|ing)|prescrib(?:e|ing)|alter(?:ing)?|chang(?:e|ing)|recommend(?:ing)?|provid(?:e|ing)|giv(?:e|ing)|replac(?:e|ing))\\s+(?:(?:medical\\s+)?(?:advice|care|treatments?|services?|conditions?|diseases?|illness(?:es)?|medications?|meds?|prescriptions?|(?:a\\s+)?dose)|emergency(?:\\s+medical)?\\s+services?)(?:,\\s*(?:and|or)\\s*|,\\s*|\\s+(?:and|or)\\s*)?)+"
+- id: cannot_diagnose_condition_tail
+  description: Negative assertion of ability to diagnose or prescribe specific conditions
+  pattern: "\\b(?:i\\s+)?(?:cannot|can['\u2019]t|unable\\s+to|not\\s+(?:permitted|allowed)\\s+to|do\\s+not|never)\\s+(?:diagnose|prescribe|recommend\\s+(?:a\\s+)?dose|determine\\s+if\\s+you\\s+have|provide\\s+(?:medical\\s+)?advice)(?:\\s+(?:whether|if)\\s+you\\s+have\\s+(?:(?:a|an)\\s+)?(?:(?:acute|chronic|severe|mild|diabetic|aortic|brain|abdominal|thoracic|peptic|stomach|gastric)\\s+)?(?:<CONDITION_TAIL>))?\\b"
+- id: only_doctor_can_diagnose
+  description: Only a doctor or clinician can diagnose or prescribe
+  pattern: "\\bonly\\s+(?:an?\\s+)?<PROVIDER_ROLE>(?:\\s+(?:or|and)\\s+(?:an?\\s+)?<PROVIDER_ROLE>)*\\s+(?:can\\s+(?:diagnose|determine)\\s+(?:or|and)\\s+(?=(?:prescribe|treat)\\b)|can\\s+(?:diagnose|prescribe|determine|treat)(?:\\s+(?:(?:an?|the)\\s+)?(?:(?:medical|mental\\s+health|health|physical)\\s+)?(?:conditions?|diseases?|illness(?:es)?|problems?|disorders?|medications?|treatments?|<CONDITION_TAIL>))?(?:\\s+(?:or|and)\\s+(?:diagnose|prescribe|determine|treat)(?:\\s+(?:(?:an?|the)\\s+)?(?:(?:medical|mental\\s+health|health|physical)\\s+)?(?:conditions?|diseases?|illness(?:es)?|problems?|disorders?|medications?|treatments?|<CONDITION_TAIL>))?)?(?=\\s*[\\.,!?;\u2014\\-\\n]|\\s*$|\\s+(?:take|inject|instill|inhale|avoid|don['\u2019]t|do\\s+not|skip|stop|discontinue|throw)\\b))"
+- id: not_a_clinician
+  description: Not a clinician and not emergency care disclosure
+  pattern: \bnot\s+a\s+(?:licensed\s+)?(?:clinician|doctor|physician|medical\s+professional)(?:\s+or\s+emergency\s+service)?(?:\s+and\s+not\s+emergency\s+care)?
+- id: not_emergency_care
+  description: Standalone not emergency care disclosure
+  pattern: \bnot\s+emergency\s+care\b
+- id: wellness_navigation_help
+  description: Wellness/navigation/admin help - not diagnosis or treatment
+  pattern: "\\bwellness(?:\\/|,\\s*)navigation(?:\\/|,\\s*)admin\\s+help\\s*[-\u2014]\\s*not\\s+diagnosis\\s+or\\s+treatment\\b"
+- id: emergency_contact_services
+  description: If this is an emergency, contact local emergency services immediately
+  pattern: \bif\s+(?:this\s+is|you\s+are\s+experiencing)\s+an?\s+emergency,?\s*(?:contact|call|seek)\s+(?:local\s+)?(?:emergency\s+services?|911|medical\s+help)(?:\s+(?:immediately|right\s+away))?\b
+- id: do_not_change_medication
+  description: Do not change or stop medication without prescribing clinician
+  pattern: "\\b(?:do\\s+not|don['\u2019]t|never)\\s+(?:change(?:\\s+(?:or|and)\\s+stop)?|stop\\s+taking|stop|alter|adjust|discontinue)\\s+(?:your\\s+)?<DISCLAIMER_MED_TARGET>\\s+without\\s+(?:(?:consulting|speaking\\s+with)\\s+)?(?:the\\s+|your\\s+)?(?:prescribing\\s+)?(?:clinician|doctor|physician|healthcare\\s+provider)\\b"
+- id: consult_physician_before_tapering
+  description: Please consult your physician before tapering, stopping, or altering medication
+  pattern: \bplease\s+(?:consult|speak\s+with)\s+(?:your\s+|the\s+)?(?:doctor|physician|clinician|healthcare\s+provider)\s+before\s+(?:tapering|stopping|discontinuing|changing|altering|adjusting)\s+(?:down\s+)?(?:any\s+)?(?:meds?|medications?|drugs?|treatments?)?\b
+- id: consult_doctor_general
+  description: Please consult your doctor or healthcare provider
+  pattern: \bplease\s+consult\s+(?:(?:a|your|an)\s+(?:qualified\s+)?)?(?:doctor|physician|clinician|healthcare\s+provider)\b
+- id: do_not_hesitate_emergency
+  description: Do not hesitate to contact emergency services or go to the ER
+  pattern: "\\b(?:do\\s+not|don['\u2019]t|never)\\s+hesitate\\s+to\\s+(?:contact|call|go\\s+to)\\s+(?:emergency(?:\\s+services?)?|911|the\\s+er|the\\s+hospital)(?:\\s+(?:immediately|right\\s+away))?\\b"
+refusal_patterns:
+- category: diagnose
+  description: Direct diagnostic assertion with condition
+  pattern: "\\b(?:<DIAGNOSTIC_SUBJECTS><SUBJECT_QUALIFIER>\\s+(?:have|has|suffer\\s+from|suffers\\s+from|are\\s+suffering\\s+from|is\\s+suffering\\s+from)|(?:you|he|she|they|<DIAGNOSTIC_SUBJECTS>)['\u2019]re\\s+suffering\\s+from|(?:indicates?|suggests?)\\s+(?:that\\s+)?<DIAGNOSTIC_SUBJECTS>\\s+(?:have|has)|<DIAGNOSTIC_SUBJECTS>\\s+(?:likely|probably|definitely|clearly|seem\\s+to|appears?\\s+to)\\s+(?:have|has)|confirm(?:ed|ing)?\\s+(?:that|if|whether)\\s+(?:<CONFIRM_SUBJECTS>\\s+(?:have|has|are|is)|(?:(?:my|the|these|our|your|this)\\s+)?(?:symptoms?|signs?|condition)\\s+(?:are|is|mean|indicates?|suggests?|point\\s+to)|(?:this|that|it)\\s+(?:is|indicates?|means?|suggests?)))(?:\\s*[:\\s])\\s*(?:a\\s+|an\\s+)?(?:(?:acute|chronic|severe|mild|diabetic|aortic|brain|abdominal|thoracic|peptic|stomach|gastric)\\s+){0,3}<CONDITION_TAIL>\\b"
+- category: diagnose
+  description: Interrogative diagnostic inquiry for a clinical condition
+  pattern: "\\b(?:do\\s+(?:i|you|we|they|y['\u2019]?all|<DIAGNOSTIC_SUBJECTS>)|does\\s+(?:he|she|it|one|someone|somebody|anyone|anybody|<DIAGNOSTIC_SUBJECTS>))\u003cSUBJECT_QUALIFIER\u003e\\s+have\\s+(?:a\\s+|an\\s+)?(?:(?:acute|chronic|severe|mild|diabetic|aortic|brain|abdominal|thoracic|peptic|stomach|gastric)\\s+){0,3}<CONDITION_TAIL>\\b"
+- category: diagnose
+  description: Impression or appearance of clinical condition
+  pattern: \b(?:(?:it|this|that)\s+)?(?:looks?\s+like|sounds?\s+like|appears?\s+to\s+be|seems?\s+(?:like|to\s+be)|my\s+impression\s+is)\s+(?:a\s+|an\s+)?(?:(?:acute|chronic|severe|mild|diabetic|aortic|brain|abdominal|thoracic|peptic|stomach|gastric)\s+){0,3}<CONDITION_TAIL>\b
+- category: diagnose
+  description: Condition determination statement
+  pattern: "\\b(?:(?:your|the\\s+patient['\u2019]s|a\\s+patient['\u2019]s|this\\s+patient['\u2019]s|our\\s+patient['\u2019]s|(?:the|a|an|this|our)\\s+<KINSHIP_MODIFIER>(?:<ALL_KINSHIPS>)['\u2019]s?|(?:your|their|his|her|our|my|y['\u2019]?all(?:['\u2019]s)?)\\s+<KINSHIP_MODIFIER>(?:<ALL_KINSHIPS>)['\u2019]s?|their|his|her)\\s+condition\\s+(?:is|looks?\\s+like|appears?\\s+to\\s+be|seems?\\s+(?:like|to\\s+be)|indicates?))\\s+(?:a\\s+|an\\s+)?(?:(?:acute|chronic|severe|mild|diabetic|aortic|brain|abdominal|thoracic|peptic|stomach|gastric)\\s+){0,3}<CONDITION_TAIL>\\b"
+- category: diagnose
+  description: Explicit diagnostic determination phrasing
+  pattern: "\\b(?:(?:you\\s+(?:are|have\\s+been|['\u2019]re|['\u2019]ve\\s+been)|<DIAGNOSTIC_SUBJECTS>\\s+(?:is|are|has\\s+been|have\\s+been))\\s+(?:hereby\\s+)?diagnosed\\s+with|diagnos(?:is\\s+(?:is|of)|is\\s*[:\\s]|ing\\s+(?:you|the\\s+patient|him|her|them)\\s+with)?|i\\s+diagnose(?:\\s+(?:you|the\\s+patient|him|her|them))?(?:\\s+with)?|my\\s+diagnosis\\s+is(?:\\s+that)?)\\s+[a-z\\s]{3,30}\\b"
+- category: diagnose
+  description: Imperative diagnosis request with parameters
+  pattern: \b(?:(?:please|can\s+you|could\s+you)\s+)?diagnose(?:\s*[:\s])(?:\s+(?:whether|if|me|us|my|this|these|the|our|your|a|an))?\s*[a-z0-9\s-]{2,30}\b
+- category: diagnose
+  description: Direct question/request to perform diagnosis
+  pattern: \b(?:can\s+you|could\s+you|please)\s+diagnose\b
+- category: diagnose
+  description: Affirmative condition labeling
+  pattern: "\\b(?:you\\s+are|you['\u2019]re)\\s+(?:depressed|bipolar|schizophrenic|autistic|anemic|diabetic|hypertensive|septic)\\b"
+- category: dose
+  description: Medication administration or prescription with numeric quantity
+  pattern: "\\b(?:(?:take|prescribe|administer|inject|consume|ingest|drink|swallow|apply|chew|rub|inhale|instill|treat|give|dispense|use|insert|infuse|start|begin|initiate|resume|restart|order|provide|deliver|refill|renew)(?:\\s+(?:taking|injecting|applying|using|giving|dispensing|infusing|ordering|providing|delivering|refilling|renewing))?|taking|injecting|applying|using|giving|dispensing|infusing|ordering|providing|delivering|refilling|renewing|(?:i\\s+)?recommend(?:\\s+taking)?|(?:i\\s+)?suggest(?:\\s+taking)?|consider(?:\\s+taking)?)(?:\\s*[:\u2014\\-\u2013])?\\s+<CAREGIVER_RECIPIENT>(?:(?:daily|nightly|weekly|hourly|immediate(?:ly)?|urgent(?:ly)?|regularly|orally|topically|sublingually|subcutaneously|intramuscularly|nasally|rectally|intravenously|(?:(?:once|twice|three|four|\\d+)\\s+times?\\s+(?:daily|a\\s+day|weekly|a\\s+week|monthly|a\\s+month))|(?:twice|once)\\s+(?:daily|a\\s+day|weekly|a\\s+week|monthly|a\\s+month)|(?:weekly|monthly)|every\\s+(?:day|other\\s+day|week|other\\s+week|month|\\\
+    d+\\s+hours?|\\d+\\s+hrs?|\\d+\\s+weeks?|\\d+\\s+days?|morning|evening|night)|bi-?weekly|bi-?monthly|(?:with\\s+(?:food|meals?|each\\s+meal|breakfast|lunch|dinner|supper|water|milk|(?:a\\s+)?glass\\s+of\\s+water|plenty\\s+of\\s+water)|without\\s+food|before\\s+(?:meals?|food|breakfast|lunch|dinner|supper|bed|sleep)|after\\s+(?:meals?|food|breakfast|lunch|dinner|supper)|on\\s+(?:an?\\s+)?empty\\s+stomach|at\\s+bedtime|at\\s+night|in\\s+the\\s+(?:morning|evening|afternoon))|as[- ]needed|now|about|around|approx(?:imately)?)[-\u2013\u2014,;:./|()\\[\\]\\s]*){0,6}<CAREGIVER_RECIPIENT>(?:(?:this\\s*:|with)\\s+)?(?:[\\(\\[]\\s*)?<NUMERIC_QUANTITY>(?:\\s+of\\s+a)?\\s*<DOSING_UNITS>\\b"
+- category: dose
+  description: Dosage specification with colon or verb syntax
+  pattern: \b(?:(?:recommended\s+)?(?:dose|dosage)(?:\s+of\s+[a-z\s]{2,25})?(?:\s+(?:is|of)|\s*:)?)\s*<NUMERIC_QUANTITY>(?:\s+of\s+a)?\s*<DOSING_UNITS>\b
+- category: dose
+  description: Prescription declaration
+  pattern: \b(?:(?:i\s+)?prescribe|prescribing(?:\s+you)?(?!\s+(?:doctor|clinician|physician|provider|practitioner))|prescribed\s*:|prescription(?:\s+(?:is|for)|\s*:))\s+[a-z0-9\s]{2,30}\b
+- category: dose
+  description: Dosage adjustment or titration instruction
+  pattern: \b(?:increase|decrease|adjust|titrate|raise|lower)\s+<FAMILY_POSSESSIVE_DETERMINERS>(?:dose|dosage|doses)\s+to\s+<NUMERIC_QUANTITY>\s*(?:mg|mcg|g|ml|units?|tablets?|pills?)\b
+- category: dose
+  description: Medication administration schedule
+  pattern: \b\d+(?:\.\d+)?\s*(?:mg|mcg|ug|milligrams?|units?)\s+(?:daily|twice\s+(?:daily|(?:a\s+)?day)|once\s+(?:daily|(?:a\s+)?day)|(?:every|\/)\s*\d+\s*(?:hours?|hrs?)|every\s+day|as\s+needed|orally|sublingually|before\s+bed|at\s+bedtime)\b
+- category: dose
+  description: Pill count recommendation
+  pattern: \b(?:take|swallow|chew)\s+<NUMERIC_QUANTITY>\s+(?:pills?|tablets?|capsules?|caplets?)\b
+- category: dose
+  description: Dosage inquiry or calculation request
+  pattern: \b(?:(?:what|how\s+much|how\s+many)\s+(?:is\s+(?:the\s+|my\s+)?)?(?:(?:the\s+|my\s+|a\s+|an\s+|our\s+|your\s+|his\s+|her\s+|their\s+)?(?:(?:exact|proper|safe|correct|appropriate|recommended|starting|initial|target|standard|maximum|max|daily|maintenance|therapeutic|optimal|prescribed|normal|suggested|right|effective)\s+)?(?:dose|dosage|units?|amount|milligrams|mg|mcg|tablets?|pills?|capsules?))|(?:calculate|determine|recommend)\s+(?:(?:the\s+|my\s+|a\s+|an\s+|our\s+|your\s+|his\s+|her\s+|their\s+)?(?:(?:exact|proper|safe|correct|appropriate|recommended|starting|initial|target|standard|maximum|max|daily|maintenance|therapeutic|optimal|prescribed|normal|suggested|right|effective)\s+)?(?:dose|dosage|units?|amount|milligrams|mg|mcg|tablets?|pills?|capsules?)))\s+(?:of\s+[a-z\s]{2,25}\s+)?(?:should|to|can|do|shall|would|is|for)\b
+- category: replace_emergency_care
+  description: Advising user to avoid emergency medical facilities
+  pattern: "\\b(?:don['\u2019]t|do\\s+not|never|no\\s+need\\s+to|skip|avoid|delay|refrain\\s+from)\\s+(?:(?:go(?:ing)?\\s+to|visit(?:ing)?|head(?:ing)?\\s+to|seek(?:ing)?)\\s+)?(?:the\\s+)?(?:er|emergency\\s+room|emergency\\s+department|hospital|urgent\\s+care|emergency\\s+care|emergency\\s+services?)\\b"
+- category: replace_emergency_care
+  description: Advising user to cancel or avoid emergency services dispatch
+  pattern: "\\b(?:don['\u2019]t|do\\s+not|never|no\\s+need\\s+(?:to|for)|skip|avoid|cancel|abort|call\\s+off|calling\\s+off|hang\\s+up\\s+(?:on)?|delay|refrain\\s+from|stop)\\s+(?:(?:call(?:ing)?(?:\\s+for)?|dial(?:ing)?|dispatch(?:ing)?|contact(?:ing)?)\\s+)?(?:(?:your|the|an?)\\s+)?(?:911|999|112|ambulance|paramedics?|the\\s+paramedics?|emergency\\s+services?|emergency\\s+help|emergency\\s+care)(?:\\s+call)?\\b"
+- category: replace_emergency_care
+  description: Substitution of emergency services with private or informal alternatives
+  pattern: \b[a-z0-9\s]{2,40}\s+instead\s+of\s+(?:(?:call(?:ing)?|dial(?:ing)?|go(?:ing)?\s+to|seek(?:ing)?|dispatch(?:ing)?)\s+)?(?:(?:your|the|an?)\s+)?(?:911|999|112|ambulance|paramedics?|emergency\s+services?|er|emergency\s+room|hospital|urgent\s+care)\b
+- category: replace_emergency_care
+  description: Dismissal of emergency care need
+  pattern: "\\b(?:you\\s+(?:don['\u2019]t|do\\s+not)\\s+need\\s+(?:to\\s+go\\s+to|to\\s+call|to\\s+visit|to\\s+dial)?\\s*(?:the\\s+)?(?:er|emergency\\s+room|emergency\\s+department|hospital|911|an?\\s+ambulance|urgent\\s+care|emergency\\s+services?|paramedics?))\\b"
+- category: replace_emergency_care
+  description: Direct avoidance directive for acute care
+  pattern: \bavoid\s+(?:the\s+)?(?:er|emergency\s+room|urgent\s+care|hospital|911|ambulance)\b
+- category: replace_emergency_care
+  description: Direct instruction to ignore or bypass emergency services or emergency room
+  pattern: \b(?:forget\s+about|ignore|bypass)\s+(?:(?:call(?:ing)?(?:\s+for)?|go(?:ing)?\s+to|visit(?:ing)?)\s+)?(?:911|999|112|(?:the\s+)?(?:er|emergency\s+room|urgent\s+care|hospital)|an?\s+ambulance)\b
+- category: replace_emergency_care
+  description: Advising that calling 911 or visiting emergency room is unnecessary or unneeded
+  pattern: "\\b(?:there\\s+is\\s+no\\s+reason\\s+to|you\\s+(?:do\\s+not|don['\u2019]t)\\s+have\\s+to|(?:do\\s+not|don['\u2019]t)\\s+bother|(?:do\\s+not|don['\u2019]t)\\s+worry\\s+about)\\s+(?:(?:call(?:ing)?|dial(?:ing)?)\\s+(?:911|999|112|an?\\s+ambulance|paramedics?|the\\s+paramedics?|emergency\\s+services?|emergency\\s+care)|go(?:ing)?\\s+to\\s+(?:the\\s+)?(?:er|emergency\\s+room|urgent\\s+care|hospital))\\b"
+- category: replace_emergency_care
+  description: Asserting that calling 911 or emergency care is not required or unnecessary
+  pattern: \b(?:(?:calling|dialing)\s+(?:911|999|112|an?\s+ambulance|paramedics?|the\s+paramedics?|emergency\s+services?|emergency\s+care)|going\s+to\s+(?:the\s+)?(?:er|emergency\s+room|urgent\s+care|hospital))\s+is\s+(?:unnecessary|unneeded|not\s+needed|not\s+required|not\s+necessary)\b
+- category: replace_emergency_care
+  description: Modal prohibition against calling 911 or visiting emergency facility
+  pattern: "\\b(?:you\\s+)?(?:should\\s+not|shouldn['\u2019]t|must\\s+not|ought\\s+not(?:\\s+to)?)\\s+(?:(?:call|dial)\\s+(?:911|999|112|an?\\s+ambulance|paramedics?|the\\s+paramedics?|emergency\\s+services?|emergency\\s+care)|(?:go\\s+to|visit)\\s+(?:the\\s+)?(?:er|emergency\\s+room|urgent\\s+care|hospital))\\b"
+- category: replace_emergency_care
+  description: Asserting that calling 911 or visiting emergency room is unnecessary or not needed
+  pattern: \bit\s+is\s+(?:unnecessary|not\s+necessary|pointless|useless|unneeded|not\s+needed|not\s+required)\s+to\s+(?:(?:call|dial)\s+(?:911|999|112|an?\s+ambulance|paramedics?|the\s+paramedics?|emergency\s+services?|emergency\s+care)|(?:go\s+to|visit)\s+(?:the\s+)?(?:er|emergency\s+room|urgent\s+care|hospital))\b
+- category: replace_emergency_care
+  description: Direct instruction to stay away or steer clear of emergency facility
+  pattern: \b(?:stay\s+away\s+from|steer\s+clear\s+of)\s+(?:the\s+)?(?:er|emergency\s+room|urgent\s+care|hospital)\b
+- category: replace_emergency_care
+  description: Nominal triage dismissals stating ambulance or emergency room visit is unnecessary or pointless
+  pattern: \b(?:(?:an?\s+ambulance|an?\s+(?:er|emergency\s+room|emergency\s+department|ed|hospital|urgent\s+care)\s+visit|(?:a\s+visit\s+to|a\s+trip\s+to|visiting|going\s+to)\s+(?:the\s+)?(?:er|emergency\s+room|emergency\s+department|ed|hospital|urgent\s+care)|emergency\s+care|(?:paramedics?|the\s+paramedics?|emergency\s+services?|911)|(?:calling|dialing)\s+(?:911|999|112|an?\s+ambulance|paramedics?|the\s+paramedics?|emergency\s+services?|emergency\s+care))\s+(?:are|is)\s+(?:unnecessary|not\s+needed|not\s+required|not\s+necessary|unneeded|pointless|useless|a\s+waste\s+of\s+time|a\s+bad\s+idea|foolish|stupid|futile|ineffective|not\s+helpful)|(?:an?\s+ambulance|an?\s+(?:er|emergency\s+room|emergency\s+department|ed|hospital|urgent\s+care)\s+visit|(?:a\s+visit\s+to|a\s+trip\s+to|visiting|going\s+to)\s+(?:the\s+)?(?:er|emergency\s+room|emergency\s+department|ed|hospital|urgent\s+care)|emergency\s+care|(?:paramedics?|the\s+paramedics?|emergency\s+services?|911)|(?:calling|dialing)\s+(?:911|999|112|an?\s+ambulance|paramedics?|the\s+paramedics?|emergency\s+services?|emergency\s+care))\s+(?:will|would)\s+not\s+help|(?:there\s+is\s+no\s+point\s+in\s+(?:calling|dialing)\s+(?:911|999|112|an?\s+ambulance|paramedics?|the\s+paramedics?|emergency\s+services?|emergency\s+care)|(?:calling|dialing)\s+(?:911|999|112|an?\s+ambulance|paramedics?|the\s+paramedics?|emergency\s+services?|emergency\s+care)\s+is\s+(?:pointless|useless|a\s+waste\s+of\s+time|a\s+bad\s+idea|foolish|stupid|futile|ineffective|not\s+helpful)))\b
+- category: instruct_stop_medication
+  description: Instruction to discontinue medication or treatment
+  pattern: "\\b(?:stop|discontinue|cease|quit|halt|do\\s+not\\s+take|don['\u2019]t\\s+take|never\\s+take|avoid\\s+taking|refrain\\s+from\\s+taking|throw\\s+away|discard|dispose\\s+of|dump|flush)\\s+(?:(?:taking|using|ingesting)\\s+)?<FAMILY_POSSESSIVE_DETERMINERS>(?:(?:current|prescribed|daily|morning|evening|nighttime|bedtime)\\s+)?(?:[a-z0-9\\-]{1,20}(?:\\s+[a-z0-9\\-]{1,20}){0,3}\\s+)?(?:medications?|meds?|treatments?|prescriptions?|pills?|tablets?|capsules?|injections?|therap(?:y|ies))\\b"
+- category: instruct_stop_medication
+  description: Instruction to hold or skip medication dose
+  pattern: \b(?:hold|skip|pause|omit)\s+<FAMILY_POSSESSIVE_DETERMINERS>(?:(?:morning|evening|nighttime|bedtime|daily)\s+)?(?:[a-z0-9\-]{1,20}\s+)?doses?\b
+- category: instruct_stop_medication
+  description: Instructing user to discontinue or alter prescription medication
+  pattern: "\\b(?:stop|discontinue|cease|quit|halt|pause|hold|hold\\s+off(?:\\s+on)?|lay\\s+off(?:\\s+on)?|skip|throw\\s+(?:away|out)|taper(?:\\s+(?:off|down))?|tapering(?:\\s+(?:off|down))?|wean(?:\\s+off)?|weaning(?:\\s+off)?|(?:(?:you\\s+)?(?:should\\s+not|shouldn['\u2019]t|must\\s+not|ought\\s+not(?:\\s+to)?|cannot|can['\u2019]t|may\\s+not)|do\\s+not|don['\u2019]t|never|avoid)\\s+(?:take|taking|use|using|inject|injecting|inhale|inhaling|apply|applying|administer|consume))\\s+(?:(?:taking|using|injecting|inhaling|applying|administering|consuming)\\s+)?<FAMILY_POSSESSIVE_DETERMINERS>(?:(?:(?:morning|evening|nighttime|bedtime|daily|prescription)\\s+)?(?:dose|dosage|doses)\\s+of\\s+)?(?:(?:prescription|daily|morning|evening|nighttime|bedtime)\\s+)?(?:meds?|medications?|drugs?|prescriptions?|insulin|metformin|lisinopril|levothyroxine|atorvastatin|amlodipine|metoprolol|omeprazole|losartan|albuterol|gabapentin|hydrochlorothiazide|sertraline|simvastatin|montelukast|escitalopram|acetaminophen|ibuprofen|aspirin|prednisone|antibiotics?|steroids?|amoxicillin|penicillin|ciprofloxacin|azithromycin|doxycycline|alprazolam|clonazepam|xanax|warfarin|eliquis|blood\\\
+    s+thinners?|anticoagulants?|painkillers?|coumadin|plavix|xarelto|lipitor|zoloft|prozac|lexapro|norvasc|prilosec|synthroid|glucophage|adderall|ritalin|lyrica|cymbalta|fentanyl|morphine|oxycodone|hydrocodone|methadone|buprenorphine|oxycontin|percocet|vicodin|keppra|dilantin|tegretol|depakote|lamictal|levetiracetam|phenytoin|carbamazepine|lamotrigine|divalproex|prograf|cellcept|tacrolimus|cyclosporine|mycophenolate|immunosuppressants?|anticonvulsants?|anti-?epileptics?|opioids?|narcotics?)\\b"
+- category: instruct_stop_medication
+  description: Instruction to discontinue specific critical prescription medications
+  pattern: "\\b(?:stop|discontinue|cease|quit|halt|pause|hold|hold\\s+off(?:\\s+on)?|lay\\s+off(?:\\s+on)?|(?:(?:you\\s+)?(?:should\\s+not|shouldn['\u2019]t|must\\s+not|ought\\s+not(?:\\s+to)?|cannot|can['\u2019]t|may\\s+not)|never|do\\s+not|don['\u2019]t)\\s+(?:take|use|inject|inhale|apply|taking|using|injecting|inhaling|applying)|avoid\\s+(?:taking|using|injecting|inhaling|applying)|throw\\s+(?:away|out)|discard|dump|flush)\\s+(?:(?:taking|using|injecting|inhaling|applying)\\s+)?<FAMILY_POSSESSIVE_DETERMINERS>(?:(?:(?:morning|evening|nighttime|bedtime|daily|prescription)\\s+)?(?:dose|dosage|doses)\\s+of\\s+)?(?:(?:prescription|daily|morning|evening|nighttime|bedtime)\\s+)?(?:insulin|metformin|lisinopril|atorvastatin|levothyroxine|amlodipine|metoprolol|omeprazole|losartan|gabapentin|hydrochlorothiazide|sertraline|simvastatin|montelukast|escitalopram|prednisone|chemotherapy|chemo|radiation|dialysis|inhalers?|statins?|antidepressants?|blood\\s+pressure\\s+(?:meds?|medications?|pills?)|heart\\\
+    s+(?:meds?|medications?|pills?)|amoxicillin|penicillin|ciprofloxacin|azithromycin|doxycycline|alprazolam|clonazepam|xanax|warfarin|eliquis|blood\\s+thinners?|anticoagulants?|painkillers?|coumadin|plavix|xarelto|lipitor|zoloft|prozac|lexapro|norvasc|prilosec|synthroid|glucophage|adderall|ritalin|lyrica|cymbalta|fentanyl|morphine|oxycodone|hydrocodone|methadone|buprenorphine|oxycontin|percocet|vicodin|keppra|dilantin|tegretol|depakote|lamictal|levetiracetam|phenytoin|carbamazepine|lamotrigine|divalproex|prograf|cellcept|tacrolimus|cyclosporine|mycophenolate|immunosuppressants?|anticonvulsants?|anti-?epileptics?|opioids?|narcotics?|medications?|meds?|prescriptions?|pills?)\\b"
+- category: instruct_stop_medication
+  description: Directing user/caregiver to stop or withhold administering medication to patient/dependent
+  pattern: "\\b(?:(?:you\\s+)?(?:should\\s+not|shouldn['\u2019]t|must\\s+not|ought\\s+not(?:\\s+to)?|cannot|can['\u2019]t|may\\s+not)|do\\s+not|don['\u2019]t|never|avoid|stop|discontinue|cease|quit|halt|pause|hold|hold\\s+off(?:\\s+on)?|lay\\s+off(?:\\s+on)?|refrain\\s+from)\\s+(?:giving|administering|dispensing|to\\s+give|give|administer|dispense)\\s+<CAREGIVER_RECIPIENT>(?:(?:all|any)\\s+(?:of\\s+)?(?:their|his|her|your|my|our|y['\u2019]?all(?:['\u2019]s)?)\\s+|(?:their|his|her|your|my|our|y['\u2019]?all(?:['\u2019]s)?)\\s+|all\\s+|any\\s+)?(?:<ALL_CESSATION_DRUGS>|meds?|medications?|drugs?|prescriptions?)\\b"
+- category: instruct_stop_medication
+  description: Instruction to alter or taper medication without medical supervision
+  pattern: \b(?:taper\s+off|cut\s+down)\s+(?:your\s+)?(?:medications?|meds?|insulin|prescriptions?|pills?|dose|dosage|antidepressants?)\s+(?:without\s+(?:a\s+)?(?:doctor|clinician|physician)|on\s+your\s+own)\b
+- category: instruct_stop_medication
+  description: Directing user to alter, double, halve, increase, reduce, raise, lower, adjust, or titrate prescription medication dose
+  pattern: \b(?:double|triple|halve|increase|decrease|reduce|cut(?:\s+in\s+half)?|raise|lower|adjust|titrate(?:\s+(?:up|down))?|step\s+(?:up|down))\s+<FAMILY_POSSESSIVE_DETERMINERS>(?:(?:(?:morning|evening|nighttime|bedtime|daily|prescription)\s+)?(?:dose|dosage|doses)\s+of\s+)?(?:prescription\s+|daily\s+|morning\s+|evening\s+|nighttime\s+|bedtime\s+)?(?:meds?|medications?|drugs?|prescriptions?|insulin|metformin|lisinopril|levothyroxine|atorvastatin|amlodipine|metoprolol|omeprazole|losartan|albuterol|gabapentin|hydrochlorothiazide|sertraline|simvastatin|montelukast|escitalopram|acetaminophen|ibuprofen|aspirin|prednisone|antibiotics?|steroids?|amoxicillin|penicillin|ciprofloxacin|azithromycin|doxycycline|alprazolam|clonazepam|xanax|warfarin|eliquis|blood\s+thinners?|anticoagulants?|painkillers?|coumadin|plavix|xarelto|lipitor|zoloft|prozac|lexapro|norvasc|prilosec|synthroid|glucophage|adderall|ritalin|lyrica|cymbalta|fentanyl|morphine|oxycodone|hydrocodone|methadone|buprenorphine|oxycontin|percocet|vicodin|keppra|dilantin|tegretol|depakote|lamictal|levetiracetam|phenytoin|carbamazepine|lamotrigine|divalproex|prograf|cellcept|tacrolimus|cyclosporine|mycophenolate|immunosuppressants?|anticonvulsants?|anti-?epileptics?|opioids?|narcotics?)(?:\s+(?:dose|dosage|doses))?(?:\s+in\s+half)?(?:\s+to\s+\d+(?:\.\d+)?\s*(?:units?|mg|ml|tablets?|pills?))?\b
