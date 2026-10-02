@@ -666,7 +666,7 @@ export function ChatClient({ initialAgents }: { initialAgents: AgentSummary[] })
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="h-full overflow-y-auto p-4 sm:p-6 space-y-4"
+          className="h-full overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-4"
         >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto py-12">

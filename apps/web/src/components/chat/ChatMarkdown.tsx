@@ -72,11 +72,11 @@ export function ChatMarkdown({ content, className = '' }: ChatMarkdownProps) {
             );
           },
 
-          // Responsive GFM Tables
+          // Responsive GFM Tables with vertical column separators and isolated horizontal scroll
           table({ children }) {
             return (
-              <div className="my-3 overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-700/80 shadow-sm">
-                <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700 text-sm">
+              <div className="my-3 w-full max-w-full overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900/60 shadow-sm overscroll-x-contain">
+                <table className="w-full min-w-max border-collapse text-left text-sm">
                   {children}
                 </table>
               </div>
@@ -84,21 +84,21 @@ export function ChatMarkdown({ content, className = '' }: ChatMarkdownProps) {
           },
           thead({ children }) {
             return (
-              <thead className="bg-zinc-50/90 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-semibold border-b border-zinc-200 dark:border-zinc-700">
+              <thead className="bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-900 dark:text-zinc-100 font-semibold border-b border-zinc-200 dark:border-zinc-700">
                 {children}
               </thead>
             );
           },
           tbody({ children }) {
             return (
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60 bg-white dark:bg-zinc-900/60">
+              <tbody className="divide-y divide-zinc-200/70 dark:divide-zinc-800 bg-white dark:bg-zinc-900/60">
                 {children}
               </tbody>
             );
           },
           tr({ children }) {
             return (
-              <tr className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors">
+              <tr className="border-b last:border-b-0 border-zinc-200/70 dark:border-zinc-800 even:bg-zinc-50/50 dark:even:bg-zinc-800/30 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 transition-colors">
                 {children}
               </tr>
             );
@@ -107,7 +107,7 @@ export function ChatMarkdown({ content, className = '' }: ChatMarkdownProps) {
             return (
               <th
                 style={style}
-                className="px-3.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300"
+                className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-zinc-800 dark:text-zinc-200 border-r last:border-r-0 border-zinc-200 dark:border-zinc-700 whitespace-nowrap bg-zinc-100/90 dark:bg-zinc-800/80"
               >
                 {children}
               </th>
@@ -117,7 +117,7 @@ export function ChatMarkdown({ content, className = '' }: ChatMarkdownProps) {
             return (
               <td
                 style={style}
-                className="px-3.5 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 align-top"
+                className="px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 border-r last:border-r-0 border-zinc-200/80 dark:border-zinc-800 align-top whitespace-nowrap"
               >
                 {children}
               </td>

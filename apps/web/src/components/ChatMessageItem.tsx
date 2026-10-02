@@ -198,7 +198,7 @@ export function ChatMessageItem({
       )}
 
       {/* Message Content with Markdown Formatting */}
-      <div className="text-sm leading-relaxed space-y-2 markdown-body">
+      <div className="text-sm leading-relaxed space-y-2 markdown-body min-w-0 max-w-full overflow-hidden">
         {message.isStreaming && !displayContent.trim() ? (
           <ThinkingIndicator
             text={

@@ -42,12 +42,20 @@ Here is your headache log table:
 
     const { container } = render(<ChatMarkdown content={tableMarkdown} />);
 
+    const tableWrapper = container.querySelector('.overflow-x-auto');
+    expect(tableWrapper).toBeInTheDocument();
+    expect(tableWrapper).toHaveClass('max-w-full');
+    expect(tableWrapper).toHaveClass('overscroll-x-contain');
+
     const table = container.querySelector('table');
     expect(table).toBeInTheDocument();
+    expect(table).toHaveClass('min-w-max');
+    expect(table).toHaveClass('border-collapse');
 
     const headers = container.querySelectorAll('th');
     expect(headers.length).toBe(9);
     expect(headers[0].textContent).toBe('Date');
+    expect(headers[0]).toHaveClass('border-r');
     expect(headers[3].textContent).toBe('Peak Pain (0-10)');
     expect(headers[8].textContent).toBe('Suspected Trigger (Sleep, Stress, Food, Weather)');
 
@@ -56,6 +64,7 @@ Here is your headache log table:
 
     const firstRowCells = rows[0].querySelectorAll('td');
     expect(firstRowCells[0].textContent).toBe('2026-10-01');
+    expect(firstRowCells[0]).toHaveClass('border-r');
     expect(firstRowCells[1].textContent).toBe('08:30 AM');
     expect(firstRowCells[6].textContent).toBe('Sumatriptan 50mg');
     expect(firstRowCells[7].textContent).toBe('Complete');
