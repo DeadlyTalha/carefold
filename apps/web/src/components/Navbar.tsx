@@ -93,12 +93,7 @@ export function Navbar() {
             <div className="w-9 h-9 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm group-hover:bg-emerald-700 transition">
               <HeartHandshake className="w-5 h-5" />
             </div>
-            <div>
-              <span className="font-bold text-lg text-slate-900 dark:text-white tracking-tight">Carefold</span>
-              <span className="ml-2 text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded">
-                Open Source
-              </span>
-            </div>
+            <span className="font-bold text-lg text-slate-900 dark:text-white tracking-tight">Carefold</span>
           </Link>
 
           {/* Primary Nav */}
