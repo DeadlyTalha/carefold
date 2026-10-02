@@ -844,3 +844,18 @@ def test_strip_internal_suggestion_leakage_adversarial():
     assert strip_internal_suggestion_leakage(normal_text) == normal_text
 
 
+def test_strip_reference_doc_preamble_adversarial():
+    """Validates that strip_reference_doc_preamble strips robotic 'Based on the provided reference...' preambles."""
+    from carefold.engine.service import strip_reference_doc_preamble
+
+    cases = [
+        ("Based on the provided reference guide, here are some questions you may want to prioritize:", "Here are some questions you may want to prioritize:"),
+        ("**Based on the provided reference document:** Consider the following questions:", "Consider the following questions:"),
+        ("_According to the reference guide_, you should check your deductible.", "You should check your deductible."),
+        ("Based on the reference material provided: here is the plan.", "Here is the plan."),
+        ("Normal response starting directly without any preamble.", "Normal response starting directly without any preamble."),
+    ]
+    for inp, expected in cases:
+        assert strip_reference_doc_preamble(inp) == expected
+
+

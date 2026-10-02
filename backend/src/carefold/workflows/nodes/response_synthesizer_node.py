@@ -46,11 +46,23 @@ class ResponseSynthesizerNode(BaseNode):
         super().__init__(name=name)
 
     @classmethod
-    def strip_disclaimers(cls, text: str) -> str:
-        """Removes constituent agent disclaimers from specialist text."""
+    def strip_reference_preamble(cls, text: str) -> str:
+        """Strips robotic 'Based on the provided reference document/guide...' opening phrases."""
         if not text:
             return ""
-        cleaned = text
+        pattern = r"^(?:(?:\*|_){0,2}(?:(?:Based on|According to|From) (?:the )?(?:provided )?reference (?:document|guide|material|checklist|information|docs?)(?: provided)?)[,:]?(?:\*|_){0,2}[,:]?\s*)"
+        cleaned = re.sub(pattern, "", text.lstrip(), flags=re.IGNORECASE)
+        cleaned = cleaned.lstrip("*_ \t")
+        if cleaned and cleaned != text:
+            cleaned = cleaned[0].upper() + cleaned[1:] if len(cleaned) > 1 else cleaned.upper()
+        return cleaned
+
+    @classmethod
+    def strip_disclaimers(cls, text: str) -> str:
+        """Removes constituent agent disclaimers and reference preambles from specialist text."""
+        if not text:
+            return ""
+        cleaned = cls.strip_reference_preamble(text)
         for pat in CONSTITUENT_DISCLAIMER_PATTERNS:
             cleaned = pat.sub("", cleaned).strip()
         cleaned = re.sub(

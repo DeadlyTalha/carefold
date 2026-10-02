@@ -8,16 +8,16 @@ tool_suggestions:
     - "Can you summarize the notes we saved so far?"
     - "What other items should I prepare or record?"
   skill-docs:
-    - "Can you summarize the key guidelines from this reference?"
-    - "What points from the reference documentation should I prioritize?"
-    - "Can you explain these instructions in simpler terms?"
+    - "Can you summarize the key preparation guidelines?"
+    - "What key questions or steps should I prioritize?"
+    - "Can you explain these points in simpler terms?"
 
 persona_suggestions:
   visit_steward:
     tools:
       skill-docs:
         - "Help me walk through the appointment preparation checklist step by step."
-        - "What questions from the reference guide should I prioritize?"
+        - "What questions should I prioritize for my visit?"
         - "Can you help me draft a personal agenda for my clinician visit?"
       workspace-note:
         - "Would you like me to add more details to your saved visit note?"

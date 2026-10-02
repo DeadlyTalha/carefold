@@ -48,6 +48,14 @@ class OutputGuardrailNode(BaseNode):
                 },
             }
 
+        # Clean robotic reference doc preamble
+        import re
+        pattern = r"^(?:(?:\*|_){0,2}(?:(?:Based on|According to|From) (?:the )?(?:provided )?reference (?:document|guide|material|checklist|information|docs?)(?: provided)?)[,:]?(?:\*|_){0,2}[,:]?\s*)"
+        cleaned_output = re.sub(pattern, "", output_text.lstrip(), flags=re.IGNORECASE).lstrip("*_ \t")
+        if cleaned_output and cleaned_output != output_text:
+            cleaned_output = cleaned_output[0].upper() + cleaned_output[1:] if len(cleaned_output) > 1 else cleaned_output.upper()
+            output_text = cleaned_output
+
         # Appends standard compliance disclaimer
         loader = get_resource_loader()
         header_text = loader.get_disclaimer_header_text()

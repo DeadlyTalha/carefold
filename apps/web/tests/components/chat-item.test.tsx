@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { ChatMessageItem, type ChatMessage } from '@/components/ChatMessageItem';
+import { ChatMessageItem, stripReferencePreamble, type ChatMessage } from '@/components/ChatMessageItem';
 import { SAFE_REFUSAL_TEMPLATE } from '@/types/api';
 
 describe('ChatMessageItem Component', () => {
@@ -275,6 +275,43 @@ describe('ChatMessageItem Component', () => {
     expect(container.textContent).not.toContain("Here are 3 concise follow-up questions");
     expect(container.textContent).not.toContain("What are the next steps if I've met my deductible?");
     expect(container.textContent).not.toContain('assistant\n\n');
+  });
+
+  // -------------------------------------------------------------------------
+  // Reference Document Preamble Sanitization Tests
+  // -------------------------------------------------------------------------
+  describe('stripReferencePreamble helper', () => {
+    it('strips plain "Based on the provided reference document,"', () => {
+      const input = 'Based on the provided reference document, here are some questions to ask:';
+      expect(stripReferencePreamble(input)).toBe('Here are some questions to ask:');
+    });
+
+    it('strips bold "**Based on the provided reference guide:**"', () => {
+      const input = '**Based on the provided reference guide:** Here are key items to prepare.';
+      expect(stripReferencePreamble(input)).toBe('Here are key items to prepare.');
+    });
+
+    it('strips "According to the reference checklist provided:"', () => {
+      const input = 'According to the reference checklist provided: bring your photo ID and lab reports.';
+      expect(stripReferencePreamble(input)).toBe('Bring your photo ID and lab reports.');
+    });
+
+    it('preserves user or standard clinical sentences untouched', () => {
+      const input = 'Here are 3 questions to ask your cardiologist about your blood pressure.';
+      expect(stripReferencePreamble(input)).toBe(input);
+    });
+  });
+
+  it('renders assistant message with reference document preamble stripped in chat bubble', () => {
+    const msg: ChatMessage = {
+      id: 'a-preamble',
+      role: 'assistant',
+      content: 'Based on the provided reference document, you should review your deductible and copay amounts.'
+    };
+
+    const { container } = render(<ChatMessageItem message={msg} />);
+    expect(container.textContent).not.toContain('Based on the provided reference document');
+    expect(container.textContent).toContain('You should review your deductible and copay amounts.');
   });
 });
 

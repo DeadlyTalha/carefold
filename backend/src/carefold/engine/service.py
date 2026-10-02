@@ -265,6 +265,18 @@ def strip_internal_suggestion_leakage(text: str) -> str:
     return cleaned.rstrip() if has_leakage else cleaned
 
 
+def strip_reference_doc_preamble(text: str) -> str:
+    """Strips robotic 'Based on the provided reference document/guide...' opening phrases."""
+    if not text:
+        return text
+    import re
+    pattern = r"^(?:(?:\*|_){0,2}(?:(?:Based on|According to|From) (?:the )?(?:provided )?reference (?:document|guide|material|checklist|information|docs?)(?: provided)?)[,:]?(?:\*|_){0,2}[,:]?\s*)"
+    cleaned = re.sub(pattern, "", text.lstrip(), flags=re.IGNORECASE).lstrip("*_ \t")
+    if cleaned and cleaned != text:
+        cleaned = cleaned[0].upper() + cleaned[1:] if len(cleaned) > 1 else cleaned.upper()
+    return cleaned
+
+
 # ============================================================================
 # AgentExecutionService
 # ============================================================================
@@ -353,7 +365,7 @@ class AgentExecutionService:
         chips = suggestions or []
         payload: Dict[str, Any] = {
             "type": SSE_EVENT_DONE,
-            "fullText": strip_internal_suggestion_leakage(full_text),
+            "fullText": strip_reference_doc_preamble(strip_internal_suggestion_leakage(full_text)),
             "auditEventId": audit_event_id,
             "refused": refused,
             "refusalReason": refusal_reason,
@@ -706,7 +718,7 @@ class AgentExecutionService:
 
         # 7. Post-Execution Safety Verification and Done Event
         total_dur_ms = (time.time() - start_time) * 1000
-        accumulated_text = strip_internal_suggestion_leakage(accumulated_text)
+        accumulated_text = strip_reference_doc_preamble(strip_internal_suggestion_leakage(accumulated_text))
 
         # Verify output against safety boundaries if not already flagged
         output_safety = check_safety_refusal(accumulated_text)

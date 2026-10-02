@@ -65,6 +65,20 @@ export function formatMessageTimestamp(timestamp?: string): string | null {
   }
 }
 
+/**
+ * Strips robotic "Based on the provided reference document/guide..." opening phrases
+ * from assistant messages so responses read naturally without confusing the user.
+ */
+export function stripReferencePreamble(text: string): string {
+  if (!text) return text;
+  const pattern = /^(?:(?:\*|_){0,2}(?:(?:Based on|According to|From) (?:the )?(?:provided )?reference (?:document|guide|material|checklist|information|docs?)(?: provided)?)[,:]?(?:\*|_){0,2}[,:]?\s*)/i;
+  let cleaned = text.trimStart().replace(pattern, '').replace(/^[*_\s]+/, '');
+  if (cleaned && cleaned !== text) {
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
+  return cleaned;
+}
+
 export function ChatMessageItem({
   message,
   onRerun,
@@ -72,7 +86,9 @@ export function ChatMessageItem({
   disabled = false,
   agentTitle
 }: ChatMessageItemProps) {
-  const displayContent = message.role === 'assistant' ? stripSuggestionLeakage(message.content) : message.content;
+  const displayContent = message.role === 'assistant'
+    ? stripReferencePreamble(stripSuggestionLeakage(message.content))
+    : message.content;
   const isRefusal = Boolean(message.isRefusal || displayContent.includes(SAFE_REFUSAL_SNIPPET));
   const traces = message.toolTraces || message.traces || [];
   const formattedTime = formatMessageTimestamp(message.timestamp);
