@@ -16,6 +16,7 @@ from carefold.workflows.nodes.orchestrator_node import OrchestratorDecision, Orc
 from carefold.workflows.nodes.output_guardrail_node import OutputGuardrailNode
 from carefold.workflows.nodes.reflection_node import ReflectionNode
 from carefold.workflows.nodes.refusal_node import RefusalNode
+from carefold.workflows.nodes.response_synthesizer_node import ResponseSynthesizerNode
 from carefold.workflows.nodes.skill_generator_node import SkillGeneratorNode
 from carefold.workflows.nodes.suggestion_node import SuggestionNode
 from carefold.workflows.nodes.supervisor_node import SupervisorNode
@@ -34,6 +35,7 @@ __all__ = [
     "OutputGuardrailNode",
     "ReflectionNode",
     "RefusalNode",
+    "ResponseSynthesizerNode",
     "SkillGeneratorNode",
     "SuggestionNode",
     "SupervisorNode",

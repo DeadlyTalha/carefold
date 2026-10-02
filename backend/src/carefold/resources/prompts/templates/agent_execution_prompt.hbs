@@ -11,6 +11,38 @@
 # ORCHESTRATOR CONTEXT & INSTRUCTIONS
 {{{orchestrator_instructions}}}
 {{/if}}
+{{#if has_skills}}
+
+# DECLARED SKILL INSTRUCTIONS
+{{#each skills}}
+### Skill: {{name}} ({{id}})
+{{{instructions}}}
+{{#unless @last}}
+
+{{/unless}}
+{{/each}}
+{{/if}}
+{{#if has_provisioned_references}}
+
+# PROVISIONED CLINICAL REFERENCES
+{{#each provisioned_references}}
+## REFERENCE: {{#if @key}}{{@key}}{{else}}{{name}}{{/if}}
+{{{content}}}
+{{#unless @last}}
+
+{{/unless}}
+{{/each}}
+{{else}}{{#if provisioned_references}}
+
+# PROVISIONED CLINICAL REFERENCES
+{{#each provisioned_references}}
+## REFERENCE: {{#if @key}}{{@key}}{{else}}{{name}}{{/if}}
+{{{content}}}
+{{#unless @last}}
+
+{{/unless}}
+{{/each}}
+{{/if}}{{/if}}
 {{#if has_generated_skills}}
 
 # DYNAMICALLY GENERATED SKILLS (PROVIDED BY ORCHESTRATOR)
