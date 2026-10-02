@@ -36,12 +36,14 @@ from carefold.constants.paths import SYSTEM_AGENTS_DIR
 from carefold.loaders.agent_loader import (
     ManifestValidationError,
     extract_fallback_description,
+    find_agent_dir,
     load_agent,
     load_agent_readme,
     load_agent_starters,
     load_all_agents,
 )
 from carefold.schemas.manifest import (
+    SLUG_REGEX,
     AgentDetailResponse,
     AgentSummary,
     ResolvedSkillSummary,
@@ -155,22 +157,17 @@ async def get_agent(
     allow_clinical: bool = Query(False, description="Explicit consent for clinical assist"),
 ) -> AgentDetailResponse:
     """Returns detailed configuration, persona, tools, and resolved skills for a specific agent."""
-    if agent_id.startswith((".", "_")):
+    if not SLUG_REGEX.match(agent_id) or agent_id.startswith((".", "_")):
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"Agent '{agent_id}' not found.")
 
-    agents_dir = settings.get_agents_dir()
-    skills_dir = settings.get_skills_dir()
-    agent_dir = agents_dir / agent_id
+    agents_dir = settings.get_agents_dir().resolve()
+    skills_dir = settings.get_skills_dir().resolve()
+    agent_dir = find_agent_dir(agents_dir, agent_id)
 
-    is_system = False
-    if not agent_dir.is_dir():
-        system_candidate = agents_dir / SYSTEM_AGENTS_DIR / agent_id
-        if system_candidate.is_dir():
-            agent_dir = system_candidate
-            is_system = True
-
-    if not agent_dir.is_dir():
+    if not agent_dir or not agent_dir.is_dir():
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"Agent '{agent_id}' not found.")
+
+    is_system = agent_dir.parent.name == SYSTEM_AGENTS_DIR
 
     try:
         agent, effective_tools, skills = load_agent(agent_dir, skills_dir)

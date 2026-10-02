@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import re
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -33,7 +34,7 @@ from carefold.constants.paths import (
     SYSTEM_AGENTS_DIR,
     TEMPLATE_DIR,
 )
-from carefold.loaders.skill_loader import ManifestValidationError, load_skill
+from carefold.loaders.skill_loader import ManifestValidationError, find_skill_dir, load_skill
 from carefold.loaders.union import (
     ToolValidationError,
     compute_effective_tools,
@@ -55,8 +56,9 @@ from carefold.schemas.manifest import (
 
 def load_agent_starters(agent_dir: Union[Path, str]) -> List[str]:
     """Loads prompt starter strings from starters.json if present."""
-    starters_file = Path(agent_dir) / STARTERS_FILENAME
-    if not starters_file.is_file():
+    agent_path = Path(agent_dir).resolve()
+    starters_file = (agent_path / STARTERS_FILENAME).resolve()
+    if not starters_file.is_relative_to(agent_path) or not starters_file.is_file():
         return []
     try:
         data = json.loads(starters_file.read_text(encoding="utf-8"))
@@ -71,13 +73,14 @@ def load_agent_starters(agent_dir: Union[Path, str]) -> List[str]:
 
 def load_agent_readme(agent_dir: Union[Path, str]) -> Optional[str]:
     """Loads README.md text if present."""
-    readme_file = Path(agent_dir) / README_FILENAME
-    if readme_file.is_file():
-        try:
-            return readme_file.read_text(encoding="utf-8")
-        except Exception:
-            return None
-    return None
+    agent_path = Path(agent_dir).resolve()
+    readme_file = (agent_path / README_FILENAME).resolve()
+    if not readme_file.is_relative_to(agent_path) or not readme_file.is_file():
+        return None
+    try:
+        return readme_file.read_text(encoding="utf-8")
+    except Exception:
+        return None
 
 
 HEADER_PREFIX_PATTERN = re.compile(
@@ -119,6 +122,42 @@ def extract_fallback_description(persona: Union[str, Dict[str, Any], Any]) -> st
     return ""
 
 
+def find_agent_dir(agents_dir: Union[Path, str], agent_id: str) -> Optional[Path]:
+    """Safely resolves an agent directory from a trusted agents directory without path injection."""
+    if not agent_id or not isinstance(agent_id, str):
+        return None
+    raw_id = os.path.basename(agent_id.strip())
+    if not SLUG_REGEX.match(raw_id) or raw_id.startswith("."):
+        return None
+
+    base_dir = Path(agents_dir).resolve()
+    if not base_dir.is_dir():
+        return None
+
+    for entry in base_dir.iterdir():
+        if entry.is_dir() and entry.name == raw_id and not entry.name.startswith((".", "_")):
+            resolved_entry = entry.resolve()
+            if resolved_entry.is_relative_to(base_dir):
+                return resolved_entry
+
+    system_dir = (base_dir / SYSTEM_AGENTS_DIR).resolve()
+    if system_dir.is_dir():
+        for entry in system_dir.iterdir():
+            if entry.is_dir() and entry.name == raw_id and not entry.name.startswith("."):
+                resolved_entry = entry.resolve()
+                if resolved_entry.is_relative_to(base_dir):
+                    return resolved_entry
+
+    # Allow custom or template dirs (e.g. _template) if exact match
+    for entry in base_dir.iterdir():
+        if entry.is_dir() and entry.name == raw_id:
+            resolved_entry = entry.resolve()
+            if resolved_entry.is_relative_to(base_dir):
+                return resolved_entry
+
+    return None
+
+
 def load_agent(
     agent_dir: Union[Path, str],
     skills_dir: Optional[Union[Path, str]] = None,
@@ -131,8 +170,8 @@ def load_agent(
     if not agent_path.is_dir():
         raise ManifestValidationError(f'Agent directory not found: "{agent_path}"')
 
-    agent_yaml_path = agent_path / AGENT_MANIFEST_FILENAME
-    if not agent_yaml_path.is_file():
+    agent_yaml_path = (agent_path / AGENT_MANIFEST_FILENAME).resolve()
+    if not agent_yaml_path.is_relative_to(agent_path) or not agent_yaml_path.is_file():
         raise ManifestValidationError(f'Missing required agent.yaml in "{agent_path}"')
 
     try:
@@ -149,22 +188,33 @@ def load_agent(
     persona_file = parsed_yaml.get("persona_file")
 
     if persona_file and isinstance(persona_file, str):
+        if ".." in persona_file or persona_file.startswith(("/", "\\")):
+            raise ManifestValidationError(f'Path traversal in persona_file: "{persona_file}"')
         target_file = (agent_path / persona_file).resolve()
+        if not target_file.is_relative_to(agent_path):
+            raise ManifestValidationError(f'Persona file outside agent directory: "{persona_file}"')
         if target_file.is_file():
             parsed_yaml["persona"] = target_file.read_text(encoding="utf-8")
             parsed_yaml["persona_file"] = persona_file
         else:
             raise ManifestValidationError(f'Persona file not found: "{persona_file}" in "{agent_path}"')
-    elif isinstance(persona_val, str) and "\n" not in persona_val and (persona_val.strip().endswith(".md") or (agent_path / persona_val.strip()).is_file()):
-        target_file = (agent_path / persona_val.strip()).resolve()
+    elif isinstance(persona_val, str) and "\n" not in persona_val:
+        cleaned_val = persona_val.strip()
+        if ".." in cleaned_val or cleaned_val.startswith(("/", "\\")):
+            raise ManifestValidationError(f'Path traversal in persona: "{persona_val}"')
+        target_file = (agent_path / cleaned_val).resolve()
+        if not target_file.is_relative_to(agent_path):
+            raise ManifestValidationError(f'Persona file outside agent directory: "{persona_val}"')
         if target_file.is_file():
             parsed_yaml["persona"] = target_file.read_text(encoding="utf-8")
-            parsed_yaml["persona_file"] = persona_val.strip()
-        else:
+            parsed_yaml["persona_file"] = cleaned_val
+        elif cleaned_val.endswith(".md"):
             raise ManifestValidationError(f'Persona file not found: "{persona_val}" in "{agent_path}"')
-    elif (persona_val is None or persona_val == "") and (agent_path / "persona.md").is_file():
-        parsed_yaml["persona"] = (agent_path / "persona.md").read_text(encoding="utf-8")
-        parsed_yaml["persona_file"] = "persona.md"
+    elif (persona_val is None or persona_val == ""):
+        default_persona = (agent_path / "persona.md").resolve()
+        if default_persona.is_relative_to(agent_path) and default_persona.is_file():
+            parsed_yaml["persona"] = default_persona.read_text(encoding="utf-8")
+            parsed_yaml["persona_file"] = "persona.md"
 
     try:
         agent = AgentManifest(**parsed_yaml)
@@ -203,10 +253,10 @@ def load_agent(
             raise ManifestValidationError(
                 f'Invalid declared skill ID "{skill_id}": Skill IDs must be alphanumeric slugs.'
             )
-        skill_path = resolved_skills_dir / skill_id
-        if not skill_path.is_dir():
+        skill_path = find_skill_dir(resolved_skills_dir, skill_id)
+        if not skill_path or not skill_path.is_dir():
             raise ManifestValidationError(
-                f'Missing declared skill: {skill_id} (looked in "{skill_path}")'
+                f'Missing declared skill: {skill_id} (looked in "{resolved_skills_dir}")'
             )
 
         skill = load_skill(skill_path)
