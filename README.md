@@ -15,8 +15,9 @@
   limitations under the License.
 -->
 
+<h1 align="center">Carefold</h1>
+
 <p align="center">
-  <h1 align="center">Carefold</h1>
   <strong>Privacy-Preserving Healthcare AI Agent Marketplace & Runtime.</strong>
 </p>
 
