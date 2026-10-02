@@ -497,6 +497,7 @@ class AgentExecutionService:
             "user_id": user_id,
             "agent_id": agent.id,
             "current_agent": agent.id,
+            "explicit_agent": agent_id,
             "effective_tools": effective_tools,
             "workspace_root": str(ws_root),
             "skills_dir": str(skills_dir),
@@ -507,7 +508,18 @@ class AgentExecutionService:
             "follow_up_suggestions": [],
             "document_dossiers": [],
             "store_bodies": effective_store_bodies,
+            "allow_clinical": allow_clinical,
+            "attachments": attachments or [],
+            "notes": [],
+            "emergency_red_flags": None,
+            "execution_plan": None,
+            "provisioned_references": {},
+            "specialist_outputs": {},
         }
+        # Ingest multi-source context (attachments, notes, catalog summary)
+        from carefold.loaders.context_loader import ContextLoader
+        initial_input = ContextLoader.load_context(initial_input, ws_root)
+
         graph_config = {"configurable": {"thread_id": thread_id}}
 
         # Helper context manager supporting both self.checkpointer and default AsyncSqliteSaver
@@ -591,11 +603,31 @@ class AgentExecutionService:
                                 thread_id=thread_id,
                             )
                             yield data
+                        elif name == "synthesis":
+                            synth_text = data.get("output") or data.get("text") or ""
+                            if synth_text and not accumulated_text:
+                                accumulated_text = synth_text
+                                yield self.format_token_event(synth_text)
+                            logger.info(
+                                "response_synthesis_emitted",
+                                thread_id=thread_id,
+                                text_length=len(synth_text),
+                            )
+                            yield {"type": "synthesis", **data}
                         elif name in ("citations", "extraction"):
                             cits = data.get("citations") or data.get("dossiers", [])
                             if cits:
                                 citations.extend(cits)
                                 yield {"type": "citations", "citations": cits}
+
+                    elif ev_kind == "on_chain_end":
+                        if not refusal_triggered and not accumulated_text:
+                            chain_out = event.get("data", {}).get("output", {})
+                            if isinstance(chain_out, dict):
+                                out_text = chain_out.get("output")
+                                if out_text and isinstance(out_text, str):
+                                    accumulated_text = out_text
+                                    yield self.format_token_event(out_text)
 
         except asyncio.CancelledError:
             logger.info("turn_cancelled", thread_id=thread_id)

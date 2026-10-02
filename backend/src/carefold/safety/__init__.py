@@ -9,6 +9,7 @@ from carefold.safety.classifier import (
     check_safety_refusal,
 )
 from carefold.safety.prompt import build_safety_preamble
+from carefold.safety.emergency import EmergencyFlag, check_emergency_red_flags
 
 __all__ = [
     "SAFE_REFUSAL_TEMPLATE",
@@ -18,4 +19,6 @@ __all__ = [
     "SafetyCheckResult",
     "check_safety_refusal",
     "build_safety_preamble",
+    "EmergencyFlag",
+    "check_emergency_red_flags",
 ]

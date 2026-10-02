@@ -22,6 +22,7 @@ from carefold.loaders.agent_loader import (
     load_agent_starters,
     load_all_agents,
 )
+from carefold.loaders.context_loader import ContextLoader
 
 __all__ = [
     "MANDATORY_INTENDED_USE_LINES",
@@ -38,4 +39,5 @@ __all__ = [
     "load_agent_readme",
     "load_agent_starters",
     "load_all_agents",
+    "ContextLoader",
 ]

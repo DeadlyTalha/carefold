@@ -133,6 +133,19 @@ class AgentState(TypedDict, total=False):
     generated_skill: Optional[Dict[str, Any]]
     generated_skills: List[Dict[str, Any]]
 
+    # Context Loading and Safety Gating (R2)
+    attachments: List[str]
+    notes: List[Dict[str, Any]]
+    allow_clinical: bool
+    emergency_red_flags: Optional[Dict[str, Any]]
+    catalog_summary: Optional[str]
+    target_domain: Optional[str]
+
+    # Orchestrator Planning, Generic Provisioning & Multi-Agent Execution (R3-R5)
+    execution_plan: Optional[Dict[str, Any]]
+    provisioned_references: Dict[str, Any]
+    specialist_outputs: Dict[str, Any]
+
 
 def extract_text_content(item: Any) -> str:
     """Extract plain text string from a message object, dict, or string.
@@ -293,6 +306,15 @@ def create_initial_state(
         "audit_events": kwargs.get("audit_events", []),
         "iteration_count": kwargs.get("iteration_count", 0),
         "turn_tool_events": kwargs.get("turn_tool_events", []),
+        "attachments": kwargs.get("attachments", []),
+        "notes": kwargs.get("notes", []),
+        "allow_clinical": kwargs.get("allow_clinical", False),
+        "emergency_red_flags": kwargs.get("emergency_red_flags", None),
+        "catalog_summary": kwargs.get("catalog_summary", ""),
+        "target_domain": kwargs.get("target_domain", None),
+        "execution_plan": kwargs.get("execution_plan", None),
+        "provisioned_references": kwargs.get("provisioned_references", {}),
+        "specialist_outputs": kwargs.get("specialist_outputs", {}),
     }
     for k, v in kwargs.items():
         if k not in state:

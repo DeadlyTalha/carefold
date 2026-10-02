@@ -82,6 +82,98 @@ class AgentExecutionNode(BaseNode):
 
         orchestrator_instructions = state.get("orchestrator_instructions", "")
 
+        # Extract companion skills declared in manifest.skills
+        declared_skills: List[Dict[str, Any]] = []
+        skill_ids = list(getattr(manifest, "skills", []) or [])
+        agent_manifest_id = getattr(manifest, "id", "") or str(state.get("current_agent") or state.get("agent_id") or "")
+        loaded_skills = self.registry.get_loaded_skills(agent_manifest_id) if agent_manifest_id else []
+        loaded_map = {sk.id: sk for sk in loaded_skills}
+
+        seen_skill_ids = set()
+        for s_item in skill_ids:
+            if isinstance(s_item, str):
+                sk_id = s_item
+                sk_obj = loaded_map.get(sk_id) or self.registry.get_skill(sk_id)
+                if sk_obj is not None:
+                    declared_skills.append({
+                        "name": sk_obj.name,
+                        "id": sk_obj.id,
+                        "instructions": sk_obj.instructions,
+                        "description": sk_obj.description,
+                    })
+                else:
+                    declared_skills.append({
+                        "name": sk_id.replace("-", " ").title(),
+                        "id": sk_id,
+                        "instructions": "",
+                        "description": "",
+                    })
+                seen_skill_ids.add(sk_id)
+            elif hasattr(s_item, "id"):
+                sk_id = getattr(s_item, "id")
+                declared_skills.append({
+                    "name": getattr(s_item, "name", sk_id),
+                    "id": sk_id,
+                    "instructions": getattr(s_item, "instructions", ""),
+                    "description": getattr(s_item, "description", ""),
+                })
+                seen_skill_ids.add(sk_id)
+            elif isinstance(s_item, dict):
+                sk_id = s_item.get("id", "skill")
+                declared_skills.append({
+                    "name": s_item.get("name") or sk_id,
+                    "id": sk_id,
+                    "instructions": s_item.get("instructions", ""),
+                    "description": s_item.get("description", ""),
+                })
+                seen_skill_ids.add(sk_id)
+
+        for sk in loaded_skills:
+            if sk.id not in seen_skill_ids:
+                declared_skills.append({
+                    "name": sk.name,
+                    "id": sk.id,
+                    "instructions": sk.instructions,
+                    "description": sk.description,
+                })
+                seen_skill_ids.add(sk.id)
+
+        # Extract provisioned references
+        provisioned_references_raw = state.get("provisioned_references")
+        provisioned_references_list: List[Dict[str, Any]] = []
+        if isinstance(provisioned_references_raw, dict):
+            for doc_name, doc_data in provisioned_references_raw.items():
+                if isinstance(doc_data, dict):
+                    provisioned_references_list.append({
+                        "name": doc_name,
+                        "title": doc_data.get("title", doc_name),
+                        "content": doc_data.get("content", ""),
+                        "skill_id": doc_data.get("skill_id", ""),
+                    })
+                elif isinstance(doc_data, str):
+                    provisioned_references_list.append({
+                        "name": doc_name,
+                        "title": doc_name,
+                        "content": doc_data,
+                        "skill_id": "",
+                    })
+        elif isinstance(provisioned_references_raw, list):
+            for item in provisioned_references_raw:
+                if isinstance(item, dict):
+                    provisioned_references_list.append({
+                        "name": item.get("name") or item.get("title") or "Reference",
+                        "title": item.get("title", ""),
+                        "content": item.get("content", ""),
+                        "skill_id": item.get("skill_id", ""),
+                    })
+                elif isinstance(item, str):
+                    provisioned_references_list.append({
+                        "name": item,
+                        "title": item,
+                        "content": item,
+                        "skill_id": "",
+                    })
+
         # Inject dynamically generated skills passed from orchestrator
         generated_skills_raw = list(state.get("generated_skills") or [])
         single_gen = state.get("generated_skill")
@@ -116,6 +208,10 @@ class AgentExecutionNode(BaseNode):
             "manifest": manifest,
             "persona": persona.strip(),
             "orchestrator_instructions": orchestrator_instructions.strip() if orchestrator_instructions else "",
+            "skills": declared_skills,
+            "has_skills": bool(declared_skills),
+            "provisioned_references": provisioned_references_list,
+            "has_provisioned_references": bool(provisioned_references_list),
             "generated_skills": processed_skills,
             "has_generated_skills": bool(processed_skills),
         }

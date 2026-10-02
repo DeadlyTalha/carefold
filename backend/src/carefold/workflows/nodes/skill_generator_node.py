@@ -283,48 +283,57 @@ class SkillGeneratorNode(BaseNode):
             f"> **EMERGENCY WARNING**: If experiencing acute, life-threatening symptoms (e.g. acute chest pain, shortness of breath, sudden weakness/speech impairment, severe trauma), **immediately call 911 or visit the nearest emergency department**.\n"
         )
 
-    async def ensure_reference_doc(
+    def synthesize_reference_doc_content(
+        self,
+        skill_id: str,
+        doc_name: str,
+        user_query: str = "",
+        target_agent: str = "assistant",
+    ) -> str:
+        """Synchronously synthesizes rule-based reference doc content in-memory."""
+        return self._synthesize_reference_doc_content(
+            skill_id=skill_id,
+            doc_name=doc_name,
+            user_query=user_query,
+            target_agent=target_agent,
+        )
+
+    async def synthesize_reference_doc(
         self,
         skill_id: str,
         doc_name: str,
         user_query: str = "",
         target_agent: str = "assistant",
         state: Optional[Dict[str, Any]] = None,
-    ) -> Optional[Path]:
-        """Proactively verifies that a reference doc exists for a skill, generating it beforehand if missing."""
+    ) -> Dict[str, Any]:
+        """Synthesizes reference doc content with guaranteed in-memory fallback if disk write is not possible."""
         clean_doc = doc_name.strip()
         if not clean_doc.endswith((".md", ".txt", ".markdown")):
             clean_doc = f"{clean_doc}.md"
 
-        target_skills_dir = self._resolve_skills_dir(state or {})
-        skill_folder = target_skills_dir / skill_id
-        if not skill_folder.is_dir():
-            # If skill folder itself doesn't exist, generate the skill first
-            await self.generate_skill(
-                skill_id=skill_id,
-                skill_description=f"Skill supporting {doc_name}",
-                user_query=user_query,
-                target_agent=target_agent,
-                state=state,
-            )
+        clean_stem = Path(clean_doc).stem.replace("_", " ").replace("-", " ").title()
 
-        ref_dir = skill_folder / "references"
-        ref_dir.mkdir(parents=True, exist_ok=True)
-        doc_path = ref_dir / clean_doc
+        # 1. Check if already exists and valid on disk
+        doc_path: Optional[Path] = None
+        try:
+            target_skills_dir = self._resolve_skills_dir(state or {})
+            skill_folder = target_skills_dir / skill_id
+            if skill_folder.is_dir():
+                candidate = skill_folder / "references" / clean_doc
+                if candidate.is_file():
+                    existing_text = candidate.read_text(encoding="utf-8")
+                    if self._is_valid_reference_doc_content(existing_text):
+                        return {
+                            "title": clean_stem,
+                            "content": existing_text,
+                            "path": candidate,
+                            "skill_id": skill_id,
+                        }
+            doc_path = skill_folder / "references" / clean_doc
+        except Exception as resolve_err:
+            logger.debug("Could not resolve disk path for '%s': %s", clean_doc, resolve_err)
 
-        if doc_path.is_file():
-            try:
-                existing_text = doc_path.read_text(encoding="utf-8")
-                if self._is_valid_reference_doc_content(existing_text):
-                    return doc_path
-                logger.warning(
-                    "Existing reference doc '%s' failed validation (refusal/greeting or missing headers); re-provisioning",
-                    doc_path,
-                )
-            except Exception:
-                return doc_path
-
-        # If model is configured, attempt generation with LLM
+        # 2. Synthesize content via LLM or rule-based fallback
         content = None
         if self.model is not None:
             try:
@@ -342,7 +351,7 @@ class SkillGeneratorNode(BaseNode):
                     content = text
                 else:
                     logger.warning(
-                        "Model output for reference doc '%s' failed validation (refusal, greeting, or missing markdown headers); falling back to rule-based synthesis",
+                        "Model output for reference doc '%s' failed validation; falling back to rule-based synthesis",
                         clean_doc,
                     )
             except Exception as exc:
@@ -356,17 +365,46 @@ class SkillGeneratorNode(BaseNode):
                 target_agent=target_agent,
             )
 
-        if not self._is_valid_reference_doc_content(content):
-            logger.error("Synthesized content for reference doc '%s' failed validation; aborting write", clean_doc)
-            return None
+        # 3. Best-effort persistence to disk without halting on failure
+        written_path: Optional[Path] = None
+        if doc_path is not None:
+            try:
+                doc_path.parent.mkdir(parents=True, exist_ok=True)
+                doc_path.write_text(content, encoding="utf-8")
+                written_path = doc_path
+                logger.info("SkillGenerator proactively provisioned reference doc: %s", doc_path)
+            except Exception as write_err:
+                logger.warning(
+                    "Could not persist provisioned doc '%s' (retaining in-memory content): %s",
+                    doc_path,
+                    write_err,
+                )
 
-        try:
-            doc_path.write_text(content, encoding="utf-8")
-            logger.info("SkillGenerator proactively provisioned reference doc: %s", doc_path)
-            return doc_path
-        except Exception as write_err:
-            logger.warning("Could not persist provisioned doc '%s': %s", doc_path, write_err)
-            return None
+        return {
+            "title": clean_stem,
+            "content": content,
+            "path": written_path,
+            "skill_id": skill_id,
+        }
+
+    async def ensure_reference_doc(
+        self,
+        skill_id: str,
+        doc_name: str,
+        user_query: str = "",
+        target_agent: str = "assistant",
+        state: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Path]:
+        """Proactively verifies that a reference doc exists for a skill, generating it beforehand if missing."""
+        res = await self.synthesize_reference_doc(
+            skill_id=skill_id,
+            doc_name=doc_name,
+            user_query=user_query,
+            target_agent=target_agent,
+            state=state,
+        )
+        return res.get("path")
+
 
     async def generate_skill(
         self,

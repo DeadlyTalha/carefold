@@ -46,6 +46,11 @@ from carefold.schemas.health import (
     WorkspaceInfo,
     HealthResponse,
 )
+from carefold.schemas.plan import (
+    AgentTask,
+    ExecutionMode,
+    ExecutionPlan,
+)
 
 __all__ = [
     "RiskClass",
@@ -84,4 +89,8 @@ __all__ = [
     "OllamaHealthStatus",
     "WorkspaceInfo",
     "HealthResponse",
+    "AgentTask",
+    "ExecutionMode",
+    "ExecutionPlan",
 ]
+

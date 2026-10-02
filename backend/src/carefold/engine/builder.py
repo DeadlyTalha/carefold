@@ -73,6 +73,7 @@ from carefold.safety.template import SAFE_REFUSAL_TEMPLATE
 from carefold.schemas.audit import AuditEvent
 from carefold.tools.registry import CLOSED_TOOL_DEFINITIONS
 from carefold.agents.registry import AgentRegistry
+from carefold.workflows.dispatcher import ExecutionDispatcher
 from carefold.workflows.nodes import (
     AgentExecutionNode,
     AgentNode,
@@ -85,6 +86,7 @@ from carefold.workflows.nodes import (
     OutputGuardrailNode,
     ReflectionNode,
     RefusalNode,
+    ResponseSynthesizerNode,
     SuggestionNode,
     SupervisorNode,
     ToolNode,
@@ -116,6 +118,8 @@ class GraphBuilder:
         include_reflection: bool = True,
         include_tool_validator: bool = True,
         include_error_node: bool = True,
+        include_dispatcher: bool = True,
+        include_synthesizer: bool = True,
         registry: Optional[AgentRegistry] = None,
         tool_registry: Optional[Any] = None,
         use_dynamic_orchestrator: bool = True,
@@ -135,11 +139,23 @@ class GraphBuilder:
         self.include_reflection = include_reflection
         self.include_tool_validator = include_tool_validator
         self.include_error_node = include_error_node
+        self.include_dispatcher = include_dispatcher
+        self.include_synthesizer = include_synthesizer
         self.registry = registry
         self.tool_registry = tool_registry
         self.use_dynamic_orchestrator = use_dynamic_orchestrator
         self.suggestion_model = kwargs.get("suggestion_model")
         self.extra_kwargs = kwargs
+
+    def with_dispatcher(self, enabled: bool = True) -> GraphBuilder:
+        """Enable or disable multi-agent execution dispatcher."""
+        self.include_dispatcher = enabled
+        return self
+
+    def with_response_synthesizer(self, enabled: bool = True) -> GraphBuilder:
+        """Enable or disable response synthesizer node."""
+        self.include_synthesizer = enabled
+        return self
 
     # ========================================================================
     # Fluent Builder Pattern Methods
@@ -291,8 +307,42 @@ class GraphBuilder:
         suggestion_node = self._custom_nodes.get("suggestion") or SuggestionNode(model=suggestion_model)
         audit_node = self._custom_nodes.get("audit") or AuditNode()
         error_node = self._custom_nodes.get("error") or ErrorNode()
+        dispatcher_node = self._custom_nodes.get("dispatcher") or self._custom_nodes.get("execution_dispatcher")
+        if dispatcher_node is None and self.include_dispatcher:
+            dispatcher_node = ExecutionDispatcher(
+                model=bound_model or self.model,
+                registry=self.registry,
+                tool_registry=self.tool_registry,
+                default_tools=self.tools,
+            )
+        synthesizer_node = (
+            self._custom_nodes.get("response_synthesizer")
+            or self._custom_nodes.get("synthesizer")
+            or (ResponseSynthesizerNode() if self.include_synthesizer else None)
+        )
 
         # Node Wrappers with SSE dispatching
+        async def _dispatcher_wrapper(state: AgentState) -> Dict[str, Any]:
+            if dispatcher_node is None:
+                return {}
+            return await (dispatcher_node(state) if callable(dispatcher_node) else dispatcher_node.execute(state))
+
+        async def _synthesizer_wrapper(state: AgentState) -> Dict[str, Any]:
+            if synthesizer_node is None:
+                return {}
+            res = await (synthesizer_node(state) if callable(synthesizer_node) else synthesizer_node.execute(state))
+            out = res.get("output", "")
+            try:
+                await adispatch_custom_event(
+                    "synthesis",
+                    {
+                        "type": "synthesis",
+                        "output": out,
+                    },
+                )
+            except Exception:
+                pass
+            return res
         async def _input_guardrail_wrapper(state: AgentState) -> Dict[str, Any]:
             res = await (input_guard_node(state) if callable(input_guard_node) else input_guard_node.execute(state))
             if res.get("is_refusal") or res.get("refused"):
@@ -464,6 +514,10 @@ class GraphBuilder:
         builder.add_node("input_guardrail", _input_guardrail_wrapper)
         if self.include_supervisor:
             builder.add_node("supervisor", supervisor_node)
+        if self.include_dispatcher and dispatcher_node is not None:
+            builder.add_node("dispatcher", _dispatcher_wrapper)
+        if self.include_synthesizer and synthesizer_node is not None:
+            builder.add_node("response_synthesizer", _synthesizer_wrapper)
         builder.add_node("agent", agent_node)
         builder.add_node("tools", _tool_wrapper)
         if self.include_tool_validator:
@@ -520,12 +574,61 @@ class GraphBuilder:
                         "extract" in sg_k.lower() and ("extract" in target_norm or "document" in target_norm)
                     ):
                         return sg_k
+
+                plan = state.get("execution_plan")
+                if plan and self.include_dispatcher and dispatcher_node is not None:
+                    mode = plan.get("mode") if isinstance(plan, dict) else getattr(plan, "mode", None)
+                    mode_val = getattr(mode, "value", str(mode)).lower()
+                    if mode_val in ("parallel", "pipeline"):
+                        return "dispatcher"
+
+                if (
+                    target_norm in ("dispatcher", "execution_dispatcher")
+                    and self.include_dispatcher
+                    and dispatcher_node is not None
+                ):
+                    return "dispatcher"
+
+                if (
+                    target_norm in ("response_synthesizer", "synthesizer")
+                    and self.include_synthesizer
+                    and synthesizer_node is not None
+                ):
+                    return "response_synthesizer"
+
                 return "agent"
 
             super_destinations = {"agent": "agent"}
+            if self.include_dispatcher and dispatcher_node is not None:
+                super_destinations["dispatcher"] = "dispatcher"
+            if self.include_synthesizer and synthesizer_node is not None:
+                super_destinations["response_synthesizer"] = "response_synthesizer"
             for sg_k in self.subgraphs.keys():
                 super_destinations[sg_k] = sg_k
             builder.add_conditional_edges("supervisor", route_supervisor, super_destinations)
+
+        # Dispatcher conditional routing
+        if self.include_dispatcher and dispatcher_node is not None:
+            def route_dispatcher(state: AgentState) -> str:
+                if (state.get("next_step") == "error" or state.get("error")) and self.include_error_node:
+                    return "error"
+                if self.include_synthesizer and synthesizer_node is not None:
+                    return "response_synthesizer"
+                return "output_guardrail"
+
+            disp_destinations = {}
+            if self.include_synthesizer and synthesizer_node is not None:
+                disp_destinations["response_synthesizer"] = "response_synthesizer"
+            else:
+                disp_destinations["output_guardrail"] = "output_guardrail"
+            if self.include_error_node:
+                disp_destinations["error"] = "error"
+
+            builder.add_conditional_edges("dispatcher", route_dispatcher, disp_destinations)
+
+        # Response synthesizer edge
+        if self.include_synthesizer and synthesizer_node is not None:
+            builder.add_edge("response_synthesizer", "output_guardrail")
 
         # Agent conditional routing
         def route_agent(state: AgentState) -> str:
@@ -622,8 +725,10 @@ class GraphBuilder:
             "nodes": [
                 "input_guardrail",
                 *(["supervisor", "orchestrator"] if self.include_supervisor else []),
+                *(["dispatcher", "execution_dispatcher"] if self.include_dispatcher else []),
                 "agent",
                 "agent_execution",
+                *(["response_synthesizer", "synthesizer"] if self.include_synthesizer else []),
                 "tools",
                 *(["tool_validator"] if self.include_tool_validator else []),
                 "output_guardrail",

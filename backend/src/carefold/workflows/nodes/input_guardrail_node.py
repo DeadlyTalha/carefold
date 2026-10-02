@@ -11,6 +11,7 @@ from typing import Any, Dict, List
 from langchain_core.messages import BaseMessage, HumanMessage
 
 from carefold.safety.classifier import check_safety_refusal
+from carefold.safety.emergency import check_emergency_red_flags
 from carefold.workflows.nodes.base import BaseNode
 
 
@@ -41,6 +42,60 @@ class InputGuardrailNode(BaseNode):
         if not prompt_text and state.get("prompt"):
             prompt_text = str(state.get("prompt"))
 
+        # 1. Acute Emergency Red-Flag Gating (Immediate 911 / ER diversion)
+        emergency_flag = check_emergency_red_flags(prompt_text)
+        if emergency_flag is not None:
+            referral_msg = emergency_flag.referral_message or (
+                "EMERGENCY WARNING: Acute symptoms detected. Please call 911 or visit the nearest emergency room immediately."
+            )
+            flag_dict = emergency_flag.to_dict() if hasattr(emergency_flag, "to_dict") else dict(emergency_flag)
+
+            # Check if prompt also explicitly attempts forbidden emergency diversion / triage
+            safety_check = check_safety_refusal(prompt_text)
+            if safety_check.refused and safety_check.reason and "replace_emergency_care" in safety_check.reason:
+                refusal_reason = "emergency_red_flag:replace_emergency_care"
+            else:
+                refusal_reason = "emergency_red_flag"
+
+            return {
+                "is_refusal": True,
+                "refused": True,
+                "refusal_reason": refusal_reason,
+                "refusal_message": referral_msg,
+                "emergency_red_flags": flag_dict,
+                "next_step": "refusal",
+                "tool_calls": [],  # Suppress pending tool calls on emergency
+                "safety_metadata": {
+                    "checked": True,
+                    "refused": True,
+                    "reason": refusal_reason,
+                    "category": emergency_flag.category,
+                    "emergency": flag_dict,
+                },
+            }
+
+        # 2. Clinical Consent Gating (allow_clinical check)
+        target_domain = state.get("target_domain") or state.get("domain")
+        is_consented = state.get("allow_clinical") is True
+        if target_domain == "clinical" and not is_consented:
+            return {
+                "is_refusal": True,
+                "refused": True,
+                "refusal_reason": "clinical_consent_required",
+                "refusal_message": (
+                    "Clinical assist features require explicit user consent (allow_clinical=True)."
+                ),
+                "next_step": "refusal",
+                "tool_calls": [],  # Suppress pending tool calls on lack of consent
+                "safety_metadata": {
+                    "checked": True,
+                    "refused": True,
+                    "reason": "clinical_consent_required",
+                    "category": "consent",
+                },
+            }
+
+        # 3. Standard Clinical Safety Refusal (34 patterns in refusal_patterns.yaml)
         safety_check = check_safety_refusal(prompt_text)
 
         if safety_check.refused:
