@@ -16,7 +16,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { cn, sanitizeAgentDescription } from '@/lib/utils';
+import { cn, sanitizeAgentDescription, formatCategoryLabel } from '@/lib/utils';
 
 describe('lib/utils', () => {
   it('combines and merges tailwind classnames', () => {
@@ -52,6 +52,32 @@ describe('lib/utils', () => {
     it('preserves clean descriptions unchanged', () => {
       const clean = 'Cardiovascular care navigator assisting patients with hypertension tracking.';
       expect(sanitizeAgentDescription(clean)).toBe(clean);
+    });
+  });
+
+  describe('formatCategoryLabel', () => {
+    it('returns empty string for null, undefined, or empty category', () => {
+      expect(formatCategoryLabel(null, 'clinical')).toBe('');
+      expect(formatCategoryLabel(undefined, 'clinical')).toBe('');
+      expect(formatCategoryLabel('', 'clinical')).toBe('');
+    });
+
+    it('strips redundant domain prefix and capitalizes subcategory', () => {
+      expect(formatCategoryLabel('clinical.ophthalmology', 'clinical')).toBe('Ophthalmology');
+      expect(formatCategoryLabel('navigation.insurance', 'navigation')).toBe('Insurance');
+      expect(formatCategoryLabel('wellness.habits', 'wellness')).toBe('Habits');
+      expect(formatCategoryLabel('navigation.prior_auth', 'navigation')).toBe('Prior Auth');
+      expect(formatCategoryLabel('navigation.claims_appeals', 'navigation')).toBe('Claims Appeals');
+    });
+
+    it('extracts leaf segment if domain is different or omitted', () => {
+      expect(formatCategoryLabel('clinical.cardiology')).toBe('Cardiology');
+      expect(formatCategoryLabel('pediatrics.allergy.food')).toBe('Food');
+    });
+
+    it('omits badge if subcategory matches the domain itself', () => {
+      expect(formatCategoryLabel('clinical', 'clinical')).toBe('');
+      expect(formatCategoryLabel('wellness.wellness', 'wellness')).toBe('');
     });
   });
 });

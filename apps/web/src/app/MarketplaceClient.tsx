@@ -22,7 +22,7 @@ import Link from 'next/link';
 import * as LucideIcons from 'lucide-react';
 import { Search, Sparkles, AlertCircle, ArrowRight, Shield, Stethoscope, FileText, HeartPulse, Terminal } from 'lucide-react';
 import type { AgentSummary } from '@/lib/types';
-import { cn, sanitizeAgentDescription } from '@/lib/utils';
+import { cn, sanitizeAgentDescription, formatCategoryLabel } from '@/lib/utils';
 
 function resolveAgentIcon(iconToken?: string, id?: string): React.ComponentType<{ className?: string }> {
   if (iconToken && iconToken in LucideIcons) {
@@ -187,6 +187,7 @@ export function MarketplaceClient({ initialAgents }: { initialAgents: AgentSumma
             const isVerified = agent.verified !== false;
             const effectiveTools = agent.effectiveTools || agent.tools || [];
             const skills = agent.skills || [];
+            const categoryLabel = formatCategoryLabel(agent.category, agent.domain);
 
             return (
               <div
@@ -213,12 +214,12 @@ export function MarketplaceClient({ initialAgents }: { initialAgents: AgentSumma
                           {agent.domain}
                         </span>
                       )}
-                      {agent.category && (
+                      {categoryLabel && (
                         <span
                           data-testid="category-badge"
-                          className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700"
+                          className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700"
                         >
-                          {agent.category}
+                          {categoryLabel}
                         </span>
                       )}
                       {isBundled && (

@@ -35,3 +35,36 @@ export function sanitizeAgentDescription(desc?: string | null): string {
     )
     .trim();
 }
+
+/**
+ * Formats a hierarchical category string (e.g. "clinical.ophthalmology" or "navigation.prior_auth")
+ * into a clean, human-readable specialty label (e.g. "Ophthalmology", "Prior Auth").
+ * Strips any redundant domain prefix matching the agent domain.
+ */
+export function formatCategoryLabel(category?: string | null, domain?: string | null): string {
+  if (!category) return '';
+  let sub = category.trim();
+
+  // Strip leading domain prefix if present (e.g. "clinical.ophthalmology" -> "ophthalmology")
+  if (domain && sub.toLowerCase().startsWith(`${domain.toLowerCase()}.`)) {
+    sub = sub.slice(domain.length + 1);
+  } else if (sub.includes('.')) {
+    // Or take the leaf segment after the last dot
+    const parts = sub.split('.');
+    sub = parts[parts.length - 1];
+  }
+
+  // If subcategory is empty or identical to domain, omit redundant badge
+  if (!sub || (domain && sub.toLowerCase() === domain.toLowerCase())) {
+    return '';
+  }
+
+  // Replace underscores/hyphens with spaces and capitalize each word
+  return sub
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+

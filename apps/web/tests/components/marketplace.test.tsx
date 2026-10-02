@@ -120,9 +120,9 @@ describe('Marketplace Home Screen (CF-S01, CF-S48, CF-S50, R4)', () => {
 
     const categoryBadges = screen.getAllByTestId('category-badge');
     expect(categoryBadges.length).toBe(3);
-    expect(categoryBadges.some((b) => b.textContent === 'navigation.appointments')).toBe(true);
-    expect(categoryBadges.some((b) => b.textContent === 'navigation.insurance')).toBe(true);
-    expect(categoryBadges.some((b) => b.textContent === 'wellness.habits')).toBe(true);
+    expect(categoryBadges.some((b) => b.textContent === 'Appointments')).toBe(true);
+    expect(categoryBadges.some((b) => b.textContent === 'Insurance')).toBe(true);
+    expect(categoryBadges.some((b) => b.textContent === 'Habits')).toBe(true);
   });
 
   it('renders domain filter tabs and filters agents by domain', () => {
