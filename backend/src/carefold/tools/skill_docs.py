@@ -247,6 +247,14 @@ async def execute_skill_docs(params: Dict[str, Any], context: Any) -> ToolResult
         skill_dir = resolve_sandboxed_path(skills_dir_path, resolved_skill_id, must_exist=False)
         ref_dir = skill_dir / REFERENCES_DIR
 
+        # Check for path traversal in doc parameter
+        if ".." in Path(doc).parts or ".." in doc:
+            return ToolResult(
+                success=False,
+                output=None,
+                error=f'Path traversal forbidden: Document path "{doc}" escapes allowed directory.',
+            )
+
         # If doc without extension is passed, check candidate extensions or normalize
         resolved_doc = doc
         if not Path(resolved_doc).suffix:

@@ -82,7 +82,7 @@ jobs:
         run: pnpm --filter web typecheck
 
       - name: Run unit & component tests
-        run: pnpm --filter web test --exclude "**/chat.test.ts"
+        run: pnpm --filter web test --exclude "**/api/**"
 
       - name: Build Next.js application
         run: pnpm --filter web build

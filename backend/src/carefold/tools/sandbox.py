@@ -102,15 +102,32 @@ def resolve_sandboxed_path(
                 )
         current = current.parent
 
+    # Lexically normalize to catch traversal through non-directories or unresolvable segments
+    norm_candidate = Path(os.path.normpath(candidate))
+    try:
+        norm_candidate.relative_to(real_base)
+        if norm_candidate == real_base and clean_user_path not in ("", "."):
+            raise SandboxSecurityError(
+                f'Path traversal forbidden: Path "{user_path}" escapes allowed directory "{base_dir}".'
+            )
+    except ValueError:
+        raise SandboxSecurityError(
+            f'Path traversal forbidden: Path "{user_path}" escapes allowed directory "{base_dir}".'
+        )
+
     # Resolve normalized path without following nonexistent final symlink yet
     try:
         resolved_candidate = candidate.resolve()
     except Exception:
-        resolved_candidate = candidate.absolute()
+        resolved_candidate = norm_candidate
 
     # Boundary check on resolved path
     try:
         resolved_candidate.relative_to(real_base)
+        if resolved_candidate == real_base and clean_user_path not in ("", "."):
+            raise SandboxSecurityError(
+                f'Path traversal forbidden: Path "{user_path}" escapes allowed directory "{base_dir}".'
+            )
     except ValueError:
         raise SandboxSecurityError(
             f'Path traversal forbidden: Path "{user_path}" escapes allowed directory "{base_dir}".'

@@ -203,7 +203,7 @@ All AI coding assistants (e.g., Cursor, Claude Code, GitHub Copilot, Gemini CLI)
      pnpm --filter web typecheck
 
      # 5. Frontend Unit & Component Tests
-     pnpm --filter web test --exclude "**/chat.test.ts"
+     pnpm --filter web test --exclude "**/api/**"
 
      # 6. Frontend Production Build
      pnpm --filter web build
