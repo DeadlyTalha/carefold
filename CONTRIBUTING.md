@@ -16,7 +16,7 @@ All contributors and maintainers are expected to adhere to the [Carefold Code of
 
 ### Prerequisites
 
-- **Node.js**: `v20.x` or `v22.x` (LTS recommended)
+- **Node.js**: `v22.x` LTS or newer (required by `engines.node >=22.0.0`)
 - **pnpm**: `v9.x` or higher
 - **Python**: `3.12` or `3.14`
 - **Git**: Configured with your real name and email for DCO signing
@@ -26,7 +26,7 @@ All contributors and maintainers are expected to adhere to the [Carefold Code of
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/carefold/carefold.git
+   git clone https://github.com/spectrayan/carefold.git
    cd carefold
    ```
 
@@ -45,15 +45,17 @@ All contributors and maintainers are expected to adhere to the [Carefold Code of
    cd ..
    ```
 
-4. **Environment Variables**:
-   Copy `.env.example` to `.env` in both `backend/` and `apps/web/` if needed, and configure any model providers.
+4. **Environment Variables** (optional):
+   All backend settings have local-first defaults. To override them, copy the root `.env.example` to `.env` (the backend reads `.env` from the directory it is started in, so start it from the repository root). See the [Configuration Reference](docs/getting-started/configuration.md) for every `CAREFOLD_*` setting. Cloud model provider keys (`GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`) are read from your shell environment.
+   ```bash
+   cp .env.example .env
+   ```
 
 5. **Start local services**:
    ```bash
-   # Terminal 1: Backend API
-   cd backend
-   source .venv/bin/activate
-   uvicorn carefold.api.main:app --reload --port 8000
+   # Terminal 1: Backend API (run from the repository root)
+   source backend/.venv/bin/activate
+   uvicorn carefold.main:app --reload --port 8000
 
    # Terminal 2: Next.js Frontend
    pnpm --filter web dev

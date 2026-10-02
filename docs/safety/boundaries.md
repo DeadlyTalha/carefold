@@ -72,4 +72,4 @@ By default (`CAREFOLD_AUDIT_STORE_BODIES=false`), the audit logger invokes `reda
 - Model completion text is **redacted**.
 - Execution metadata (timestamp, agent ID, allowed status, target agents, thread ID) is **preserved**.
 
-This guarantees complete traceability and regulatory auditability without creating unencrypted stores of Protected Health Information (PHI).
+This preserves traceability of agent decisions while keeping prompt and completion text, which may contain Protected Health Information (PHI), out of the audit log by default. It is designed to support privacy reviews and does not by itself constitute regulatory compliance or certification.

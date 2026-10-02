@@ -27,7 +27,7 @@
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22_LTS-339933.svg?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node" /></a>
   <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-16_Turbopack-000000.svg?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" /></a>
   <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.115-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" /></a>
-  <a href="https://github.com/spectrayan/carefold/pkgs/container/carefold"><img src="https://img.shields.io/badge/Docker-GHCR-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" /></a>
+  <a href="docker/docker-compose.yml"><img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Compose" /></a>
   <a href="https://github.com/spectrayan/carefold/actions"><img src="https://img.shields.io/github/actions/workflow/status/spectrayan/carefold/ci.yml?branch=main&style=for-the-badge" alt="Build" /></a>
   <a href="https://spectrayan.github.io/carefold/"><img src="https://img.shields.io/badge/Docs-MkDocs-blue?logo=materialformkdocs&style=for-the-badge" alt="Docs" /></a>
 </p>
@@ -40,7 +40,7 @@
 
 **Carefold** is an open-source, local-first healthcare AI agent marketplace and multi-agent execution runtime. Designed for clinical visit preparation, health insurance navigation, and chronic care support, Carefold runs entirely on user-controlled hardware (or private self-hosted endpoints) to safeguard patient privacy.
 
-It pairs a **5-phase LangGraph orchestration engine** with **22 specialist clinical and administrative navigators**, modular skill packs, hexagonal memory architecture (ready for Spector cognitive memory), zero-trust sandboxed tools, and a two-tier clinical safety guardrail system.
+It pairs a **5-phase LangGraph orchestration engine** with **20 specialist clinical and administrative navigators**, modular skill packs, hexagonal memory architecture (with Spector cognitive memory integration planned), zero-trust sandboxed tools, and a two-tier clinical safety guardrail system.
 
 ---
 
@@ -49,12 +49,17 @@ It pairs a **5-phase LangGraph orchestration engine** with **22 specialist clini
 Get a local Carefold runtime and agent marketplace running in seconds:
 
 ### 1. Instant Launch via Docker Compose
-```bash
-# Start FastAPI backend (:8000) and Next.js marketplace UI (:3000)
-docker compose up -d
+Images are built locally from [`docker/Dockerfile`](docker/Dockerfile); no prebuilt image is required.
 
-# Or include local Ollama for 100% offline local LLM inference:
-docker compose --profile embeddings up -d
+```bash
+# From the repository root: build and start the FastAPI backend (:8000) and Next.js marketplace UI (:3000)
+docker compose -f docker/docker-compose.yml up -d --build
+
+# Or also start a local Ollama container for on-device LLM inference:
+docker compose -f docker/docker-compose.yml --profile ollama up -d --build
+
+# Pull the default model into the Ollama container (first run only)
+docker compose -f docker/docker-compose.yml exec ollama ollama pull llama3.2
 ```
 Visit `http://localhost:3000` to browse specialist agents and launch private consultations.
 
@@ -77,7 +82,7 @@ pip install -e backend
 pip install -r backend/requirements-dev.txt
 
 # Start backend server (Terminal 1)
-uvicorn carefold.api.main:app --host 127.0.0.1 --port 8000 --reload
+uvicorn carefold.main:app --host 127.0.0.1 --port 8000 --reload
 
 # Start Next.js marketplace UI (Terminal 2)
 pnpm --filter web dev
@@ -129,7 +134,7 @@ flowchart TD
 
 ## 🏥 Specialist Agent Topology
 
-Carefold includes 22 specialist clinical/navigational agents and 6 internal system infrastructure agents:
+Carefold includes 20 specialist clinical/navigational agents and 6 internal system infrastructure agents, backed by 22 skill packs (plus `_template` starters for new agents and skills):
 
 | Agent Identifier | Domain | Category | Risk Class | Clinical Scope & Capabilities |
 |---|---|---|---|---|
@@ -146,7 +151,7 @@ Carefold includes 22 specialist clinical/navigational agents and 6 internal syst
 | `urology-guide` | `clinical` | `urology` | `clinical_assist` | Bladder health, frequency-volume tracking, prostate consultation prep |
 | `eye-guide` | `clinical` | `ophthalmology` | `clinical_assist` | Vision changes, glaucoma & macular degeneration monitoring, surgery prep |
 | `ent-guide` | `clinical` | `ent` | `clinical_assist` | Sinusitis tracking, tinnitus diaries, audiogram & hearing consultation prep |
-| `visit-steward` | `clinical` | `general` | `clinical_assist` | General primary care preparation, doctor agendas, medication reconciliations |
+| `visit-steward` | `navigation` | `appointments` | `wellness` | General primary care preparation, doctor agendas, medication reconciliations |
 | `benefits-guide` | `navigation` | `insurance` | `admin` | EOB breakdown, deductible/copay tracking, insurance policy explainer |
 | `claims-appeals-guide`| `navigation`| `appeals` | `admin` | Denied claim analysis, ERISA appeal timelines, external review drafting |
 | `prior-auth-navigator`| `navigation`| `authorizations` | `admin` | Prior authorization criteria, step therapy documentation, physician checklists |
@@ -171,7 +176,7 @@ Carefold implements a hexagonal architecture for memory and agent discovery:
 * **`MemoryPort`**: Cognitive memory interface supporting working, episodic, semantic, and procedural memory tiers with salience ranking and decay.
 * **`CatalogPort`**: Full-text and BM25 agent/skill catalog search index.
 * **Zero-Dependency SQLite FTS5 Adapter**: Out-of-the-box local storage requiring no external services.
-* **Spector-Ready**: Seamlessly connects to [Spector](https://github.com/spectrayan/spector) — Spectrayan's SIMD-accelerated cognitive memory engine — via a single configuration flag (`MEMORY_BACKEND=spector`).
+* **Spector Integration (Planned)**: A `MemoryPort` adapter for [Spector](https://github.com/spectrayan/spector) — Spectrayan's SIMD-accelerated cognitive memory engine — is planned for Q1–Q2 2027 (see [ROADMAP](ROADMAP.md)). The `CAREFOLD_MEMORY_BACKEND` setting already reserves the `spector` value, but only `sqlite` is implemented today; selecting `spector` currently raises a "not yet implemented" error.
 
 ---
 

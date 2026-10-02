@@ -10,7 +10,7 @@ Carefold solves this problem through **Two-Hop Hierarchical Routing**, combining
 
 | Dimension | Flat Single-Hop Routing | Carefold Two-Hop Routing |
 |---|---|---|
-| **Context Size** | Injects all 22+ agent manifests into prompt on every turn (~6,000+ tokens). | Injects only domain taxonomy (~300 tokens) in Hop 1; injects top 3–5 candidates (~800 tokens) in Hop 2. |
+| **Context Size** | Injects all 20+ agent manifests into prompt on every turn (~6,000+ tokens). | Injects only domain taxonomy (~300 tokens) in Hop 1; injects top 3–5 candidates (~800 tokens) in Hop 2. |
 | **Search Accuracy** | Relies entirely on LLM memory of manifest text; prone to attention drift. | Leverages SQLite FTS5 BM25 full-text indexing over titles, descriptions, and personas. |
 | **Catalog Scalability**| Degrades rapidly beyond 20 agents due to context limits. | Scales smoothly to hundreds of agents across clinical subspecialties. |
 | **Determinism** | High variance in agent selection on ambiguous queries. | 4-step deterministic fallback chain guarantees valid specialist resolution. |

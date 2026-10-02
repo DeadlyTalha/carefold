@@ -18,10 +18,10 @@ carefold/
 │   │   ├── safety/           # Emergency red-flag detection & non-clinical refusal classifier
 │   │   ├── loaders/          # Context loader & resource parsing
 │   │   └── schemas/          # Pydantic models for manifests, state, and API schemas
-│   └── tests/                # 3,800+ test suite and 47-point security penetration suite
-├── apps/web/                 # Next.js 15 healthcare marketplace and chat UI (Tailwind CSS)
-├── agents/                   # 22 specialized agent manifests and pure personas
-├── skills/                   # 23 clinical and administrative skill packs with golden evals
+│   └── tests/                # 3,900+ test suite and 47-point security penetration suite
+├── apps/web/                 # Next.js 16 healthcare marketplace and chat UI (Tailwind CSS)
+├── agents/                   # 20 specialist agent manifests, 6 system agents (_system/), and a starter template
+├── skills/                   # 22 clinical and administrative skill packs, plus a starter template
 ├── packages/cli/             # Scaffolding and developer CLI
 ├── packages/runner/          # Sandboxed local execution runner
 ├── docs/                     # Verified MkDocs Material documentation and ADR repository
@@ -99,7 +99,7 @@ Agent definitions in Carefold strictly maintain separation of concerns:
 All persistence and discovery operations interact exclusively with abstract port interfaces:
 - `MemoryPort` mediates access to 4 cognitive memory tiers (`WORKING`, `EPISODIC`, `SEMANTIC`, `PROCEDURAL`).
 - `CatalogPort` mediates agent and skill indexing and category hierarchy generation.
-- The default adapter is `SqliteMemoryAdapter` and `SqliteCatalogAdapter` using SQLite FTS5. This architecture enables drop-in migration to enterprise memory backends (such as Spector MCP) without altering core workflow nodes.
+- The default adapter is `SqliteMemoryAdapter` and `SqliteCatalogAdapter` using SQLite FTS5. This architecture is designed so additional memory backends (such as the planned Spector MCP adapter) can be added without altering core workflow nodes.
 
 ### 3. Execution Topologies
 The orchestrator plans execution dynamically based on patient presentation complexity:
@@ -107,7 +107,7 @@ The orchestrator plans execution dynamically based on patient presentation compl
 - **`Parallel`**: Multimorbid presentations (e.g., patient presenting with overlapping symptoms across cardiology and pulmonology) trigger concurrent execution via `asyncio.gather`.
 - **`Pipeline`**: Cross-functional handoffs (e.g., clinical guidance followed by prior authorization navigation) execute in dependency order with topological sorting.
 
-### 4. Zero-Body Audit Logging & HIPAA Guardrails
+### 4. Zero-Body Audit Logging & Privacy Safeguards
 To safeguard Protected Health Information (PHI):
 - Consultation events log metadata (timestamp, agent ID, allowed status, event type).
 - Sensitive prompt and completion bodies are redacted by default (`CAREFOLD_AUDIT_STORE_BODIES=false`).

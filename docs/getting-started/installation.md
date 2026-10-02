@@ -11,7 +11,7 @@ Before installing Carefold, ensure your system meets the following requirements:
 | Component | Minimum Version | Recommended | Notes |
 |---|---|---|---|
 | **Python** | 3.12+ | 3.12 or 3.14 | Required for the FastAPI backend and LangGraph engine. |
-| **Node.js** | 20.0.0+ | 20.x or 22.x LTS | Required for Next.js 15 and web dependencies. |
+| **Node.js** | 22.0.0+ | 22.x LTS | Required for Next.js 16 and web dependencies (`engines.node >=22.0.0`). |
 | **pnpm** | 9.0.0+ | 10.x or 12.x | Fast, disk-space efficient package manager. |
 | **Ollama** | Latest | 0.3.0+ | Recommended for local-first zero-telemetry LLM inference. |
 | **Git** | 2.30+ | Latest | For repository cloning and version control. |
@@ -23,7 +23,7 @@ Before installing Carefold, ensure your system meets the following requirements:
 Clone the Carefold repository from GitHub and navigate to the project directory:
 
 ```bash
-git clone https://github.com/carefold/carefold.git
+git clone https://github.com/spectrayan/carefold.git
 cd carefold
 ```
 
@@ -71,7 +71,7 @@ pnpm install
 ```
 
 This installs dependencies across:
-- `apps/web`: Next.js 15 client and consultation interface.
+- `apps/web`: Next.js 16 client and consultation interface.
 - `packages/cli`: Scaffolding and developer CLI tools.
 - `packages/runner`: Local sandbox execution runner.
 
@@ -101,7 +101,7 @@ Validate that all components are configured properly by running the automated te
 
 ### 1. Backend Verification
 ```bash
-# Run backend test suite (3,800+ unit and integration tests)
+# Run backend test suite (3,900+ unit and integration tests)
 backend/.venv/bin/pytest backend/tests/
 
 # Run 47-point security penetration suite

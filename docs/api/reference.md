@@ -69,6 +69,9 @@ Returns system health status, runtime uptime, workspace agent/skill counts, and 
 }
 ```
 
+!!! note
+    `agentsCount` and `skillsCount` count workspace directories under `agents/` and `skills/`, so they include `agents/_system` and the `_template` starters in addition to the 20 specialist agents and 22 skill packs.
+
 ---
 
 ### 2. Streaming Consultation
@@ -117,7 +120,7 @@ X-Accel-Buffering: no
 **Response (`200 OK`)**:
 ```json
 {
-  "total": 22,
+  "total": 20,
   "domains": {
     "clinical": {
       "count": 13,
@@ -128,10 +131,16 @@ X-Accel-Buffering: no
       }
     },
     "navigation": {
-      "count": 7,
+      "count": 6,
       "categories": {
-        "insurance": {"count": 2, "subcategories": {}},
+        "insurance": {"count": 1, "subcategories": {}},
         "prior_auth": {"count": 1, "subcategories": {}}
+      }
+    },
+    "wellness": {
+      "count": 1,
+      "categories": {
+        "habits": {"count": 1, "subcategories": {}}
       }
     }
   }

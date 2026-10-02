@@ -19,7 +19,7 @@ The table below outlines all available configuration options, their types, defau
 | `CAREFOLD_AUDIT_LOG_PATH` | `Path` | `logs/audit.jsonl` | Filepath where structured zero-body audit events are written. |
 | `CAREFOLD_AUDIT_STORE_BODIES` | `bool` | `false` | When `false` (recommended), redacts prompts and completion bodies in audit logs to protect PII. |
 | `CAREFOLD_DB_PATH` | `Path` | `None` | Path to SQLite checkpointer database for session state persistence. |
-| `CAREFOLD_MEMORY_BACKEND` | `str` | `sqlite` | Cognitive memory backend adapter (`sqlite`, `spector`, `postgres`). |
+| `CAREFOLD_MEMORY_BACKEND` | `str` | `sqlite` | Cognitive memory backend adapter. Only `sqlite` is implemented today; `spector` and `postgres` are reserved for planned adapters and currently raise a "not yet implemented" error. |
 | `CAREFOLD_SPECTOR_URL` | `str` | `http://localhost:7070` | Endpoint URL for future Spector MCP cognitive memory integration. |
 | `CAREFOLD_CATALOG_DB_PATH` | `Path` | `catalog.db` | Custom file path for SQLite catalog and memory storage (defaults to `${CAREFOLD_WORKSPACE_ROOT}/catalog.db`). |
 | `CAREFOLD_CORS_ORIGINS` | `List[str]` | `["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000", "http://127.0.0.1:8000"]` | Allowed CORS origins for browser web requests. |
