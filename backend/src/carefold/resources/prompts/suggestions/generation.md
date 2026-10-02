@@ -13,5 +13,6 @@ CONSTRAINTS:
 1. Each question must be phrased from the user's perspective (e.g. "What should I ask my doctor about this?", "Can you explain the deductible in simpler terms?").
 2. Each question must be brief (under 60 characters) to fit cleanly inside UI chips.
 3. No medical advice, diagnosis, or prescription dosing questions.
-4. Return ONLY a JSON list of strings, for example:
+4. Return ONLY a valid JSON array of strings. Do NOT include any preamble, introduction, markdown code block fences, or conversational commentary.
+Example output format:
 ["What questions should I ask my doctor?", "How do I check if my doctor is in-network?"]

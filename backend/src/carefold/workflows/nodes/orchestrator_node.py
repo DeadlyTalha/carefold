@@ -251,7 +251,9 @@ class OrchestratorNode(BaseNode):
             if hasattr(self.model, "with_structured_output"):
                 try:
                     structured_model = self.model.with_structured_output(OrchestratorDecision)
-                    res = await structured_model.ainvoke(lc_messages)
+                    res = await structured_model.ainvoke(
+                        lc_messages, config={"tags": ["internal", "orchestrator", "no_stream"]}
+                    )
                     if isinstance(res, OrchestratorDecision):
                         decision = res
                     elif isinstance(res, dict):
@@ -261,7 +263,9 @@ class OrchestratorNode(BaseNode):
                     decision = None
 
             if decision is None:
-                resp = await self.model.ainvoke(lc_messages)
+                resp = await self.model.ainvoke(
+                    lc_messages, config={"tags": ["internal", "orchestrator", "no_stream"]}
+                )
                 content = extract_text_content(resp)
                 import json
                 clean_content = content.strip()
@@ -336,7 +340,9 @@ class OrchestratorNode(BaseNode):
             if hasattr(self.model, "with_structured_output"):
                 try:
                     structured_model = self.model.with_structured_output(DomainClassification)
-                    res = await structured_model.ainvoke(tier1_messages)
+                    res = await structured_model.ainvoke(
+                        tier1_messages, config={"tags": ["internal", "orchestrator", "no_stream"]}
+                    )
                     if isinstance(res, DomainClassification):
                         classified = res
                     elif isinstance(res, dict):
@@ -346,7 +352,9 @@ class OrchestratorNode(BaseNode):
                     classified = None
 
             if classified is None:
-                resp = await self.model.ainvoke(tier1_messages)
+                resp = await self.model.ainvoke(
+                    tier1_messages, config={"tags": ["internal", "orchestrator", "no_stream"]}
+                )
                 content = extract_text_content(resp)
                 import json
                 clean_content = content.strip()
@@ -439,7 +447,9 @@ class OrchestratorNode(BaseNode):
             if hasattr(self.model, "with_structured_output"):
                 try:
                     structured_model = self.model.with_structured_output(OrchestratorDecision)
-                    res = await structured_model.ainvoke(tier2_messages)
+                    res = await structured_model.ainvoke(
+                        tier2_messages, config={"tags": ["internal", "orchestrator", "no_stream"]}
+                    )
                     if isinstance(res, OrchestratorDecision):
                         decision = res
                     elif isinstance(res, dict):
@@ -449,7 +459,9 @@ class OrchestratorNode(BaseNode):
                     decision = None
 
             if decision is None:
-                resp = await self.model.ainvoke(tier2_messages)
+                resp = await self.model.ainvoke(
+                    tier2_messages, config={"tags": ["internal", "orchestrator", "no_stream"]}
+                )
                 content = extract_text_content(resp)
                 import json
                 clean_content = content.strip()

@@ -79,7 +79,10 @@ class SuggestionNode(BaseNode):
                     assistant_response=completion_text or "(none)",
                     tools_used=", ".join(tools_used) if tools_used else "None",
                 )
-                resp = await self.model.ainvoke([SystemMessage(content=rendered_prompt)])
+                resp = await self.model.ainvoke(
+                    [SystemMessage(content=rendered_prompt)],
+                    config={"tags": ["internal", "suggestion", "no_stream"]},
+                )
                 content = str(getattr(resp, "content", "") or "").strip()
 
                 raw_extracted: List[str] = []

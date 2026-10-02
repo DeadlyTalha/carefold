@@ -747,3 +747,79 @@ async def test_adversarial_stream_cancellation_database_integrity(temp_workspace
     done = next(e for e in events_after if e["type"] == "done")
     assert done["refused"] is False
 
+
+@pytest.mark.asyncio
+async def test_stream_never_leaks_internal_suggestion_or_orchestrator_tokens(temp_workspace: Path):
+    """Verifies that dynamic suggestion generator model tokens never leak into the assistant chat stream."""
+    from langchain_core.language_models.chat_models import BaseChatModel
+    from langchain_core.messages import AIMessageChunk
+    from langchain_core.outputs import ChatGeneration, ChatResult
+    from carefold.engine.builder import GraphBuilder
+    from carefold.engine.service import AgentExecutionService
+
+    class StreamingLeakageChallengerModel(BaseChatModel):
+        def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+            raise NotImplementedError
+
+        async def _agenerate(self, messages, stop=None, run_manager=None, **kwargs):
+            msg_text = " ".join(getattr(m, "content", "") for m in messages)
+            if "Suggestion Generator" in msg_text or "follow-up questions" in msg_text:
+                content = (
+                    "Here are 3 concise follow-up questions from the user's perspective:\n\n"
+                    '["What are next steps if I have met my deductible?", "Explain OOP max?"]'
+                )
+            else:
+                content = "Your deductible is $1,000 and copay is $25."
+
+            # Simulate token streaming callback
+            for token in content.split(" "):
+                if run_manager:
+                    await run_manager.on_llm_new_token(token + " ")
+            return ChatResult(generations=[ChatGeneration(message=AIMessageChunk(content=content))])
+
+        @property
+        def _llm_type(self) -> str:
+            return "streaming-leakage-challenger"
+
+    model = StreamingLeakageChallengerModel()
+    svc = AgentExecutionService()
+    gb = GraphBuilder().with_model(model).with_suggestion_model(model)
+    svc.graph = gb.build()
+
+    tokens: List[str] = []
+    suggestions: List[str] = []
+    done_payload: Dict[str, Any] = {}
+
+    async for raw_ev in svc.execute_chat(
+        {"agent_id": "benefits-guide", "prompt": "Explain my deductible", "thread_id": "test-leakage-prevention"},
+        raw_events=True,
+    ):
+        ev_type = raw_ev.get("type")
+        if ev_type == "token":
+            tokens.append(raw_ev.get("delta") or "")
+        elif ev_type == "suggestions":
+            suggestions = raw_ev.get("suggestions", [])
+        elif ev_type == "done":
+            done_payload = raw_ev
+
+    full_streamed = "".join(tokens).strip()
+    full_text = str(done_payload.get("fullText", "")).strip()
+
+    # 1. Specialist content must be fully streamed
+    assert "Your deductible is $1,000" in full_streamed
+    assert "Your deductible is $1,000" in full_text
+    assert full_streamed == full_text
+
+    # 2. Suggestion generator output MUST NOT leak into the assistant chat text
+    assert "Here are 3 concise" not in full_streamed
+    assert "follow-up questions from the user's perspective" not in full_streamed
+    assert '["What are next steps' not in full_streamed
+    assert "Here are 3 concise" not in full_text
+    assert "follow-up questions from the user's perspective" not in full_text
+    assert '["What are next steps' not in full_text
+
+    # 3. Suggestion chips must still be emitted cleanly as parsed lists
+    assert len(suggestions) >= 2
+    assert any("deductible" in s.lower() for s in suggestions)
+
+

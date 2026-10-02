@@ -345,7 +345,10 @@ class SkillGeneratorNode(BaseNode):
                     f"User Inquiry Context: {user_query}\n\n"
                     f"Include structured tables or checklists, action steps, and strict non-clinical disclaimers."
                 )
-                resp = await self.model.ainvoke([sys_msg, HumanMessage(content=prompt)])
+                resp = await self.model.ainvoke(
+                    [sys_msg, HumanMessage(content=prompt)],
+                    config={"tags": ["internal", "skill_generator", "no_stream"]},
+                )
                 text = extract_text_content(resp).strip()
                 if self._is_valid_reference_doc_content(text):
                     content = text
@@ -436,7 +439,9 @@ class SkillGeneratorNode(BaseNode):
                 if hasattr(self.model, "with_structured_output"):
                     try:
                         structured = self.model.with_structured_output(GeneratedSkillSchema)
-                        res = await structured.ainvoke(messages)
+                        res = await structured.ainvoke(
+                            messages, config={"tags": ["internal", "skill_generator", "no_stream"]}
+                        )
                         if isinstance(res, GeneratedSkillSchema):
                             skill_data = res.model_dump()
                         elif isinstance(res, dict):
@@ -445,7 +450,9 @@ class SkillGeneratorNode(BaseNode):
                         logger.debug("Structured skill generation error: %s", struct_err)
 
                 if skill_data is None:
-                    resp = await self.model.ainvoke(messages)
+                    resp = await self.model.ainvoke(
+                        messages, config={"tags": ["internal", "skill_generator", "no_stream"]}
+                    )
                     content = extract_text_content(resp)
                     try:
                         parsed = json.loads(content)

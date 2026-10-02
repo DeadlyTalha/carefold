@@ -76,6 +76,31 @@ from carefold.workflows.state import AgentState
 
 logger = get_logger("carefold.engine.service")
 
+# Nodes whose chat model invocations are internal/structural and must never stream tokens to the user chat UI
+NON_STREAMING_NODES: set[str] = {
+    "suggestion",
+    "suggestion_node",
+    "supervisor",
+    "orchestrator",
+    "dispatcher",
+    "input_guardrail",
+    "safety_guard_node",
+    "output_guardrail",
+    "post_safety_node",
+    "tools",
+    "tools_node",
+    "tool_validator",
+    "reflection",
+    "refusal",
+    "audit",
+    "audit_node",
+    "error",
+    "skill_generator",
+    "document_extractor",
+    "triage_auditor",
+    "quality_reviewer",
+}
+
 
 # ============================================================================
 # Generic Stream Chat Adapter for Non-BaseChatModel Callers
@@ -566,6 +591,16 @@ class AgentExecutionService:
 
                     # Stream model token chunks
                     if ev_kind == "on_chat_model_stream":
+                        node_name = event.get("metadata", {}).get("langgraph_node")
+                        tags = event.get("tags") or []
+                        if (
+                            (node_name and node_name in NON_STREAMING_NODES)
+                            or "internal" in tags
+                            or "no_stream" in tags
+                            or "suggestion" in tags
+                        ):
+                            continue
+
                         chunk = event.get("data", {}).get("chunk")
                         if chunk and getattr(chunk, "content", None):
                             content_str = chunk.content
