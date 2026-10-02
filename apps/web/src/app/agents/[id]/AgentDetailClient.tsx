@@ -1,3 +1,20 @@
+/*
+ * Carefold — Healthcare AI Agent Marketplace & Runtime
+ * Copyright 2026 Spectrayan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 'use client';
 
 import React, { useState } from 'react';
@@ -39,7 +56,7 @@ export function AgentDetailClient({ agent }: { agent: AgentDetail }) {
       case 'clinical_assist':
         return 'Clinical Assistant: Elevated risk classification. Subject to strict clinician oversight and local safety refusal controls.';
       default:
-        return 'Local health assistant with strict Phase 0 sandboxing.';
+        return 'Local health assistant with strict local sandbox controls.';
     }
   };
 
@@ -173,7 +190,7 @@ export function AgentDetailClient({ agent }: { agent: AgentDetail }) {
               <span>Effective Tools Allowlist</span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-zinc-400 mb-3">
-              Union of agent and skill declarations restricted to Phase 0 Closed Sandbox:
+              Union of agent and skill declarations restricted to Local Secure Sandbox:
             </p>
             <div className="space-y-2">
               {agent.effectiveTools.map((tool) => (

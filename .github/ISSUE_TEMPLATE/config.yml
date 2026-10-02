@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security Vulnerability or Clinical Safety Disclosure
+    url: https://github.com/carefold/carefold/blob/main/SECURITY.md
+    about: Please report security vulnerabilities and clinical safety boundary incidents privately via our security process.
+  - name: Community Discussions & Q&A
+    url: https://github.com/carefold/carefold/discussions
+    about: Ask questions, share ideas, and connect with other Carefold contributors and users.

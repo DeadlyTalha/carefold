@@ -1,3 +1,20 @@
+/*
+ * Carefold — Healthcare AI Agent Marketplace & Runtime
+ * Copyright 2026 Spectrayan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { SafetyDisclaimerBanner } from '@/components/SafetyDisclaimerBanner';
@@ -30,7 +47,7 @@ export default function RootLayout({
           </main>
           <footer className="border-t border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-6 mt-auto transition-colors">
             <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 dark:text-zinc-400 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div>Carefold Phase 0 • Open-Source Local Runtime • Apache-2.0</div>
+              <div>Carefold • Healthcare AI Agent Marketplace • Apache-2.0</div>
               <div>Zero cloud sync • No prompt telemetry • 100% on-device</div>
             </div>
           </footer>

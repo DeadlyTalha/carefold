@@ -1,0 +1,94 @@
+name: Clinical Agent Proposal
+description: Propose a new specialist agent or clinical skill pack for the Carefold catalog
+title: "[Agent Proposal]: "
+labels: ["agent-proposal", "clinical-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to propose a new specialist clinical or navigation agent for the Carefold marketplace.
+        All agent proposals undergo review by the Clinical AI Review team to ensure strict adherence to non-diagnostic safety bounds.
+  - type: input
+    id: agent_id
+    attributes:
+      label: Agent Identifier
+      description: Kebab-case identifier for the agent (e.g., `pediatrics-guide`, `geriatrics-steward`).
+      placeholder: "specialty-guide"
+    validations:
+      required: true
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Clinical Domain
+      description: High-level classification used by the Two-Hop Orchestrator.
+      options:
+        - "clinical"
+        - "navigation"
+        - "wellness"
+        - "education"
+        - "therapy"
+    validations:
+      required: true
+  - type: dropdown
+    id: risk_class
+    attributes:
+      label: Risk Classification
+      description: Clinical risk class governing autonomy and guardrail stringency.
+      options:
+        - "clinical_assist (Clinical visit preparation, guideline questions - non-diagnostic)"
+        - "admin (Insurance, prior authorization, records management)"
+        - "wellness (Habits, lifestyle, medication scheduling)"
+        - "education (Patient literacy, procedural explanation)"
+    validations:
+      required: true
+  - type: textarea
+    id: intended_use
+    attributes:
+      label: Intended Use Statement
+      description: Mandatory concise 3-line statement specifying target user, intended role, and explicit exclusions.
+      placeholder: |
+        Intended for adult patients preparing for an outpatient consultation.
+        Assists with symptom history structuring and question generation.
+        Explicitly excludes medical diagnosis, drug dosing, or emergency triage.
+    validations:
+      required: true
+  - type: textarea
+    id: persona_prompt
+    attributes:
+      label: Persona & System Prompt Outline
+      description: Summarize the agent's tone, focus area, conversational style, and role boundaries.
+      placeholder: "Acts as an empathetic clinical preparation steward..."
+    validations:
+      required: true
+  - type: textarea
+    id: declared_skills
+    attributes:
+      label: Required Skills & Tools
+      description: List skill packs (e.g., `clinical-safety-boundaries`, `emergency-red-flags`, specialized prep skill) and tools (`attach-read`, `workspace-note`).
+      placeholder: |
+        - clinical-safety-boundaries
+        - emergency-red-flags
+        - specialty-prep
+    validations:
+      required: true
+  - type: textarea
+    id: clinical_references
+    attributes:
+      label: Authoritative Clinical Guidelines & References
+      description: Cite peer-reviewed professional society guidelines (e.g., ACC/AHA, ADA, ASCO) that ground this agent's knowledge.
+      placeholder: |
+        1. 2024 Practice Guidelines published by...
+        2. Clinical Practice Guidelines for...
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Clinical Safety Confirmations
+      options:
+        - label: The agent prompt explicitly disclaims medical diagnosis and clinical prescribing.
+          required: true
+        - label: The agent includes immediate emergency red-flag escalation protocols.
+          required: true
+        - label: All referenced clinical materials are public, evidence-based guidelines.
+          required: true

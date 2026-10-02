@@ -1,0 +1,62 @@
+name: Feature Request
+description: Propose a new feature, architecture enhancement, or tool integration
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggesting an enhancement for Carefold? Provide as much architectural context and healthcare motivation as possible.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: Concise summary of the requested capability or improvement.
+      placeholder: Introduce support for...
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement & Motivation
+      description: What challenge or user need does this solve?
+      placeholder: Currently, users cannot...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution & Architectural Design
+      description: How should this be implemented? Mention any relevant ports, adapters, or LangGraph nodes.
+      placeholder: Extend MemoryPort to support...
+    validations:
+      required: true
+  - type: dropdown
+    id: subsystem
+    attributes:
+      label: Target Subsystem
+      options:
+        - "Backend Multi-Agent Engine"
+        - "Frontend Web UI"
+        - "Cognitive Memory & Catalog"
+        - "Document Ingestion & Sandbox"
+        - "Developer Tooling & CLI"
+        - "CI/CD & Documentation"
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative designs or workarounds you considered.
+    validations:
+      required: false
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Community Checklist
+      options:
+        - label: I would be interested in contributing code or an ADR for this feature.
+          required: false
+        - label: I have checked existing feature requests to prevent duplicates.
+          required: true

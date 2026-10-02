@@ -1,4 +1,4 @@
-# Carefold Phase 0 Multi-Stage Dockerfile
+# Carefold Multi-Stage Dockerfile
 # Supports target 'backend', target 'web', and default 'all-in-one'
 # Build: docker build -f docker/Dockerfile .
 
@@ -12,11 +12,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY backend/pyproject.toml backend/README.md* ./backend/
-RUN pip install --no-cache-dir ./backend
-
 COPY backend/ ./backend/
-RUN pip install --no-cache-dir -e ./backend
+RUN pip install --no-cache-dir ./backend
 
 COPY agents/ ./agents/
 COPY skills/ ./skills/
@@ -43,7 +40,8 @@ WORKDIR /app
 # Enable pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* tsconfig.base.json ./
+COPY scripts/ ./scripts/
 COPY packages/ ./packages/
 COPY apps/web/ ./apps/web/
 
@@ -88,11 +86,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-COPY backend/pyproject.toml backend/README.md* ./backend/
-RUN pip install --no-cache-dir ./backend
-
 COPY backend/ ./backend/
-RUN pip install --no-cache-dir -e ./backend
+RUN pip install --no-cache-dir ./backend
 
 COPY agents/ ./agents/
 COPY skills/ ./skills/

@@ -1,0 +1,29 @@
+# Carefold Code Ownership Mapping
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default global owners for the repository
+* @spectrayan/core-maintainers
+
+# Backend FastAPI runtime, LangGraph nodes, memory ports & adapters
+/backend/ @spectrayan/backend-team
+
+# Frontend Next.js web application and consultation UI
+/apps/web/ @spectrayan/frontend-team
+
+# Core packages & CLI tooling
+/packages/ @spectrayan/core-maintainers
+
+# Specialist agents and manifest definitions
+/agents/ @spectrayan/clinical-ai-team
+
+# Clinical skill packs and reference guidelines
+/skills/ @spectrayan/clinical-ai-team
+
+# Documentation and Living Architecture Decision Records (ADRs)
+/docs/ @spectrayan/docs-team
+
+# CI/CD Workflows, GitHub actions, and repository configuration
+/.github/ @spectrayan/infra-team
+
+# Build, license, and repository automation scripts
+/scripts/ @spectrayan/infra-team

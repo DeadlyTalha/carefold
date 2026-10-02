@@ -1,0 +1,76 @@
+name: Bug Report
+description: File a bug report or regression in Carefold
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! Please do not paste unredacted Protected Health Information (PHI) or Personally Identifiable Information (PII) in issue reports.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug.
+      placeholder: Describe what happened...
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Select the primary subsystem experiencing the defect.
+      options:
+        - "Backend (FastAPI / LangGraph Workflows)"
+        - "Frontend (Next.js 15 Web Application)"
+        - "Hexagonal Memory / Catalog Ports (SQLite FTS5)"
+        - "Document Extraction & PII Sanitizer"
+        - "Specialist Agent / Skill Pack"
+        - "CLI / Runner Package"
+        - "CI/CD / Documentation"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Exact steps to reproduce the issue.
+      placeholder: |
+        1. Start backend with `...`
+        2. Send chat query `...`
+        3. Observe error `...`
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should have happened instead?
+      placeholder: Expected the agent to...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs or Terminal Output
+      description: Paste relevant terminal logs, stack traces, or console output (ensure all PII is redacted).
+      render: shell
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Environment & Versions
+      description: Operating System, Python version, Node.js version, LLM provider/model.
+      placeholder: "macOS 15.0 / Python 3.12 / Node 20 / Ollama llama3.2"
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-Submission Checklist
+      options:
+        - label: I have verified that no PII or sensitive patient data is contained in this report.
+          required: true
+        - label: I have searched existing issues to ensure this is not a duplicate.
+          required: true

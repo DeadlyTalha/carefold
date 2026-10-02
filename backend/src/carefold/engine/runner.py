@@ -1,3 +1,18 @@
+# Carefold — Healthcare AI Agent Marketplace & Runtime
+# Copyright 2026 Spectrayan
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Agent execution runtime backward-compatibility delegation facade.
 
 Delegates execution runs to AgentExecutionService and GraphBuilder, eliminating
@@ -23,10 +38,6 @@ from carefold.schemas.manifest import AgentManifest, SkillManifest
 logger = logging.getLogger(__name__)
 
 
-# ============================================================================
-# ExecutionContext Dataclass (Preserved for Sandboxed Tools & Callers)
-# ============================================================================
-
 @dataclass
 class ExecutionContext:
     """Lightweight execution context passed to sandbox tools and tests."""
@@ -37,10 +48,6 @@ class ExecutionContext:
     effective_tools: List[str]
     skills: List[SkillManifest]
 
-
-# ============================================================================
-# Backward-Compatible Execution Facade
-# ============================================================================
 
 async def execute_agent_run(
     agent_id: str,
@@ -67,43 +74,22 @@ async def execute_agent_run(
     resolved_thread_id = thread_id or f"thread_{agent_id}_{uuid.uuid4().hex[:12]}"
 
     # Resolve chat model if specified or use factory (respects test monkeypatching)
-    if model_client is not None:
-        chat_model = model_client
-    else:
-        chat_model = create_chat_model(
-            provider=provider or "ollama",
-            model=model,
-            api_key=api_key,
-            base_url=base_url,
-        )
+    chat_model = model_client if model_client is not None else create_chat_model(
+        provider=provider or "ollama", model=model, api_key=api_key, base_url=base_url
+    )
 
     service = AgentExecutionService(
         model=chat_model if isinstance(chat_model, BaseChatModel) else None,
-        workspace_root=workspace_root,
-        db_path=checkpointer_db_path,
-        store_bodies=store_bodies,
+        workspace_root=workspace_root, db_path=checkpointer_db_path, store_bodies=store_bodies,
     )
 
     async for event in service.execute_turn(
-        thread_id=resolved_thread_id,
-        prompt=prompt,
-        agent_id=agent_id,
-        messages=messages,
-        attachments=attachments,
-        allow_clinical=allow_clinical,
-        model=chat_model,
-        provider=provider,
-        model_name=model,
-        api_key=api_key,
-        base_url=base_url,
-        store_bodies=store_bodies,
-        **kwargs,
+        thread_id=resolved_thread_id, prompt=prompt, agent_id=agent_id,
+        messages=messages, attachments=attachments, allow_clinical=allow_clinical,
+        model=chat_model, provider=provider, model_name=model,
+        api_key=api_key, base_url=base_url, store_bodies=store_bodies, **kwargs,
     ):
         yield event
 
 
-__all__ = [
-    "ExecutionContext",
-    "execute_agent_run",
-    "create_chat_model",
-]
+__all__ = ["ExecutionContext", "execute_agent_run", "create_chat_model"]

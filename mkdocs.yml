@@ -1,0 +1,82 @@
+site_name: Carefold
+site_description: Healthcare AI Agent Marketplace & Local-First Runtime
+site_author: Spectrayan
+site_url: https://carefold.github.io/carefold/
+repo_name: carefold/carefold
+repo_url: https://github.com/carefold/carefold
+copyright: "Copyright &copy; 2026 Spectrayan. All rights reserved."
+
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: default
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - attr_list
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Configuration: getting-started/configuration.md
+      - Quickstart: getting-started/quickstart.md
+  - Architecture:
+      - System Overview: architecture/overview.md
+      - Orchestrator Engine: architecture/orchestrator.md
+      - Two-Hop Routing: architecture/two-hop-routing.md
+  - Specialist Agents:
+      - Catalog: agents/catalog.md
+      - Manifest Specification: agents/manifest.md
+  - Skills:
+      - Authoring Guide: skills/authoring.md
+      - Intended Use & Safety: skills/specification.md
+  - Memory:
+      - Cognitive Memory & Spector: memory/spector.md
+      - Hexagonal Ports: memory/hexagonal-ports.md
+  - Safety & Guardrails:
+      - Safety Boundaries: safety/boundaries.md
+      - Emergency Red Flags: safety/emergency-triage.md
+  - API Reference: api/reference.md
+  - Architecture Decision Records:
+      - ADR Overview: adr/README.md
+      - 0000 - ADR Template: adr/0000-template.md
+      - 0001 - Orchestrator Architecture: adr/0001-orchestrator-driven-agent-architecture.md
+      - 0002 - Hexagonal Memory Ports: adr/0002-hexagonal-memory-and-catalog-ports.md

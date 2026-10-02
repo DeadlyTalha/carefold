@@ -1,0 +1,89 @@
+# Changelog
+
+All notable changes to the Carefold project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [Unreleased]
+
+### Planned
+- Native Spector MCP server memory adapter.
+- HL7 FHIR bundle generation from visit preparation dossiers.
+- Offline P2P distributed agent registry.
+
+---
+
+## [0.3.0] - 2026-10-02
+
+### Added
+- **Autonomous Agent Manifest (`AGENTS.md`)**: Full specification adherence defining operational boundaries, tool privileges, and AI coding agent guidelines.
+- **Living Project Context (`PROJECT_CONTEXT.md`)**: Spector-grade architectural specification capturing hexagonal ports, 4 cognitive memory tiers, and execution pipelines.
+- **Open-Source Governance & Community Suite**:
+  - `CONTRIBUTING.md` with Conventional Commits, DCO requirements, and test gates.
+  - `GOVERNANCE.md` detailing meritocratic maintainer model and decision-making workflows.
+  - `CODE_OF_CONDUCT.md` adopting Contributor Covenant v2.1.
+  - `SECURITY.md` establishing Coordinated Vulnerability Disclosure SLAs and clinical safety reporting.
+  - `ROADMAP.md` covering multi-phase evolution from local core to decentralized agent store.
+  - `.github/CODEOWNERS`, `.github/pull_request_template.md`, and issue templates for bugs, features, and clinical agent proposals.
+- **Licensing & Attribution Automation**:
+  - Root `NOTICE` file complying with Spector attribution standards.
+  - Automated license check and fix tooling (`scripts/licenses.mjs`, `pnpm check:licenses`, `pnpm fix:licenses`).
+  - Spectrayan Apache-2.0 copyright headers applied across 417 source files.
+- **CI/CD Quality Matrix**:
+  - Unified multi-job GitHub Actions CI (`.github/workflows/ci.yml`) covering Python (3.12, 3.14), Node (20, 22), penetration security, and license enforcement.
+  - GitHub CodeQL static analysis (`codeql.yml`), automated license remediation (`license-fix.yml`), MkDocs Pages deployment (`docs.yml`), and multi-stage Docker build workflow (`docker-publish.yml`).
+- **Verified MkDocs Material Portal & Living ADRs**:
+  - Modern documentation site configured with search, dark/light theme, and code annotations.
+  - Living Architecture Decision Records in `docs/adr/` featuring Mermaid diagrams for the 5-phase orchestrator lifecycle and hexagonal memory ports.
+
+### Changed
+- Replaced legacy "Phase 0" branding in Next.js web UI with "Open Source" badge and "Local Secure Sandbox".
+- Updated web footer to `Carefold • Healthcare AI Agent Marketplace • Apache-2.0`.
+
+### Removed
+- Cleaned 9 obsolete planning documents from `docs/` (`00-README.md` through `06-backlog-index.md`, `orchestrator_redesign.md`).
+
+---
+
+## [0.2.0] - 2026-09-15
+
+### Added
+- **Hexagonal Cognitive Memory Architecture**:
+  - Abstract `MemoryPort` supporting 4 cognitive tiers (`WORKING`, `EPISODIC`, `SEMANTIC`, `PROCEDURAL`).
+  - Abstract `CatalogPort` for specialist agent and skill indexing and category hierarchy generation.
+  - High-performance asynchronous `SqliteMemoryAdapter` and `SqliteCatalogAdapter` using SQLite FTS5 and BM25 relevance scoring.
+- **Two-Hop Intent Routing & Orchestrator Node**:
+  - Tier-1 broad domain classification followed by Tier-2 specialist manifest resolution.
+  - Dynamic skill and reference document provisioning to prevent context window bloat.
+- **Expanded Specialist Catalog & Skill Packs**:
+  - 22 specialist clinical organ navigators and administrative guides.
+  - 23 clinical skill packs with evidence-based medical guidelines and 3-line intended-use statements.
+- **Dual Ingestion & Structured Extraction Pipeline**:
+  - Dual invocation via user file upload or in-turn tool call `extract_document_dossier`.
+  - HIPAA-aligned regex PII sanitization.
+  - Pydantic models for `InsuranceBenefitsDossier`, `ClinicalVisitDossier`, and `GenericDocumentDossier`.
+  - Numerical grounding validator preventing hallucinated currencies and lab numbers.
+- **Security Penetration Test Suite**:
+  - 47 automated security tests verifying path traversal prevention, symlink protection, null-byte blocking, and skill authorization barriers.
+
+### Changed
+- Refactored monolithic agent execution engine into class-based LangGraph nodes under `carefold.workflows.nodes`.
+- Streamlined `AgentState` schema to support subgraphs, dossiers, tool traces, and refusal metadata.
+
+### Fixed
+- Addressed path traversal vulnerability in attachment file reading.
+- Resolved race condition during SQLite checkpointer initialization.
+
+---
+
+## [0.1.0] - 2026-08-01
+
+### Added
+- Initial local-first healthcare AI prototype with FastAPI backend and LangGraph execution engine.
+- Next.js 15 Tailwind CSS consultation chat UI with model and provider selection.
+- Local sandboxed attachment storage in `attachments/`.
+- Foundational `visit-steward` and `benefits-guide` agent manifests.
+- Basic streaming responses using Server-Sent Events (SSE).

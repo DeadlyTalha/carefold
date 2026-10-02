@@ -1,3 +1,20 @@
+/*
+ * Carefold — Healthcare AI Agent Marketplace & Runtime
+ * Copyright 2026 Spectrayan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -70,7 +87,7 @@ export function Navbar() {
             <div>
               <span className="font-bold text-lg text-slate-900 dark:text-white tracking-tight">Carefold</span>
               <span className="ml-2 text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded">
-                Phase 0
+                Open Source
               </span>
             </div>
           </Link>
