@@ -136,7 +136,7 @@ export function ChatMessageItem({
               {formattedTime && (
                 <>
                   <span className="opacity-60">•</span>
-                  <time data-testid="message-timestamp" dateTime={message.timestamp} className="text-blue-100 tabular-nums">
+                  <time data-testid="message-timestamp" dateTime={message.timestamp} suppressHydrationWarning className="text-blue-100 tabular-nums">
                     {formattedTime}
                   </time>
                 </>
@@ -232,7 +232,7 @@ export function ChatMessageItem({
           {formattedTime && (
             <>
               <span className="opacity-50 text-slate-400 dark:text-zinc-600">•</span>
-              <time data-testid="message-timestamp" dateTime={message.timestamp} className="text-slate-500 dark:text-zinc-400 tabular-nums">
+              <time data-testid="message-timestamp" dateTime={message.timestamp} suppressHydrationWarning className="text-slate-500 dark:text-zinc-400 tabular-nums">
                 {formattedTime}
               </time>
             </>

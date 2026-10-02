@@ -41,11 +41,11 @@ export interface WorkspacePaths {
 
 export function findWorkspaceRoot(explicitDir?: string): string {
   if (explicitDir) {
-    return path.resolve(process.cwd(), explicitDir);
+    return path.resolve(/*turbopackIgnore: true*/ process.cwd(), explicitDir);
   }
 
   if (process.env.CAREFOLD_WORKSPACE) {
-    return path.resolve(process.cwd(), process.env.CAREFOLD_WORKSPACE);
+    return path.resolve(/*turbopackIgnore: true*/ process.cwd(), process.env.CAREFOLD_WORKSPACE);
   }
 
   // Walk upwards from current working directory

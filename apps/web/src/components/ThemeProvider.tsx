@@ -160,24 +160,6 @@ export function useTheme(): ThemeContextValue {
 }
 
 /**
- * Inline blocking script component for SSR flash prevention.
- * Place inside <head> of layout.tsx.
+ * Re-export ThemeScript from pure Server Component for backward compatibility.
  */
-export function ThemeScript() {
-  const scriptContent = `(function() {
-  try {
-    var key = '${THEME_STORAGE_KEY}';
-    var stored = localStorage.getItem(key);
-    var supportDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (stored === 'dark' || ((!stored || stored === 'system') && supportDark)) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
-  } catch (e) {}
-})();`;
-
-  return <script dangerouslySetInnerHTML={{ __html: scriptContent }} />;
-}
+export { ThemeScript } from './ThemeScript';

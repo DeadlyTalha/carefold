@@ -29,12 +29,21 @@ export function Navbar() {
   const pathname = usePathname();
   const [ollamaOnline, setOllamaOnline] = useState<boolean | null>(null);
 
+  const [mounted, setMounted] = useState(false);
+
   // Safely consume ThemeContext, falling back to local state if rendered without provider
   const themeContext = useOptionalTheme();
-  const [fallbackTheme, setFallbackTheme] = useState<Theme>(() => getStoredTheme());
+  const [fallbackTheme, setFallbackTheme] = useState<Theme>('system');
+
+  useEffect(() => {
+    setMounted(true);
+    setFallbackTheme(getStoredTheme());
+  }, []);
 
   const theme = themeContext ? themeContext.theme : fallbackTheme;
   const resolvedTheme = themeContext ? themeContext.resolvedTheme : resolveTheme(fallbackTheme);
+  const effectiveTheme = mounted ? theme : 'system';
+  const effectiveResolvedTheme = mounted ? resolvedTheme : 'light';
 
   const toggleTheme = () => {
     if (themeContext) {
@@ -150,12 +159,13 @@ export function Navbar() {
           <button
             type="button"
             data-testid="theme-toggle-btn"
-            aria-label={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
-            title={`Current theme: ${theme} (${resolvedTheme}). Click to switch.`}
+            aria-label={`Switch to ${effectiveResolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
+            title={`Current theme: ${effectiveTheme} (${effectiveResolvedTheme}). Click to switch.`}
             onClick={toggleTheme}
+            suppressHydrationWarning
             className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-700 transition cursor-pointer shadow-sm"
           >
-            {resolvedTheme === 'dark' ? (
+            {mounted && effectiveResolvedTheme === 'dark' ? (
               <Sun data-testid="theme-icon-sun" className="w-4 h-4 text-amber-400" />
             ) : (
               <Moon data-testid="theme-icon-moon" className="w-4 h-4 text-slate-700" />

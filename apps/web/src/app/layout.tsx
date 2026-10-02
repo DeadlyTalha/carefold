@@ -19,7 +19,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { SafetyDisclaimerBanner } from '@/components/SafetyDisclaimerBanner';
 import { Navbar } from '@/components/Navbar';
-import { ThemeProvider, ThemeScript } from '@/components/ThemeProvider';
+import { ThemeProvider } from '@/components/ThemeProvider';
+import { ThemeScript } from '@/components/ThemeScript';
 
 export const metadata: Metadata = {
   title: 'Carefold — Specialist Health Agents',
