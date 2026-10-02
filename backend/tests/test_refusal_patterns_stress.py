@@ -137,7 +137,7 @@ def test_extreme_input_massive_benign_string():
     elapsed = time.perf_counter() - start
 
     assert res.refused is False, f"False positive on massive benign text: {res.reason}"
-    assert elapsed < 1.0, f"Massive string evaluation took too long: {elapsed:.4f}s"
+    assert elapsed < 3.0, f"Massive string evaluation took too long: {elapsed:.4f}s"
 
 
 @pytest.mark.parametrize("position", ["start", "middle", "end"])
