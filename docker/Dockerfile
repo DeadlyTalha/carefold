@@ -44,6 +44,7 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* tsconfig.base.json ./
 COPY scripts/ ./scripts/
 COPY packages/ ./packages/
 COPY apps/web/ ./apps/web/
+RUN mkdir -p /app/apps/web/public
 
 RUN pnpm install --frozen-lockfile || pnpm install
 RUN pnpm --filter @carefold/web build

@@ -1,0 +1,15 @@
+node_modules
+apps/web/node_modules
+apps/web/.next
+.next
+.git
+.venv
+backend/.venv
+dist
+coverage
+*.pyc
+__pycache__
+.pytest_cache
+.mypy_cache
+.ruff_cache
+*.tsbuildinfo
