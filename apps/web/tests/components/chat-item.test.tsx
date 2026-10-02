@@ -87,6 +87,33 @@ describe('ChatMessageItem Component', () => {
     expect(container).toHaveTextContent(SAFE_REFUSAL_TEMPLATE);
   });
 
+  it('renders assistant message with clinical boundary disclaimer when boundaryWarning is true', () => {
+    const message: ChatMessage = {
+      id: 'm-tier2',
+      role: 'assistant',
+      content: 'Here are details on hypertension and questions you can ask your doctor.',
+      boundaryWarning: true,
+      boundaryReason: 'forbidden_intent:diagnose'
+    };
+
+    render(<ChatMessageItem message={message} />);
+
+    // Should NOT be replaced with refusal gate box
+    expect(screen.getByTestId('chat-message-assistant')).toBeInTheDocument();
+    expect(screen.queryByTestId('chat-message-refusal')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('safe-refusal-badge')).not.toBeInTheDocument();
+
+    // Content is preserved
+    expect(screen.getByText(/Here are details on hypertension/)).toBeInTheDocument();
+
+    // Clinical boundary notice disclaimer card is rendered
+    const disclaimer = screen.getByTestId('clinical-boundary-disclaimer');
+    expect(disclaimer).toBeInTheDocument();
+    expect(disclaimer).toHaveTextContent('Clinical Boundary Notice');
+    expect(disclaimer).toHaveTextContent('diagnose');
+    expect(disclaimer).toHaveTextContent('Carefold provides educational context and visit preparation checklists');
+  });
+
   // -------------------------------------------------------------------------
   // M9 Enhancements: Role Badges
   // -------------------------------------------------------------------------

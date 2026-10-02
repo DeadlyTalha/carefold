@@ -500,17 +500,19 @@ class GraphBuilder:
             res = await (output_guard_node(state) if callable(output_guard_node) else output_guard_node.execute(state))
             if res.get("is_refusal") or res.get("refused"):
                 reason = res.get("refusal_reason") or state.get("default_refusal_reason") or "forbidden_intent:policy_prohibited"
-                try:
-                    await adispatch_custom_event(
-                        SSE_EVENT_REFUSAL,
-                        {
-                            "type": SSE_EVENT_REFUSAL,
-                            "reason": reason,
-                            "message": SAFE_REFUSAL_TEMPLATE,
-                        },
-                    )
-                except Exception:
-                    pass
+                from carefold.safety.classifier import is_hard_refusal_reason
+                if is_hard_refusal_reason(reason):
+                    try:
+                        await adispatch_custom_event(
+                            SSE_EVENT_REFUSAL,
+                            {
+                                "type": SSE_EVENT_REFUSAL,
+                                "reason": reason,
+                                "message": SAFE_REFUSAL_TEMPLATE,
+                            },
+                        )
+                    except Exception:
+                        pass
             return res
 
         async def _suggestion_wrapper(state: AgentState) -> Dict[str, Any]:

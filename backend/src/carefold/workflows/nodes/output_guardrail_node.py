@@ -26,7 +26,7 @@ from typing import Any, Dict, List
 from langchain_core.messages import AIMessage
 
 from carefold.resources.loader import get_resource_loader
-from carefold.safety.classifier import check_safety_refusal
+from carefold.safety.classifier import check_safety_refusal, is_hard_refusal_reason
 from carefold.workflows.nodes.base import BaseNode
 
 
@@ -49,21 +49,27 @@ class OutputGuardrailNode(BaseNode):
 
         safety_check = check_safety_refusal(output_text)
 
+        # Safety refusal gate
         if safety_check.refused:
             reason = safety_check.reason or "forbidden_intent:medical_prohibited"
+            is_hard = is_hard_refusal_reason(reason)
             return {
                 "is_refusal": True,
                 "refused": True,
                 "refusal_reason": reason,
+                "boundary_warning": not is_hard,
+                "boundary_reason": reason if not is_hard else None,
                 "next_step": "reflection",
                 "is_compliant": False,
                 "compliance_metadata": {
                     "compliant": False,
                     "reason": reason,
+                    "boundary_warning": not is_hard,
                 },
             }
 
-        # Clean robotic reference doc preamble
+        # Tier 2 (Soft Clinical Boundary Notice) and Compliant Output:
+        # Preserve full output text, clean robotic preambles, and append compliance disclaimer.
         import re
         pattern = r"^(?:(?:\*|_){0,2}(?:(?:Based on|According to|From) (?:the )?(?:provided )?reference (?:document|guide|material|checklist|information|docs?)(?: provided)?)[,:]?(?:\*|_){0,2}[,:]?\s*)"
         cleaned_output = re.sub(pattern, "", output_text.lstrip(), flags=re.IGNORECASE).lstrip("*_ \t")
@@ -80,9 +86,14 @@ class OutputGuardrailNode(BaseNode):
         if header_text and header_text.lower() not in output_text.lower():
             final_output = f"{output_text}{disclaimer_clause}"
 
+        boundary_warning = bool(safety_check.refused and not is_hard_refusal_reason(safety_check.reason))
+        boundary_reason = safety_check.reason if boundary_warning else None
+
         return {
             "is_refusal": False,
             "refused": False,
+            "boundary_warning": boundary_warning,
+            "boundary_reason": boundary_reason,
             "is_compliant": True,
             "output": final_output,
             "compliance_disclaimer": header_text,
@@ -90,9 +101,12 @@ class OutputGuardrailNode(BaseNode):
             "compliance_metadata": {
                 "compliant": True,
                 "has_disclaimer": True,
+                "boundary_warning": boundary_warning,
+                "boundary_reason": boundary_reason,
             },
             "next_step": "suggestion",
         }
+
 
 
 __all__ = ["OutputGuardrailNode"]

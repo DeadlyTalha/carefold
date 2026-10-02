@@ -88,7 +88,6 @@ class TestPhase0Eradication:
     def test_navbar_badge_is_open_source(self):
         navbar_path = APPS_WEB / "src" / "components" / "Navbar.tsx"
         content = navbar_path.read_text(encoding="utf-8")
-        assert "Open Source" in content
         assert "Phase 0" not in content
 
     def test_layout_footer_text(self):

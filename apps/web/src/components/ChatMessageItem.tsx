@@ -32,6 +32,8 @@ export interface ChatMessage {
   isStreaming?: boolean;
   isRefusal?: boolean;
   refusalReason?: string;
+  boundaryWarning?: boolean;
+  boundaryReason?: string;
   toolTraces?: ToolTraceItem[];
   traces?: ToolTraceItem[];
   attachments?: string[];
@@ -106,7 +108,10 @@ export function ChatMessageItem({
   const displayContent = message.role === 'assistant'
     ? stripReferencePreamble(stripSuggestionLeakage(message.content))
     : message.content;
-  const isRefusal = Boolean(message.isRefusal || displayContent.includes(SAFE_REFUSAL_SNIPPET));
+  const isBoundaryNotice = Boolean(message.boundaryWarning);
+  const isHardRefusal = Boolean(
+    !isBoundaryNotice && (message.isRefusal || displayContent.includes(SAFE_REFUSAL_SNIPPET))
+  );
   const traces = message.toolTraces || message.traces || [];
   const formattedTime = formatMessageTimestamp(message.timestamp);
 
@@ -159,15 +164,15 @@ export function ChatMessageItem({
 
   return (
     <div
-      data-testid={isRefusal ? 'chat-message-refusal' : 'chat-message-assistant'}
+      data-testid={isHardRefusal ? 'chat-message-refusal' : 'chat-message-assistant'}
       className={`relative group flex flex-col my-3 max-w-[95%] md:max-w-[85%] min-w-[240px] rounded-2xl p-4 shadow-sm transition-colors ${
-        isRefusal
+        isHardRefusal
           ? 'border-2 border-amber-500 bg-amber-50/70 dark:bg-amber-950/25 text-amber-950 dark:text-amber-100'
           : 'border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100'
       }`}
     >
-      {/* Safe Refusal Header Badge */}
-      {isRefusal && (
+      {/* Safe Refusal Header Badge (Tier 1 Hard Refusals) */}
+      {isHardRefusal && (
         <div data-testid="safe-refusal-badge" className="flex items-center gap-2 pb-2 mb-2 border-b border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300 font-semibold text-xs">
           <svg className="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -176,8 +181,8 @@ export function ChatMessageItem({
         </div>
       )}
 
-      {/* Refusal Reason Callout */}
-      {isRefusal && message.refusalReason && (
+      {/* Refusal Reason Callout (Tier 1 Hard Refusals) */}
+      {isHardRefusal && message.refusalReason && (
         <div data-testid="refusal-reason-callout" className="text-xs font-medium text-amber-700 dark:text-amber-300 mb-2 italic">
           Blocked Category: {message.refusalReason}
         </div>
@@ -213,12 +218,35 @@ export function ChatMessageItem({
             )}
           </>
         )}
+
+        {/* Tier 2 Clinical Boundary Notice Callout */}
+        {isBoundaryNotice && (
+          <div
+            data-testid="clinical-boundary-disclaimer"
+            className="mt-3 p-3 rounded-xl border border-amber-300 dark:border-amber-700/60 bg-amber-50/90 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 text-xs shadow-sm space-y-1.5"
+          >
+            <div className="flex items-center gap-1.5 font-semibold text-amber-800 dark:text-amber-300">
+              <svg className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Clinical Boundary Notice</span>
+              {message.boundaryReason && (
+                <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-200/70 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">
+                  {message.boundaryReason.replace('forbidden_intent:', '')}
+                </span>
+              )}
+            </div>
+            <p className="leading-relaxed opacity-95">
+              Carefold provides educational context and visit preparation checklists, but does not provide formal medical diagnoses, drug prescriptions, or clinical treatment decisions. Always verify symptoms and medical choices with a licensed healthcare provider.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Assistant Message Bottom Footer Row */}
       <div
         className={`mt-3 pt-2 border-t flex items-center justify-between gap-2 text-xs select-none ${
-          isRefusal
+          isHardRefusal
             ? 'border-amber-200 dark:border-amber-900/60'
             : 'border-slate-100 dark:border-zinc-800'
         }`}

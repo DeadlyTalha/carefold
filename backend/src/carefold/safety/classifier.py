@@ -129,6 +129,34 @@ def reload_safety_resources() -> None:
     _ANCHORED_REFUSAL_PATTERNS = [p for p in REFUSAL_PATTERNS if "^" in p.regex.pattern or "$" in p.regex.pattern]
 
 
+# Hard refusal categories (Tier 1): immediate full content suppression/replacement
+# Covers acute emergencies, direct medication dosing/prescribing, replacing ER care, and stopping meds.
+HARD_REFUSAL_PREFIXES: tuple[str, ...] = (
+    "emergency_red_flag",
+    "emergency_red_flags",
+    f"{FORBIDDEN_INTENT_PREFIX}prescribe",
+    f"{FORBIDDEN_INTENT_PREFIX}dose",
+    f"{FORBIDDEN_INTENT_PREFIX}instruct_stop_medication",
+    f"{FORBIDDEN_INTENT_PREFIX}replace_emergency_care",
+)
+
+
+def is_hard_refusal_reason(reason: Optional[str]) -> bool:
+    """Evaluates whether a refusal reason requires a hard refusal (Tier 1).
+
+    Tier 1 hard refusals completely suppress content and display an emergency/refusal card.
+    Applies to acute emergency red flags, prescription directives, dosing, stopping medications,
+    and emergency room diversion.
+
+    Tier 2 soft clinical boundaries (e.g. diagnose, medical_prohibited) preserve the generated
+    educational output and attach an explicit clinical boundary notice.
+    """
+    if not reason:
+        return False
+    lower = reason.lower().strip()
+    return any(lower.startswith(prefix) or prefix in lower for prefix in HARD_REFUSAL_PREFIXES)
+
+
 def check_safety_refusal(text: Optional[str]) -> SafetyCheckResult:
     """Evaluates whether the given text triggers the medical safety refusal gate."""
     if not text or not isinstance(text, str):
@@ -185,6 +213,7 @@ def check_safety_refusal(text: Optional[str]) -> SafetyCheckResult:
     return SafetyCheckResult(refused=False)
 
 
+
 __all__ = [
     "COMMON_CONDITIONS",
     "COMMON_CONDITIONS_LIST",
@@ -210,4 +239,7 @@ __all__ = [
     "SafetyCheckResult",
     "check_safety_refusal",
     "reload_safety_resources",
+    "HARD_REFUSAL_PREFIXES",
+    "is_hard_refusal_reason",
 ]
+

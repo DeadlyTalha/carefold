@@ -406,14 +406,17 @@ export function ChatClient({ initialAgents }: { initialAgents: AgentSummary[] })
                   })
                 );
               } else if (eventType === 'refusal') {
+                const isHard = !data.reason || !data.reason.includes('diagnose');
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === assistantMessageId
                       ? {
                           ...msg,
-                          isRefusal: true,
+                          isRefusal: isHard,
                           refusalReason: data.reason,
-                          content: data.message || msg.content
+                          boundaryWarning: !isHard,
+                          boundaryReason: data.reason,
+                          content: isHard ? (data.message || msg.content) : msg.content
                         }
                       : msg
                   )
@@ -428,14 +431,18 @@ export function ChatClient({ initialAgents }: { initialAgents: AgentSummary[] })
                 if (Array.isArray(list) && list.length > 0) {
                   setSuggestedQuestions(list);
                 }
+                const isRefusal = Boolean(data.refused);
+                const hasBoundaryWarning = Boolean(data.boundaryWarning);
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === assistantMessageId
                       ? {
                           ...msg,
                           content: stripReferencePreamble(stripSuggestionLeakage(data.fullText || msg.content)),
-                          isRefusal: data.refused || msg.isRefusal,
+                          isRefusal: isRefusal,
                           refusalReason: data.refusalReason || msg.refusalReason,
+                          boundaryWarning: hasBoundaryWarning || (!isRefusal && Boolean(msg.boundaryWarning)),
+                          boundaryReason: data.boundaryReason || (hasBoundaryWarning ? data.refusalReason : msg.boundaryReason),
                           isStreaming: false
                         }
                       : msg

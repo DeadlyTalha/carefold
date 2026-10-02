@@ -55,6 +55,8 @@ export interface ChatMessage {
   isStreaming?: boolean;
   isRefusal?: boolean;
   refusalReason?: string;
+  boundaryWarning?: boolean;
+  boundaryReason?: string;
   toolTraces?: ToolTraceItem[];
   traces?: ToolTraceItem[];
   attachments?: string[];

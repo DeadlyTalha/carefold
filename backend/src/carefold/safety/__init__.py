@@ -19,9 +19,11 @@ from carefold.safety.template import SAFE_REFUSAL_TEMPLATE
 from carefold.safety.classifier import (
     COMMON_CONDITIONS,
     DISCLAIMER_CLAUSES,
+    HARD_REFUSAL_PREFIXES,
     REFUSAL_PATTERNS,
     SafetyCheckResult,
     check_safety_refusal,
+    is_hard_refusal_reason,
 )
 from carefold.safety.prompt import build_safety_preamble
 from carefold.safety.emergency import EmergencyFlag, check_emergency_red_flags
@@ -30,10 +32,13 @@ __all__ = [
     "SAFE_REFUSAL_TEMPLATE",
     "COMMON_CONDITIONS",
     "DISCLAIMER_CLAUSES",
+    "HARD_REFUSAL_PREFIXES",
     "REFUSAL_PATTERNS",
     "SafetyCheckResult",
     "check_safety_refusal",
+    "is_hard_refusal_reason",
     "build_safety_preamble",
     "EmergencyFlag",
     "check_emergency_red_flags",
 ]
+

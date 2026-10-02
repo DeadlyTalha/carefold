@@ -234,7 +234,13 @@ async def post_safety_node(state: AgentState) -> Dict[str, Any]:
             "next_step": "refusal",
         }
 
-    return {"refused": False, "is_refusal": False}
+    return {
+        "refused": False,
+        "is_refusal": False,
+        "boundary_warning": res.get("boundary_warning", False),
+        "boundary_reason": res.get("boundary_reason"),
+        "output": res.get("output"),
+    }
 
 
 async def tools_node(state: AgentState) -> Dict[str, Any]:

@@ -80,7 +80,7 @@ from carefold.engine.graph import (
 from carefold.engine.prompt_builder import build_system_prompt
 from carefold.loaders.agent_loader import load_agent
 from carefold.model.factory import create_chat_model
-from carefold.safety.classifier import check_safety_refusal
+from carefold.safety.classifier import check_safety_refusal, is_hard_refusal_reason
 from carefold.safety.template import SAFE_REFUSAL_TEMPLATE
 from carefold.schemas.audit import AuditEvent
 from carefold.schemas.chat import ChatMessage, ChatRequestBody
@@ -373,6 +373,8 @@ class AgentExecutionService:
         audit_event_id: Optional[str] = None,
         refused: bool = False,
         refusal_reason: Optional[str] = None,
+        boundary_warning: bool = False,
+        boundary_reason: Optional[str] = None,
         suggestions: Optional[List[str]] = None,
         citations: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
@@ -384,6 +386,8 @@ class AgentExecutionService:
             "auditEventId": audit_event_id,
             "refused": refused,
             "refusalReason": refusal_reason,
+            "boundaryWarning": boundary_warning,
+            "boundaryReason": boundary_reason,
             "suggestions": chips,
             "followUpSuggestions": chips,
             "threadId": thread_id,
@@ -737,8 +741,11 @@ class AgentExecutionService:
 
         # Verify output against safety boundaries if not already flagged
         output_safety = check_safety_refusal(accumulated_text)
-        if refusal_triggered or output_safety.refused:
-            reason = refusal_reason or output_safety.reason or "forbidden_intent:medical_prohibited"
+        is_refusal_candidate = refusal_triggered or output_safety.refused
+        reason = refusal_reason or (output_safety.reason if output_safety.refused else None) or "forbidden_intent:medical_prohibited"
+        is_hard = refusal_triggered or (output_safety.refused and is_hard_refusal_reason(reason))
+
+        if is_refusal_candidate and is_hard:
             logger.warning(
                 "workflow_turn_refused",
                 engine="LANGGRAPH_WORKFLOW",
@@ -768,10 +775,34 @@ class AgentExecutionService:
                 audit_event_id=getattr(refuse_event, "ts", None),
                 refused=True,
                 refusal_reason=reason,
+                boundary_warning=False,
+                boundary_reason=None,
                 suggestions=[],
                 citations=citations if citations else None,
             )
         else:
+            is_soft_boundary = is_refusal_candidate and not is_hard
+            if is_soft_boundary:
+                logger.info(
+                    "workflow_turn_boundary_warning",
+                    engine="LANGGRAPH_WORKFLOW",
+                    agent_id=agent.id,
+                    thread_id=thread_id,
+                    reason=reason,
+                    duration_ms=round(total_dur_ms, 2),
+                )
+                await record_audit(
+                    AuditEvent(
+                        agent_id=agent.id,
+                        event="boundary_warning",
+                        allowed=True,
+                        reason=reason,
+                        duration_ms=total_dur_ms,
+                    ),
+                    log_path=resolved_log_path,
+                    store_bodies=effective_store_bodies,
+                )
+
             if not suggestions:
                 suggestions = generate_follow_up_suggestions(
                     agent_id=agent.id,
@@ -803,12 +834,15 @@ class AgentExecutionService:
                 store_bodies=effective_store_bodies,
             )
 
+
             yield self.format_done_event(
                 full_text=accumulated_text,
                 thread_id=thread_id,
                 audit_event_id=getattr(run_event, "ts", None),
                 refused=False,
                 refusal_reason=None,
+                boundary_warning=is_soft_boundary,
+                boundary_reason=reason if is_soft_boundary else None,
                 suggestions=suggestions,
                 citations=citations if citations else None,
             )

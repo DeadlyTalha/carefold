@@ -251,10 +251,27 @@ async def test_output_guardrail_node_disclaimer_and_refusal():
     assert "disclaimer" in compliant_out["output"].lower()
     assert compliant_out["next_step"] == "suggestion"
 
-    # Non-compliant output routes to reflection
+    # Non-compliant hard violation routes to reflection
     non_compliant_out = await node.execute({"output": "You have asthma, take 500mg amoxicillin."})
     assert non_compliant_out["is_refusal"] is True
     assert non_compliant_out["next_step"] == "reflection"
+
+
+@pytest.mark.asyncio
+async def test_output_guardrail_node_two_tier_boundary_warning():
+    """Verifies that Tier 2 diagnostic boundaries tag boundary_warning while routing to reflection."""
+    node = OutputGuardrailNode()
+
+    # Soft boundary violation (diagnostic assertion without prescription/dosing)
+    output_text = "These symptoms suggest you have asthma. Here is an appointment preparation checklist."
+    res = await node.execute({"output": output_text})
+
+    assert res["is_refusal"] is True
+    assert res["refused"] is True
+    assert res["boundary_warning"] is True
+    assert res["boundary_reason"] == "forbidden_intent:diagnose"
+    assert res["next_step"] == "reflection"
+
 
 
 @pytest.mark.asyncio
