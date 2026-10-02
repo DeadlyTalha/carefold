@@ -18,7 +18,12 @@
 from pathlib import Path
 import pytest
 
-from carefold.loaders.agent_loader import ManifestValidationError, load_agent, load_all_agents
+from carefold.loaders.agent_loader import (
+    ManifestValidationError,
+    extract_fallback_description,
+    load_agent,
+    load_all_agents,
+)
 from carefold.loaders.frontmatter import (
     MANDATORY_INTENDED_USE_LINES,
     check_mandatory_intended_use,
@@ -610,4 +615,54 @@ def test_load_all_agents_skips_template_and_hidden_dirs(tmp_path: Path):
     assert sys_summary.hidden is True
     user_summary = next(s for s in summaries if s.id == "user-agent")
     assert user_summary.hidden is False
+
+
+def test_extract_fallback_description():
+    """Verify extract_fallback_description ignores markdown headers and section titles."""
+    # Classic markdown header
+    p1 = "ROLE & EMPATHY:\nYou are Benefits Guide, a helpful assistant.\nMore text."
+    assert extract_fallback_description(p1) == "You are Benefits Guide, a helpful assistant."
+
+    # Markdown hash heading
+    p2 = "# Role & Empathy\nYou are Visit Steward, an organized assistant."
+    assert extract_fallback_description(p2) == "You are Visit Steward, an organized assistant."
+
+    # Leading whitespace and blank lines
+    p3 = "\n\n  ROLE:\n\n  Dedicated oncology care steward."
+    assert extract_fallback_description(p3) == "Dedicated oncology care steward."
+
+    # Dictionary persona
+    p4 = {"role": "Healthcare insurance navigator"}
+    assert extract_fallback_description(p4) == "Healthcare insurance navigator"
+
+    # Dictionary persona with header in role falling back to instructions
+    p5 = {"role": "ROLE & EMPATHY:", "instructions": "You are a test guide."}
+    assert extract_fallback_description(p5) == "You are a test guide."
+
+    # Empty inputs
+    assert extract_fallback_description("") == ""
+    assert extract_fallback_description(None) == ""
+
+
+def test_all_agents_have_valid_descriptions():
+    """Verify that all live agents in the repo have substantive, non-header descriptions."""
+    repo_agents_dir = Path(__file__).resolve().parent.parent.parent / "agents"
+    if not repo_agents_dir.is_dir():
+        pytest.skip("Repo agents directory not found")
+
+    summaries = load_all_agents(repo_agents_dir)
+    assert len(summaries) >= 20
+
+    for agent in summaries:
+        assert agent.description, f"Agent '{agent.id}' has empty description"
+        assert not agent.description.upper().startswith("ROLE & EMPATHY"), (
+            f"Agent '{agent.id}' description leaked header: {agent.description}"
+        )
+        assert not agent.description.upper().startswith("ROLE:"), (
+            f"Agent '{agent.id}' description leaked header: {agent.description}"
+        )
+        assert len(agent.description) >= 20, (
+            f"Agent '{agent.id}' description is too short: {agent.description}"
+        )
+
 

@@ -35,6 +35,7 @@ from carefold.constants.defaults import BUNDLED_AGENT_IDS
 from carefold.constants.paths import SYSTEM_AGENTS_DIR
 from carefold.loaders.agent_loader import (
     ManifestValidationError,
+    extract_fallback_description,
     load_agent,
     load_agent_readme,
     load_agent_starters,
@@ -191,16 +192,7 @@ async def get_agent(
     is_bundled = agent_id in BUNDLED_AGENT_IDS
 
     # Persona summary
-    persona_summary = agent.description
-    if not persona_summary:
-        if isinstance(agent.persona, str):
-            persona_summary = agent.persona.strip().split("\n")[0]
-        elif isinstance(agent.persona, dict):
-            persona_summary = agent.persona.get("role", "")
-        elif hasattr(agent.persona, "role") and agent.persona.role:
-            persona_summary = agent.persona.role
-        else:
-            persona_summary = ""
+    persona_summary = agent.description or extract_fallback_description(agent.persona)
 
     if isinstance(agent.persona, (str, dict)):
         persona_val = agent.persona

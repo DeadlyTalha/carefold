@@ -245,12 +245,12 @@ apps/web/.next/
 apps/web/out/
 
 # Carefold Local Runtime Workspace (User Data & Logs)
-logs/
-attachments/
-chats/
-chat/
-notes/
-workspace/
+/logs/
+/attachments/
+/chats/
+/chat/
+/notes/
+/workspace/
 carefold.config.json
 
 # Environment variables

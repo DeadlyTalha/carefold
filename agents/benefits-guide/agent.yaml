@@ -16,6 +16,9 @@ tags:
   - copay
 icon: "FileText"
 model: llama3.2
+description: >-
+  Healthcare benefits and insurance navigation steward assisting patients with deductible tracking,
+  copays, out-of-pocket maximums, and explanation of benefits (EOB) analysis.
 skills:
   - benefits-explainer
 tools:

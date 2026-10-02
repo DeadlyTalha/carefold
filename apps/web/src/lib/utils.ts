@@ -21,3 +21,17 @@ import { twMerge } from 'tailwind-merge';
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/**
+ * Sanitizes an agent description by removing stray markdown section headers
+ * (e.g. "ROLE & EMPATHY:", "ROLE:") if present as a fallback artifact.
+ */
+export function sanitizeAgentDescription(desc?: string | null): string {
+  if (!desc) return '';
+  return desc
+    .replace(
+      /^(?:#+\s*|\*+\s*)?(?:ROLE(?:\s*&|\s+AND)?\s*EMPATHY|ROLE|CLINICAL SCOPE(?:\s*&|\s+FOCUS)?|MISSION|OVERVIEW):?\s*/i,
+      ''
+    )
+    .trim();
+}

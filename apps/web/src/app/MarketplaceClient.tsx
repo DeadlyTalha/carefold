@@ -22,7 +22,7 @@ import Link from 'next/link';
 import * as LucideIcons from 'lucide-react';
 import { Search, Sparkles, AlertCircle, ArrowRight, Shield, Stethoscope, FileText, HeartPulse, Terminal } from 'lucide-react';
 import type { AgentSummary } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { cn, sanitizeAgentDescription } from '@/lib/utils';
 
 function resolveAgentIcon(iconToken?: string, id?: string): React.ComponentType<{ className?: string }> {
   if (iconToken && iconToken in LucideIcons) {
@@ -251,7 +251,7 @@ export function MarketplaceClient({ initialAgents }: { initialAgents: AgentSumma
                     <Link href={`/agents/${agent.id}`}>{agent.title}</Link>
                   </h2>
                   <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-zinc-400 line-clamp-3 leading-relaxed">
-                    {agent.description}
+                    {sanitizeAgentDescription(agent.description)}
                   </p>
 
                   {/* Skills & Tools Pills */}

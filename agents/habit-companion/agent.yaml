@@ -14,6 +14,9 @@ tags:
   - checklist
 icon: "HeartPulse"
 model: llama3.2
+description: >-
+  Daily wellness and lifestyle companion supporting hydration, sleep hygiene,
+  activity goals, and positive chronic health habit check-ins.
 skills:
   - habit-checkin
 tools:

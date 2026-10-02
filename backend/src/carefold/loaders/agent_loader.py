@@ -19,7 +19,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+import re
+from typing import Any, Dict, List, Optional, Tuple, Union
 import yaml
 from pydantic import ValidationError
 
@@ -77,6 +78,45 @@ def load_agent_readme(agent_dir: Union[Path, str]) -> Optional[str]:
         except Exception:
             return None
     return None
+
+
+HEADER_PREFIX_PATTERN = re.compile(
+    r"^(?:#+\s*|\*+\s*)?(?:ROLE(?:\s*&|\s+AND)?\s*EMPATHY|ROLE|CLINICAL SCOPE(?:\s*&|\s+FOCUS)?|MISSION|OVERVIEW|PURPOSE|BACKGROUND|INTENDED BEHAVIOR)[\s:]*$",
+    re.IGNORECASE,
+)
+
+
+def extract_fallback_description(persona: Union[str, Dict[str, Any], Any]) -> str:
+    """Extracts a substantive summary from an agent persona, skipping section headers."""
+    if not persona:
+        return ""
+    if isinstance(persona, dict):
+        role = persona.get("role", "")
+        if role and not HEADER_PREFIX_PATTERN.match(role.strip()):
+            return role.strip()
+        instructions = persona.get("instructions", "")
+        if instructions:
+            return extract_fallback_description(instructions)
+        return ""
+    if hasattr(persona, "role") and getattr(persona, "role"):
+        role = getattr(persona, "role")
+        if not HEADER_PREFIX_PATTERN.match(str(role).strip()):
+            return str(role).strip()
+
+    if isinstance(persona, str):
+        lines = [line.strip() for line in persona.strip().splitlines()]
+        for line in lines:
+            if not line:
+                continue
+            if line.startswith("#") or line.startswith("---") or line.startswith("==="):
+                continue
+            if HEADER_PREFIX_PATTERN.match(line):
+                continue
+            if len(line) < 35 and line.endswith(":") and "." not in line:
+                continue
+            return line
+
+    return ""
 
 
 def load_agent(
@@ -218,15 +258,8 @@ def load_all_agents(
             starters = load_agent_starters(entry)
             is_bundled = entry.name in BUNDLED_AGENT_IDS
 
-            # Description extraction: prefer manifest.description, fallback to persona
-            desc = agent.description
-            if not desc:
-                if isinstance(agent.persona, str):
-                    desc = agent.persona.strip().split("\n")[0]
-                elif isinstance(agent.persona, dict):
-                    desc = agent.persona.get("role", "")
-                elif hasattr(agent.persona, "role") and agent.persona.role:
-                    desc = agent.persona.role
+            # Description extraction: prefer manifest.description, fallback to sanitized persona summary
+            desc = agent.description or extract_fallback_description(agent.persona)
 
             summaries.append(
                 AgentSummary(
