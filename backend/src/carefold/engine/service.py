@@ -233,6 +233,38 @@ class _StreamChatModelAdapter(BaseChatModel):
         return ChatResult(generations=[ChatGeneration(message=gen_chunk.message)])
 
 
+def strip_internal_suggestion_leakage(text: str) -> str:
+    """Strips accidental suggestion generator preamble or raw JSON question blocks."""
+    if not text:
+        return text
+    import re
+    has_leakage = False
+
+    def _replace_preamble(m: Any) -> str:
+        nonlocal has_leakage
+        has_leakage = True
+        return m.group(1) or ""
+
+    def _replace_json(m: Any) -> str:
+        nonlocal has_leakage
+        has_leakage = True
+        return ""
+
+    cleaned = re.sub(
+        r"(\.|\?|\!)?\s*(?:assistant\s*\n+|\n|^)Here are \d+ concise follow-up questions.*$",
+        _replace_preamble,
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    cleaned = re.sub(
+        r"(?:\n|^)\[\s*\"[^\"]+\?\s*\"(?:\s*,\s*\"[^\"]+\?\s*\")*\s*\]\s*$",
+        _replace_json,
+        cleaned,
+        flags=re.DOTALL,
+    )
+    return cleaned.rstrip() if has_leakage else cleaned
+
+
 # ============================================================================
 # AgentExecutionService
 # ============================================================================
@@ -321,7 +353,7 @@ class AgentExecutionService:
         chips = suggestions or []
         payload: Dict[str, Any] = {
             "type": SSE_EVENT_DONE,
-            "fullText": full_text,
+            "fullText": strip_internal_suggestion_leakage(full_text),
             "auditEventId": audit_event_id,
             "refused": refused,
             "refusalReason": refusal_reason,
@@ -674,6 +706,7 @@ class AgentExecutionService:
 
         # 7. Post-Execution Safety Verification and Done Event
         total_dur_ms = (time.time() - start_time) * 1000
+        accumulated_text = strip_internal_suggestion_leakage(accumulated_text)
 
         # Verify output against safety boundaries if not already flagged
         output_safety = check_safety_refusal(accumulated_text)

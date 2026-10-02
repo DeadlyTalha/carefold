@@ -30,6 +30,30 @@ export interface ChatMessageItemProps {
 
 const SAFE_REFUSAL_SNIPPET = 'I am a wellness and care navigation assistant, not a licensed medical professional';
 
+/**
+ * Strips internal suggestion generator preamble or raw JSON question blocks
+ * from assistant message content so they are never displayed in the chat bubble.
+ */
+export function stripSuggestionLeakage(text: string): string {
+  if (!text) return text;
+  let hasLeakage = false;
+  let cleaned = text.replace(
+    /(\.|\?|\!)?\s*(?:assistant\s*\n+|\n|^)Here are \d+ concise follow-up questions.*$/is,
+    (_, punct) => {
+      hasLeakage = true;
+      return punct || '';
+    }
+  );
+  cleaned = cleaned.replace(
+    /(?:\n|^)\[\s*"[^"]+\?\s*"(?:,\s*"[^"]+\?\s*")*\s*\]\s*$/s,
+    () => {
+      hasLeakage = true;
+      return '';
+    }
+  );
+  return hasLeakage ? cleaned.trimEnd() : cleaned;
+}
+
 export function formatMessageTimestamp(timestamp?: string): string | null {
   if (!timestamp) return null;
   try {
@@ -48,7 +72,8 @@ export function ChatMessageItem({
   disabled = false,
   agentTitle
 }: ChatMessageItemProps) {
-  const isRefusal = Boolean(message.isRefusal || message.content.includes(SAFE_REFUSAL_SNIPPET));
+  const displayContent = message.role === 'assistant' ? stripSuggestionLeakage(message.content) : message.content;
+  const isRefusal = Boolean(message.isRefusal || displayContent.includes(SAFE_REFUSAL_SNIPPET));
   const traces = message.toolTraces || message.traces || [];
   const formattedTime = formatMessageTimestamp(message.timestamp);
 
@@ -136,7 +161,7 @@ export function ChatMessageItem({
 
       {/* Message Content with Markdown Formatting */}
       <div className="text-sm leading-relaxed space-y-2 markdown-body">
-        {message.isStreaming && !message.content.trim() ? (
+        {message.isStreaming && !displayContent.trim() ? (
           <ThinkingIndicator
             text={
               traces.some((t) => t.status === 'running')
@@ -146,8 +171,8 @@ export function ChatMessageItem({
           />
         ) : (
           <>
-            {renderSimpleMarkdown(message.content)}
-            {message.isStreaming && message.content.length > 0 && (
+            {renderSimpleMarkdown(displayContent)}
+            {message.isStreaming && displayContent.length > 0 && (
               <span
                 data-testid="streaming-indicator"
                 className="inline-block w-2 h-4 ml-1 bg-blue-600 dark:bg-blue-400 animate-pulse align-middle"
@@ -185,7 +210,7 @@ export function ChatMessageItem({
         {!message.isStreaming && (
           <MessageToolbar
             role="assistant"
-            content={message.content}
+            content={displayContent}
             messageId={message.id}
             onRegenerate={onRegenerate}
             disabled={disabled}

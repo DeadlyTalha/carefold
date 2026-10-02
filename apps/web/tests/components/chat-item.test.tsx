@@ -250,5 +250,31 @@ describe('ChatMessageItem Component', () => {
     expect(lis).toHaveLength(3);
     expect(lis[0]).toHaveTextContent('First step');
   });
+
+  // -------------------------------------------------------------------------
+  // Suggestion Leakage Sanitization Tests
+  // -------------------------------------------------------------------------
+  it('strips leaked internal follow-up questions preamble and raw JSON block from assistant message', () => {
+    const leakedContent =
+      "These questions will help you understand your deductible and how it applies to your specific situation.assistant\n\n" +
+      "Here are 3 concise follow-up questions from the user's perspective:\n\n" +
+      "[\n" +
+      '  "What are the next steps if I\'ve met my deductible?",\n' +
+      '  "Can you explain the Out-of-Pocket Maximum in simpler terms?",\n' +
+      '  "How can I confirm my insurance coverage for this procedure?"\n' +
+      "]";
+
+    const msg: ChatMessage = {
+      id: 'a-leakage',
+      role: 'assistant',
+      content: leakedContent
+    };
+
+    const { container } = render(<ChatMessageItem message={msg} />);
+    expect(container.textContent).toContain('These questions will help you understand your deductible and how it applies to your specific situation.');
+    expect(container.textContent).not.toContain("Here are 3 concise follow-up questions");
+    expect(container.textContent).not.toContain("What are the next steps if I've met my deductible?");
+    expect(container.textContent).not.toContain('assistant\n\n');
+  });
 });
 

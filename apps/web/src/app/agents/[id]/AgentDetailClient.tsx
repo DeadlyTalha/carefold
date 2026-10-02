@@ -49,7 +49,7 @@ export function AgentDetailClient({ agent }: { agent: AgentDetail }) {
       <div>
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Marketplace</span>
@@ -57,18 +57,18 @@ export function AgentDetailClient({ agent }: { agent: AgentDetail }) {
       </div>
 
       {/* Hero Header */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 shadow-sm transition-colors">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 capitalize">
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 capitalize">
                 {agent.risk_class.replace('_', ' ')}
               </span>
-              <span className="text-xs font-mono text-slate-400">v{agent.version}</span>
-              <span className="text-xs text-slate-400">• {agent.license}</span>
+              <span className="text-xs font-mono text-slate-400 dark:text-zinc-500">v{agent.version}</span>
+              <span className="text-xs text-slate-400 dark:text-zinc-500">• {agent.license}</span>
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{agent.title}</h1>
-            <p className="mt-2 text-sm text-slate-600 max-w-2xl">{getRiskDisclaimer(agent.risk_class)}</p>
+            <h1 className="text-3xl font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight">{agent.title}</h1>
+            <p className="mt-2 text-sm text-slate-600 dark:text-zinc-400 max-w-2xl">{getRiskDisclaimer(agent.risk_class)}</p>
           </div>
 
           {/* Quick CTA Actions */}
@@ -84,9 +84,9 @@ export function AgentDetailClient({ agent }: { agent: AgentDetail }) {
             <button
               type="button"
               onClick={handleCopyCli}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-mono transition"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 text-xs font-mono transition"
             >
-              {copiedCli ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+              {copiedCli ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />}
               <span>{copiedCli ? 'Copied CLI Command!' : `carefold run --agent ${agent.id}`}</span>
             </button>
           </div>
@@ -95,9 +95,9 @@ export function AgentDetailClient({ agent }: { agent: AgentDetail }) {
 
       {/* Suggested Starters Chips (CF-S50) */}
       {agent.starters.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
+        <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm transition-colors">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Suggested Starter Prompts</span>
           </h2>
           <div className="flex flex-wrap gap-2">
@@ -106,7 +106,7 @@ export function AgentDetailClient({ agent }: { agent: AgentDetail }) {
                 key={i}
                 type="button"
                 onClick={() => router.push(`/chat?agent=${agent.id}&prompt=${encodeURIComponent(starter)}`)}
-                className="text-left text-xs bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-900 border border-slate-200 text-slate-700 px-3.5 py-2 rounded-xl transition"
+                className="text-left text-xs bg-slate-50 dark:bg-zinc-800/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:border-emerald-300 dark:hover:border-emerald-800 hover:text-emerald-900 dark:hover:text-emerald-300 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl transition"
               >
                 "{starter}"
               </button>
@@ -118,25 +118,25 @@ export function AgentDetailClient({ agent }: { agent: AgentDetail }) {
       {/* Detailed Specifications Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Persona & Intended Behavior */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-            <Cpu className="w-4 h-4 text-slate-500" />
+        <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-4 transition-colors">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wider flex items-center gap-2">
+            <Cpu className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
             <span>Persona & Operating Instructions</span>
           </h2>
-          <div className="text-xs text-slate-600 leading-relaxed max-h-60 overflow-y-auto bg-slate-50 p-4 rounded-xl border border-slate-200/60 font-sans whitespace-pre-wrap">
+          <div className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed max-h-60 overflow-y-auto bg-slate-50 dark:bg-zinc-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-zinc-700/60 font-sans whitespace-pre-wrap">
             {agent.persona}
           </div>
 
           <div>
-            <h3 className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-amber-600" />
+            <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2 flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>Forbidden Intent Filters (Refusal Gate)</span>
             </h3>
             <div className="flex flex-wrap gap-1.5">
               {agent.forbidden.map((f) => (
                 <span
                   key={f}
-                  className="bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-mono px-2 py-0.5 rounded"
+                  className="bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70 text-[11px] font-mono px-2 py-0.5 rounded"
                 >
                   {f}
                 </span>
@@ -146,21 +146,21 @@ export function AgentDetailClient({ agent }: { agent: AgentDetail }) {
         </div>
 
         {/* Declared Skills & Effective Tools Allowlist */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-6 transition-colors">
           {/* Declared Skills */}
           <div>
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-3">
-              <Shield className="w-4 h-4 text-emerald-600" />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wider flex items-center gap-2 mb-3">
+              <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Declared Skills ({agent.skills.length})</span>
             </h2>
             <div className="space-y-2.5">
               {agent.skills.map((skill) => (
-                <div key={skill.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                  <div className="flex items-center justify-between font-semibold text-slate-800">
+                <div key={skill.id} className="p-3 bg-slate-50 dark:bg-zinc-800/80 rounded-xl border border-slate-200 dark:border-zinc-700 text-xs">
+                  <div className="flex items-center justify-between font-semibold text-slate-800 dark:text-zinc-200">
                     <span>{skill.name}</span>
-                    <span className="font-mono text-[10px] text-slate-500">v{skill.version}</span>
+                    <span className="font-mono text-[10px] text-slate-500 dark:text-zinc-400">v{skill.version}</span>
                   </div>
-                  <p className="text-slate-600 mt-1">{skill.description}</p>
+                  <p className="text-slate-600 dark:text-zinc-400 mt-1">{skill.description}</p>
                 </div>
               ))}
             </div>
@@ -168,21 +168,21 @@ export function AgentDetailClient({ agent }: { agent: AgentDetail }) {
 
           {/* Effective Tools Union */}
           <div>
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-2">
-              <CheckCircle className="w-4 h-4 text-emerald-600" />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wider flex items-center gap-2 mb-2">
+              <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Effective Tools Allowlist</span>
             </h2>
-            <p className="text-xs text-slate-500 mb-3">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mb-3">
               Union of agent and skill declarations restricted to Phase 0 Closed Sandbox:
             </p>
             <div className="space-y-2">
               {agent.effectiveTools.map((tool) => (
                 <div
                   key={tool}
-                  className="flex items-center justify-between p-2.5 bg-emerald-50/50 border border-emerald-200 rounded-lg text-xs"
+                  className="flex items-center justify-between p-2.5 bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-lg text-xs"
                 >
-                  <span className="font-mono font-bold text-emerald-900">{tool}</span>
-                  <span className="text-[11px] text-emerald-700">Sandbox Permitted</span>
+                  <span className="font-mono font-bold text-emerald-900 dark:text-emerald-200">{tool}</span>
+                  <span className="text-[11px] text-emerald-700 dark:text-emerald-400">Sandbox Permitted</span>
                 </div>
               ))}
             </div>

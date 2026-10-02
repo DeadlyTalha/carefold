@@ -823,3 +823,24 @@ async def test_stream_never_leaks_internal_suggestion_or_orchestrator_tokens(tem
     assert any("deductible" in s.lower() for s in suggestions)
 
 
+def test_strip_internal_suggestion_leakage_adversarial():
+    """Validates that strip_internal_suggestion_leakage sanitizes glued assistant prompts and JSON question blocks."""
+    from carefold.engine.service import strip_internal_suggestion_leakage
+
+    leakage_sample = (
+        "These questions will help you understand your deductible and how it applies to your specific situation.assistant\n\n"
+        "Here are 3 concise follow-up questions from the user's perspective:\n\n"
+        "[\n"
+        '  "What are the next steps if I\'ve met my deductible?",\n'
+        '  "Can you explain the Out-of-Pocket Maximum in simpler terms?",\n'
+        '  "How can I confirm my insurance coverage for this procedure?"\n'
+        "]"
+    )
+    cleaned = strip_internal_suggestion_leakage(leakage_sample)
+    assert cleaned == "These questions will help you understand your deductible and how it applies to your specific situation."
+
+    # Normal text without leakage should remain unchanged
+    normal_text = "Your deductible is $1,000 with a $25 copay.\n\nHave a great day!\n"
+    assert strip_internal_suggestion_leakage(normal_text) == normal_text
+
+

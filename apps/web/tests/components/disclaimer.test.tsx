@@ -1,10 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { DisclaimerHeader } from '@/components/DisclaimerHeader';
 
 describe('DisclaimerHeader Component (CF-S05)', () => {
-  it('renders permanent safety notice with required canonical copy', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+
+  it('renders safety notice with required canonical copy', () => {
     render(<DisclaimerHeader />);
 
     const banner = screen.getByTestId('safety-disclaimer-header');
@@ -14,8 +18,13 @@ describe('DisclaimerHeader Component (CF-S05)', () => {
     expect(banner.textContent?.toLowerCase()).toContain('not diagnosis or treatment');
   });
 
-  it('cannot be dismissed (no close button exists)', () => {
+  it('can be dismissed when close button is clicked', () => {
     render(<DisclaimerHeader />);
-    expect(screen.queryByRole('button', { name: /close|dismiss/i })).not.toBeInTheDocument();
+
+    const dismissBtn = screen.getByRole('button', { name: /close|dismiss/i });
+    expect(dismissBtn).toBeInTheDocument();
+
+    fireEvent.click(dismissBtn);
+    expect(screen.queryByTestId('safety-disclaimer-header')).not.toBeInTheDocument();
   });
 });
