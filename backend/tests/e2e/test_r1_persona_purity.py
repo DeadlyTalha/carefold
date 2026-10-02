@@ -1,0 +1,371 @@
+"""Tier 1 to Tier 4 E2E Tests for Requirement R1: Persona Purification & Separation of Concerns.
+
+Verifies that all agent personas in `agents/*/persona.md` and `agents/_template/persona.md`
+are completely purified of operational tool invocation syntax, skill slugs, reference document
+filenames, and filesystem paths. Asserts word count >= 250 and presence of all 5 mandatory
+uppercase section headers.
+"""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+import re
+from typing import Dict, List, Set, Tuple
+import pytest
+import yaml
+
+from carefold.loaders.agent_loader import load_agent
+
+
+# ============================================================================
+# Canonical Invariant Definitions
+# ============================================================================
+
+MANDATORY_HEADERS: List[str] = [
+    "ROLE & EMPATHY:",
+    "CLINICAL SCOPE & FOCUS:",
+    "STRUCTURED INTERACTION PROTOCOL:",
+    "STRICT NON-CLINICAL BOUNDARIES:",
+    "EXPLICIT EMERGENCY RED FLAGS:",
+]
+
+FORBIDDEN_TOOL_KEYWORDS: Set[str] = {
+    "attach-read",
+    "workspace-note",
+    "skill-docs",
+}
+
+FORBIDDEN_SKILL_SLUGS: Set[str] = {
+    "cardiology-prep",
+    "visit-prep",
+    "benefits-explainer",
+    "pulmonology-prep",
+    "neurology-prep",
+    "gastro-prep",
+    "nephrology-prep",
+    "endocrinology-prep",
+    "ortho-prep",
+    "derma-prep",
+    "rheuma-prep",
+    "ent-prep",
+    "eye-prep",
+    "urology-prep",
+    "oncology-prep",
+    "emergency-red-flags",
+    "clinical-safety-boundaries",
+}
+
+FORBIDDEN_FILESYSTEM_PATTERNS: List[re.Pattern] = [
+    re.compile(r"\battachments/", re.IGNORECASE),
+    re.compile(r"\bnotes/", re.IGNORECASE),
+    re.compile(r"\bworkspace/notes/", re.IGNORECASE),
+    re.compile(r"/Users/", re.IGNORECASE),
+]
+
+FORBIDDEN_DOC_FILENAMES: List[str] = [
+    "cardiology_visit_agenda.md",
+    "hypertension_log_template.md",
+    "dyspnea_symptom_tracker.md",
+    "migraine_headache_diary_template.md",
+    "cognitive_symptom_timeline.md",
+    "ibs_ibd_food_symptom_journal.md",
+    "fluid_and_sodium_tracking_worksheet.md",
+    "cgm_and_glucose_log_summary.md",
+    "joint_mobility_and_pain_tracker.md",
+    "rash_and_flareup_documentation_protocol.md",
+    "lesion_abcde_tracking_guide.md",
+    "symptom_log_template.md",
+    "eob_explanation.md",
+]
+
+
+# ============================================================================
+# Helper Functions & Parsers
+# ============================================================================
+
+def get_all_persona_paths(repo_root: Path) -> List[Path]:
+    """Discovers all persona.md files under agents/ excluding _system internal nodes."""
+    agents_dir = repo_root / "agents"
+    if not agents_dir.is_dir():
+        return []
+    personas = []
+    for p in agents_dir.glob("*/persona.md"):
+        # Exclude _system internal node personas if any
+        if "_system" in p.parts:
+            continue
+        personas.append(p)
+    return sorted(personas, key=lambda x: str(x))
+
+
+def count_words(text: str) -> int:
+    """Calculates total word count of markdown text."""
+    words = re.findall(r"\b[A-Za-z0-9_-]+\b", text)
+    return len(words)
+
+
+def inspect_persona_violations(persona_text: str) -> Dict[str, List[str]]:
+    """Inspects persona text for violations of R1 purity invariants."""
+    violations: Dict[str, List[str]] = {
+        "tools": [],
+        "skill_slugs": [],
+        "filenames": [],
+        "paths": [],
+        "missing_headers": [],
+    }
+
+    # 1. Tool syntax check
+    for tool in FORBIDDEN_TOOL_KEYWORDS:
+        if tool.lower() in persona_text.lower():
+            violations["tools"].append(tool)
+
+    # Tool invocation syntax like tool="...", using the ... tool
+    if re.search(r'tool\s*=\s*["\'][^"\']+["\']', persona_text, re.IGNORECASE):
+        violations["tools"].append('tool="..." attribute')
+    if re.search(r'using the \S+ tool', persona_text, re.IGNORECASE):
+        violations["tools"].append('using the ... tool')
+
+    # 2. Skill slugs check
+    for slug in FORBIDDEN_SKILL_SLUGS:
+        # Match word boundary or quoted slug
+        if re.search(rf'\b{re.escape(slug)}\b', persona_text, re.IGNORECASE):
+            violations["skill_slugs"].append(slug)
+    if re.search(r'skill_id\s*=\s*["\'][^"\']+["\']', persona_text, re.IGNORECASE):
+        violations["skill_slugs"].append('skill_id="..." attribute')
+
+    # 3. Filename references (.md files)
+    md_matches = re.findall(r'\b[a-zA-Z0-9_\-]+\.md\b', persona_text, re.IGNORECASE)
+    for m in md_matches:
+        violations["filenames"].append(m)
+    for fname in FORBIDDEN_DOC_FILENAMES:
+        if fname.lower() in persona_text.lower() and fname not in violations["filenames"]:
+            violations["filenames"].append(fname)
+
+    # 4. Filesystem path references
+    for pat in FORBIDDEN_FILESYSTEM_PATTERNS:
+        if pat.search(persona_text):
+            violations["paths"].append(pat.pattern)
+
+    # 5. Mandatory headers check
+    for header in MANDATORY_HEADERS:
+        if header not in persona_text:
+            violations["missing_headers"].append(header)
+
+    return violations
+
+
+# ============================================================================
+# Tier 1: Feature Coverage (R1)
+# ============================================================================
+
+class TestR1PersonaPurityFeatureCoverage:
+    """Tier 1: Comprehensive feature coverage verifying R1 persona purity requirements."""
+
+    def test_f_r1_01_all_personas_contain_zero_tool_invocations(self, e2e_repo_root: Path):
+        """F-R1.01: Verifies zero operational tool invocations (attach-read, workspace-note, skill-docs)."""
+        persona_paths = get_all_persona_paths(e2e_repo_root)
+        assert len(persona_paths) >= 20, f"Expected >= 20 personas, found {len(persona_paths)}"
+
+        failures = {}
+        for p in persona_paths:
+            content = p.read_text(encoding="utf-8")
+            violations = inspect_persona_violations(content)
+            if violations["tools"]:
+                failures[p.parent.name] = violations["tools"]
+
+        assert not failures, (
+            f"Found forbidden tool invocation directives in {len(failures)} personas: {failures}"
+        )
+
+    def test_f_r1_02_all_personas_contain_zero_skill_slugs(self, e2e_repo_root: Path):
+        """F-R1.02: Verifies zero skill slugs or skill_id attributes in persona text."""
+        persona_paths = get_all_persona_paths(e2e_repo_root)
+        failures = {}
+        for p in persona_paths:
+            content = p.read_text(encoding="utf-8")
+            violations = inspect_persona_violations(content)
+            if violations["skill_slugs"]:
+                failures[p.parent.name] = violations["skill_slugs"]
+
+        assert not failures, (
+            f"Found forbidden skill slug references in {len(failures)} personas: {failures}"
+        )
+
+    def test_f_r1_03_all_personas_contain_zero_document_filenames(self, e2e_repo_root: Path):
+        """F-R1.03: Verifies zero .md document filenames in persona text."""
+        persona_paths = get_all_persona_paths(e2e_repo_root)
+        failures = {}
+        for p in persona_paths:
+            content = p.read_text(encoding="utf-8")
+            violations = inspect_persona_violations(content)
+            if violations["filenames"]:
+                failures[p.parent.name] = violations["filenames"]
+
+        assert not failures, (
+            f"Found forbidden reference document filenames in {len(failures)} personas: {failures}"
+        )
+
+    def test_f_r1_04_all_personas_contain_zero_filesystem_paths(self, e2e_repo_root: Path):
+        """F-R1.04: Verifies zero filesystem paths (attachments/, notes/) in persona text."""
+        persona_paths = get_all_persona_paths(e2e_repo_root)
+        failures = {}
+        for p in persona_paths:
+            content = p.read_text(encoding="utf-8")
+            violations = inspect_persona_violations(content)
+            if violations["paths"]:
+                failures[p.parent.name] = violations["paths"]
+
+        assert not failures, (
+            f"Found forbidden filesystem paths in {len(failures)} personas: {failures}"
+        )
+
+    def test_f_r1_05_all_personas_meet_minimum_word_count(self, e2e_repo_root: Path):
+        """F-R1.05: Verifies all personas meet minimum >= 250 words requirement."""
+        persona_paths = get_all_persona_paths(e2e_repo_root)
+        failures = {}
+        for p in persona_paths:
+            content = p.read_text(encoding="utf-8")
+            count = count_words(content)
+            if count < 250:
+                failures[p.parent.name] = count
+
+        assert not failures, (
+            f"Found {len(failures)} personas with word count < 250: {failures}"
+        )
+
+    def test_f_r1_06_all_personas_contain_mandatory_five_headers(self, e2e_repo_root: Path):
+        """F-R1.06: Verifies all personas contain all 5 standard uppercase headers."""
+        persona_paths = get_all_persona_paths(e2e_repo_root)
+        failures = {}
+        for p in persona_paths:
+            content = p.read_text(encoding="utf-8")
+            violations = inspect_persona_violations(content)
+            if violations["missing_headers"]:
+                failures[p.parent.name] = violations["missing_headers"]
+
+        assert not failures, (
+            f"Found {len(failures)} personas missing mandatory section headers: {failures}"
+        )
+
+    def test_f_r1_07_agent_yaml_declarative_capabilities(self, e2e_repo_root: Path):
+        """F-R1.07: Verifies agents declare tools and skills strictly in agent.yaml."""
+        agents_dir = e2e_repo_root / "agents"
+        failures = []
+        for agent_dir in agents_dir.glob("*"):
+            if not agent_dir.is_dir() or agent_dir.name.startswith("_system"):
+                continue
+            yaml_path = agent_dir / "agent.yaml"
+            assert yaml_path.is_file(), f"Missing agent.yaml for agent {agent_dir.name}"
+            manifest_data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+            assert isinstance(manifest_data, dict), f"agent.yaml in {agent_dir.name} must be a map"
+            assert "id" in manifest_data, f"agent.yaml in {agent_dir.name} missing 'id'"
+            assert "title" in manifest_data, f"agent.yaml in {agent_dir.name} missing 'title'"
+
+
+# ============================================================================
+# Tier 2: Boundary & Corner Cases (R1)
+# ============================================================================
+
+class TestR1PersonaPurityBoundaries:
+    """Tier 2: Boundary conditions, corner cases, and negative tests for R1."""
+
+    def test_r1_b01_word_count_exact_boundary_threshold(self):
+        """Verifies boundary check: 249 words is rejected, 250 words is accepted."""
+        words_249 = " ".join(["word"] * 249)
+        words_250 = " ".join(["word"] * 250)
+        assert count_words(words_249) == 249
+        assert count_words(words_250) == 250
+        assert count_words(words_249) < 250
+        assert count_words(words_250) >= 250
+
+    def test_r1_b02_substring_non_tool_words_allowed(self):
+        """Verifies legitimate English words containing tool substrings do NOT trigger false positives."""
+        clean_text = (
+            "The patient had an emotional attachment to the old therapy plan. "
+            "It is noteworthy that documentation was thorough and skilled. "
+            "A notebook was provided for home journaling."
+        )
+        violations = inspect_persona_violations(clean_text)
+        assert not violations["tools"], f"False positive detected: {violations['tools']}"
+        assert not violations["skill_slugs"], f"False positive detected: {violations['skill_slugs']}"
+        assert not violations["paths"], f"False positive detected: {violations['paths']}"
+
+    def test_r1_b03_header_case_and_punctuation_sensitivity(self):
+        """Verifies headers missing trailing colon or using mixed case are detected as missing."""
+        malformed_text = (
+            "Role & Empathy:\n"
+            "Clinical Scope & Focus:\n"
+            "STRUCTURED INTERACTION PROTOCOL\n"  # missing colon
+            "Strict Non-Clinical Boundaries:\n"
+            "EXPLICIT EMERGENCY RED FLAGS:\n"
+        )
+        violations = inspect_persona_violations(malformed_text)
+        assert "ROLE & EMPATHY:" in violations["missing_headers"]
+        assert "CLINICAL SCOPE & FOCUS:" in violations["missing_headers"]
+        assert "STRUCTURED INTERACTION PROTOCOL:" in violations["missing_headers"]
+        assert "STRICT NON-CLINICAL BOUNDARIES:" in violations["missing_headers"]
+        assert "EXPLICIT EMERGENCY RED FLAGS:" not in violations["missing_headers"]
+
+    def test_r1_b04_empty_persona_handling(self):
+        """Verifies empty or whitespace personas are rejected on word count and headers."""
+        violations = inspect_persona_violations("   \n\t  ")
+        assert count_words("   \n\t  ") == 0
+        assert len(violations["missing_headers"]) == 5
+
+    def test_r1_b05_persona_with_codeblocks_and_quotes(self):
+        """Verifies tool mentions inside markdown code blocks or quotes are still flagged."""
+        quoted_text = (
+            "ROLE & EMPATHY:\nTest.\n"
+            "CLINICAL SCOPE & FOCUS:\nTest.\n"
+            "STRUCTURED INTERACTION PROTOCOL:\n"
+            "> As noted earlier: `attach-read` should be called.\n"
+            "STRICT NON-CLINICAL BOUNDARIES:\nTest.\n"
+            "EXPLICIT EMERGENCY RED FLAGS:\nTest.\n"
+        )
+        violations = inspect_persona_violations(quoted_text)
+        assert "attach-read" in violations["tools"]
+
+
+# ============================================================================
+# Tier 3: Cross-Feature Combinations (R1)
+# ============================================================================
+
+class TestR1PersonaCrossFeatureCombinations:
+    """Tier 3: Pairwise interactions with AgentLoader and schema validation."""
+
+    def test_r1_c01_persona_loading_via_agent_loader(self, e2e_repo_root: Path):
+        """Verifies that purified personas load cleanly through Carefold's AgentLoader."""
+        agents_dir = e2e_repo_root / "agents"
+        for agent_dir in agents_dir.glob("*"):
+            if not agent_dir.is_dir() or agent_dir.name.startswith("_system"):
+                continue
+            manifest, _, _ = load_agent(agent_dir)
+            assert manifest is not None
+            assert manifest.id == agent_dir.name
+            assert len(manifest.persona) > 0
+
+
+# ============================================================================
+# Tier 4: Real-World Application Scenarios (R1)
+# ============================================================================
+
+class TestR1PersonaRealWorldScenarios:
+    """Tier 4: Realistic persona validation for key clinical specialties."""
+
+    @pytest.mark.parametrize("specialist_id", [
+        "cardiology-guide",
+        "nephrology-guide",
+        "endocrinology-guide",
+        "pulmonology-guide",
+        "ortho-guide",
+    ])
+    def test_r1_s01_core_specialists_have_clinical_protocols(self, e2e_repo_root: Path, specialist_id: str):
+        """Verifies core clinical specialists have robust protocol structure and emergency red flags."""
+        persona_path = e2e_repo_root / "agents" / specialist_id / "persona.md"
+        assert persona_path.is_file(), f"Missing persona for {specialist_id}"
+        content = persona_path.read_text(encoding="utf-8")
+
+        # Must have emergency instructions
+        assert "911" in content or "emergency" in content.lower()
+        # Must have non-clinical boundary reminder
+        assert "diagnos" in content.lower() or "prescrib" in content.lower()
