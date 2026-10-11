@@ -90,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const userRef = useRef<UserProfile | null>(null);
   userRef.current = user;
+  const isLoggingOutRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
   const [providersInfo, setProvidersInfo] = useState<AuthProvidersInfo>({
     active_provider: 'local',
@@ -98,8 +99,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   const refreshUser = useCallback(async (): Promise<UserProfile | null> => {
+    if (isLoggingOutRef.current) {
+      return null;
+    }
+    let activeMode: string = 'local';
     try {
-      let activeMode: string = 'local';
 
       // 1. Fetch provider status
       try {
@@ -113,15 +117,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Network/proxy fallback
       }
 
+      if (isLoggingOutRef.current) {
+        return null;
+      }
+
       // 2. Fetch current user
       const meRes = await fetch('/api/v1/auth/me', {
         headers: { Accept: 'application/json' },
         cache: 'no-store'
       });
 
+      if (isLoggingOutRef.current) {
+        return null;
+      }
+
       if (meRes.ok) {
         const data = await meRes.json();
         const loadedUser: UserProfile = data.user || data;
+        if (isLoggingOutRef.current) {
+          return null;
+        }
         setUser(loadedUser);
         try {
           await fetchHouseholdProfiles();
@@ -129,7 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return loadedUser;
       } else {
         // If unauthenticated and in disabled mode, assign default steward user
-        if (activeMode === 'disabled') {
+        if (activeMode === 'disabled' && !isLoggingOutRef.current) {
           setUser(DEFAULT_STEWARD_USER);
           return DEFAULT_STEWARD_USER;
         } else {
@@ -143,8 +158,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               currentPath.startsWith('/register') ||
               currentPath.startsWith('/forgot-password') ||
               currentPath.startsWith('/reset-password');
-            if (!isAuthRoute && meRes.status === 401) {
-              window.location.href = `/login?redirect=${encodeURIComponent(currentPath + window.location.search)}`;
+            if (!isAuthRoute) {
+              const errQuery = meRes.status === 503 ? 'error=service_unavailable&' : '';
+              window.location.href = `/login?${errQuery}redirect=${encodeURIComponent(currentPath + window.location.search)}`;
             }
           }
           return null;
@@ -152,16 +168,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {
       // In offline / fallback disabled mode
-      if (providersInfo.active_provider === 'disabled') {
+      if (activeMode === 'disabled' && !isLoggingOutRef.current) {
         setUser(DEFAULT_STEWARD_USER);
         return DEFAULT_STEWARD_USER;
       }
       setUser(null);
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        const isAuthRoute =
+          currentPath.startsWith('/login') ||
+          currentPath.startsWith('/register') ||
+          currentPath.startsWith('/forgot-password') ||
+          currentPath.startsWith('/reset-password');
+        if (!isAuthRoute) {
+          window.location.href = `/login?error=service_unavailable&redirect=${encodeURIComponent(currentPath + window.location.search)}`;
+        }
+      }
       return null;
     } finally {
       setIsLoading(false);
     }
-  }, [providersInfo.active_provider]);
+  }, []);
 
   useEffect(() => {
     refreshUser();
@@ -170,6 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Login handler supporting overloaded signatures: login(username, password) or login({ username, password })
   const login = useCallback(
     async (usernameOrOpts: string | LoginOptions, password?: string): Promise<UserProfile> => {
+      isLoggingOutRef.current = false;
       let payload: Record<string, any>;
       if (typeof usernameOrOpts === 'string') {
         payload = { username: usernameOrOpts, password: password || '' };
@@ -210,6 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password?: string,
       fullName?: string | null
     ): Promise<UserProfile> => {
+      isLoggingOutRef.current = false;
       let payload: Record<string, any>;
       if (typeof emailOrOpts === 'string') {
         payload = {
@@ -265,6 +294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Logout handler
   const logout = useCallback(async (): Promise<void> => {
+    isLoggingOutRef.current = true;
     try {
       // 1. Revoke session on backend via v1 API with credentials and json header
       await fetch('/api/v1/auth/logout', {
