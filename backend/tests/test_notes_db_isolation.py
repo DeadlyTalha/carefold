@@ -111,7 +111,7 @@ def _register_user(client: TestClient, email: str, password: str, name: str) -> 
 # ==============================================================================
 
 @pytest.mark.asyncio
-async def test_challenge_cross_user_identical_slug_isolation(notes_challenge_env):
+async def test_cross_user_identical_slug_isolation(notes_challenge_env):
     """Stress-test: User A and User B create notes with identical slugs in their respective profiles.
     
     Verifies:
@@ -209,7 +209,7 @@ async def test_challenge_cross_user_identical_slug_isolation(notes_challenge_env
 
 
 @pytest.mark.asyncio
-async def test_challenge_same_user_cross_profile_slug_behavior(notes_challenge_env):
+async def test_same_user_cross_profile_slug_behavior(notes_challenge_env):
     """Stress-test: Same user creating identical slugs across two different profiles they own.
     
     Verifies how the system resolves or scopes notes when the same user has two profiles.
@@ -252,7 +252,7 @@ async def test_challenge_same_user_cross_profile_slug_behavior(notes_challenge_e
 # ==============================================================================
 
 @pytest.mark.asyncio
-async def test_challenge_permission_scoping_clinical_vs_paperwork(notes_challenge_env):
+async def test_permission_scoping_clinical_vs_paperwork(notes_challenge_env):
     """Stress-test: Comprehensive verification of access levels on clinical notes.
     
     - 'manage': create, read, update, delete
@@ -386,7 +386,7 @@ async def test_challenge_permission_scoping_clinical_vs_paperwork(notes_challeng
 # ==============================================================================
 
 @pytest.mark.asyncio
-async def test_challenge_unauthorized_and_nonexistent_profiles(notes_challenge_env):
+async def test_unauthorized_and_nonexistent_profiles(notes_challenge_env):
     """Stress-test: 403 and 404 responses for unauthorized and non-existent profiles."""
     with TestClient(app) as client:
         user_a = _register_user(client, "alice_unauth@test.local", "Password123!", "Alice Unauth")
@@ -442,15 +442,24 @@ async def test_challenge_unauthorized_and_nonexistent_profiles(notes_challenge_e
         )
         assert reassign_404.status_code == 404
 
-        # 5. User A creates unassigned note (profile_id=None)
-        unassigned_res = client.post(
+        # 5a. Missing profile_id is rejected with 400 per AU-12 deep entity scoping
+        missing_pid_res = client.post(
             "/api/notes",
             headers=user_a["headers"],
             json={"slug": "scratchpad-raw", "title": "Raw Scratchpad", "content": "Scratchpad text"},
         )
+        assert missing_pid_res.status_code == 400
+        assert "profile_id is required" in missing_pid_res.json()["detail"]
+
+        # 5b. User A creates scratchpad note scoped to Alice's profile
+        unassigned_res = client.post(
+            "/api/notes",
+            headers=user_a["headers"],
+            json={"slug": "scratchpad-raw", "title": "Raw Scratchpad", "content": "Scratchpad text", "profile_id": prof_a},
+        )
         assert unassigned_res.status_code == 201
 
-        # User B cannot read or modify User A's unassigned note
+        # User B cannot read or modify User A's note
         assert client.get("/api/notes/scratchpad-raw", headers=user_b["headers"]).status_code in (403, 404)
         assert client.put("/api/notes/scratchpad-raw", headers=user_b["headers"], json={"content": "Modified"}).status_code in (403, 404)
         assert client.delete("/api/notes/scratchpad-raw", headers=user_b["headers"]).status_code in (403, 404)
@@ -476,7 +485,7 @@ async def test_challenge_unauthorized_and_nonexistent_profiles(notes_challenge_e
         "slug;rm -rf /",
     ],
 )
-def test_challenge_path_traversal_in_slug(client: TestClient, malicious_slug: str):
+def test_path_traversal_in_slug(client: TestClient, malicious_slug: str):
     """Stress-test: Reject traversal payloads and invalid slug characters with 400 or 404."""
     # GET
     try:
@@ -496,12 +505,39 @@ def test_challenge_path_traversal_in_slug(client: TestClient, malicious_slug: st
         assert "InvalidURL" in type(exc).__name__ or "invalid" in str(exc).lower()
 
 
-def test_challenge_traversal_in_title_and_symlink_defense(client: TestClient, tmp_path: Path):
+def test_traversal_in_title_and_symlink_defense(client: TestClient, tmp_path: Path):
     """Stress-test: Path traversal in note title and symlink defense on disk."""
+    from carefold.auth.adapters.disabled_adapter import DEFAULT_STEWARD_USER
+    from carefold.db.models import User
+    from carefold.db.session import get_session_factory
+
+    async def _ensure_steward():
+        factory = get_session_factory()
+        async with factory() as session:
+            user = await session.get(User, DEFAULT_STEWARD_USER.id)
+            if not user:
+                user = User(
+                    id=DEFAULT_STEWARD_USER.id,
+                    email="steward@carefold.ai",
+                    username="steward",
+                    hashed_password="mock",
+                    role="steward",
+                    status="active",
+                    auth_provider="disabled",
+                )
+                session.add(user)
+                await session.commit()
+
+    asyncio.run(_ensure_steward())
+    # Provision profile in single-user mode
+    p_res = client.post("/api/profiles", json={"name": "Traversal Test", "relationship": "self"})
+    assert p_res.status_code == 201
+    prof_id = p_res.json()["id"]
+
     # 1. Traversal attempt in title (auto-generated slug)
     res = client.post(
         "/api/notes",
-        json={"title": "../../../etc/passwd", "content": "Test content"},
+        json={"title": "../../../etc/passwd", "content": "Test content", "profile_id": prof_id},
     )
     assert res.status_code == 201
     created_slug = res.json()["slug"]
@@ -533,7 +569,7 @@ def test_challenge_traversal_in_title_and_symlink_defense(client: TestClient, tm
 # ==============================================================================
 
 @pytest.mark.asyncio
-async def test_challenge_concurrent_note_creation_identical_slugs(notes_challenge_env):
+async def test_concurrent_note_creation_identical_slugs(notes_challenge_env):
     """Stress-test: Simultaneous creation of notes with identical slugs."""
     from httpx import ASGITransport, AsyncClient
 
@@ -600,7 +636,7 @@ async def test_challenge_concurrent_note_creation_identical_slugs(notes_challeng
 
 
 @pytest.mark.asyncio
-async def test_challenge_concurrent_note_updates(notes_challenge_env):
+async def test_concurrent_note_updates(notes_challenge_env):
     """Stress-test: Simultaneous updating of the same note."""
     from httpx import ASGITransport, AsyncClient
 
@@ -630,11 +666,16 @@ async def test_challenge_concurrent_note_updates(notes_challenge_env):
         token = login_res.json()["token"]
         headers = {"Authorization": f"Bearer {token}"}
 
+        # Create profile for user
+        p_resp = await aclient.post("/api/profiles", headers=headers, json={"name": "Me", "relationship": "self"})
+        assert p_resp.status_code == 201
+        prof_id = p_resp.json()["id"]
+
         # Create note
         init_res = await aclient.post(
             "/api/notes",
             headers=headers,
-            json={"slug": "update-race", "title": "Update Race Note", "content": "Initial"},
+            json={"slug": "update-race", "title": "Update Race Note", "content": "Initial", "profile_id": prof_id},
         )
         assert init_res.status_code == 201
 
@@ -659,21 +700,25 @@ async def test_challenge_concurrent_note_updates(notes_challenge_env):
 # ==============================================================================
 
 @pytest.mark.asyncio
-async def test_challenge_zero_loose_md_files(notes_challenge_env):
+async def test_zero_loose_md_files(notes_challenge_env):
     """Stress-test: Zero .md files created during CRUD operations."""
     notes_dir = settings.get_notes_dir()
     initial_mds = list(notes_dir.glob("**/*.md"))
 
     with TestClient(app) as client:
         user = _register_user(client, "zero_md@test.local", "Password123!", "Zero MD")
+        p_res = client.post("/api/profiles", headers=user["headers"], json={"name": "Zero MD Patient", "relationship": "self"})
+        assert p_res.status_code == 201
+        prof_id = p_res.json()["id"]
 
         # 1. Create multiple notes
         for i in range(5):
-            client.post(
+            res = client.post(
                 "/api/notes",
                 headers=user["headers"],
-                json={"title": f"Zero MD Note {i}", "content": f"Content {i}"},
+                json={"title": f"Zero MD Note {i}", "content": f"Content {i}", "profile_id": prof_id},
             )
+            assert res.status_code == 201
 
         # Invariant check
         post_create_mds = list(notes_dir.glob("**/*.md"))

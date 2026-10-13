@@ -24,7 +24,9 @@ import {
   Home,
   MessageSquare,
   BookOpen,
-  Activity,
+  HeartPulse,
+  Calendar,
+  History,
   Sparkles,
   Users,
   Settings,
@@ -74,11 +76,22 @@ export interface AppRailProps extends React.HTMLAttributes<HTMLElement> {
     family?: number;
     helpers?: number;
     agents?: number;
+    vitals?: number;
+    schedule?: number;
+    appointments?: number;
+    activity?: number;
   };
   isCollapsed?: boolean;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onOpenProfileSwitcher?: () => void;
+}
+
+function formatRelationship(relationship?: string): string {
+  if (!relationship) return 'Self';
+  const trimmed = relationship.trim();
+  if (trimmed.toLowerCase() === 'self') return 'Self';
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
 
 export function AppRail({
@@ -145,7 +158,7 @@ export function AppRail({
         id: household.id,
         name: resolvedName,
         shortName: resolvedShortName,
-        relationship: household.relationship,
+        relationship: isSelf ? 'Self' : formatRelationship(household.relationship),
         age: household.age,
         role: household.role === 'self' ? 'Personal care' : 'You manage',
         colorSlot: household.colorSlot
@@ -204,6 +217,20 @@ export function AppRail({
       badge: counts?.chat
     },
     {
+      href: profilePath(derivedProfile.id, '/vitals'),
+      label: 'Vitals',
+      icon: HeartPulse,
+      badge: counts?.vitals,
+      aliasPrefixes: [`/p/${derivedProfile.id}/vitals`]
+    },
+    {
+      href: profilePath(derivedProfile.id, '/appointments'),
+      label: 'Schedule',
+      icon: Calendar,
+      badge: counts?.schedule ?? counts?.appointments,
+      aliasPrefixes: [`/p/${derivedProfile.id}/appointments`, `/p/${derivedProfile.id}/schedule`]
+    },
+    {
       href: profilePath(derivedProfile.id, '/library'),
       label: 'Library',
       icon: BookOpen,
@@ -212,7 +239,8 @@ export function AppRail({
     {
       href: profilePath(derivedProfile.id, '/activity'),
       label: 'Activity',
-      icon: Activity
+      icon: History,
+      badge: counts?.activity
     }
   ];
 
@@ -347,7 +375,7 @@ export function AppRail({
               {derivedProfile.name}
             </span>
             <span className="text-xs text-[var(--cf-fg-subtle)] truncate" suppressHydrationWarning>
-              <span>{derivedProfile.relationship || 'Self'}</span>
+              <span suppressHydrationWarning>{derivedProfile.relationship || 'Self'}</span>
               {derivedProfile.age ? ` · ${derivedProfile.age}` : ''}
               {derivedProfile.role ? ` · ${derivedProfile.role}` : ''}
             </span>
