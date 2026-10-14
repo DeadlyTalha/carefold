@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -328,7 +324,7 @@ export function MemoryManagementPanel() {
         <div
           role="status"
           data-testid="memory-feedback-banner"
-          className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2 animate-in fade-in"
+          className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2"
         >
           <Check className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <span>{feedback}</span>
@@ -474,7 +470,7 @@ export function MemoryManagementPanel() {
             className={cn(
               'px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer',
               selectedTier === 'procedural'
-                ? 'bg-purple-600 text-white shadow-sm'
+                ? 'bg-emerald-700 text-white shadow-sm'
                 : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-zinc-700'
             )}
           >

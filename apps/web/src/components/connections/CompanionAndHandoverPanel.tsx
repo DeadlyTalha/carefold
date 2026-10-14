@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -39,7 +35,7 @@ import type {
   TeenHandoverPayload,
   TeenHandoverResponse,
   ViewerSectionKey,
-} from '@/types/autonomyBatch6';
+} from '@/types/routinesAndCompanion';
 
 const ALL_VIEWER_SECTIONS: ViewerSectionKey[] = [
   'vitals',
@@ -143,7 +139,7 @@ export function CompanionAndHandoverPanel({
           </div>
           <span
             data-testid="companion-mode-s-guard-badge"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60"
           >
             <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
             Mode S / TLS Cert Fingerprint Pinning Active
@@ -165,14 +161,14 @@ export function CompanionAndHandoverPanel({
                     <h4 className="text-sm font-bold text-[var(--cf-fg)]">
                       {device.device_name}
                     </h4>
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                       {device.status}
                     </span>
                   </div>
 
                   <p
                     data-testid={`companion-cert-fingerprint-${device.id}`}
-                    className="text-[11px] font-mono text-[var(--cf-fg-muted)]"
+                    className="text-xs font-mono text-[var(--cf-fg-muted)]"
                   >
                     TLS SHA-256: {device.cert_fingerprint_sha256}
                   </p>
@@ -181,7 +177,7 @@ export function CompanionAndHandoverPanel({
                     {device.allowed_categories.map((cat) => (
                       <span
                         key={cat}
-                        className="px-2 py-0.5 rounded bg-[var(--cf-surface-2)] border border-[var(--cf-border)] text-[10px] font-medium text-[var(--cf-fg)]"
+                        className="px-2 py-0.5 rounded bg-[var(--cf-surface-2)] border border-[var(--cf-border)] text-xs font-medium text-[var(--cf-fg)]"
                       >
                         {cat}
                       </span>
@@ -211,7 +207,7 @@ export function CompanionAndHandoverPanel({
             <div className="flex-1 min-w-[220px]">
               <label
                 htmlFor="companion-device-name-input"
-                className="block text-[11px] font-medium text-[var(--cf-fg-muted)] mb-1"
+                className="block text-xs font-medium text-[var(--cf-fg-muted)] mb-1"
               >
                 iOS Device Label
               </label>
@@ -254,13 +250,13 @@ export function CompanionAndHandoverPanel({
                     {pairingQr.pairing_code}
                   </code>
                 </span>
-                <span className="text-[11px] font-mono text-[var(--cf-fg-muted)]">
+                <span className="text-xs font-mono text-[var(--cf-fg-muted)]">
                   Endpoint: {pairingQr.host}:{pairingQr.port}
                 </span>
               </div>
               <p
                 data-testid="companion-qr-fingerprint"
-                className="text-[11px] font-mono text-[var(--cf-fg-muted)]"
+                className="text-xs font-mono text-[var(--cf-fg-muted)]"
               >
                 Pinned TLS Cert SHA-256: {pairingQr.cert_fingerprint_sha256}
               </p>
@@ -299,7 +295,7 @@ export function CompanionAndHandoverPanel({
                     onChange={() => handleToggleViewerSection(section)}
                     className="rounded border-[var(--cf-border)] text-emerald-600"
                   />
-                  <span className="font-mono text-[11px] text-[var(--cf-fg)]">
+                  <span className="font-mono text-xs text-[var(--cf-fg)]">
                     {section}
                   </span>
                 </label>
@@ -339,7 +335,7 @@ export function CompanionAndHandoverPanel({
           <div className="max-w-sm">
             <label
               htmlFor="teen-steward-user-input"
-              className="block text-[11px] font-medium text-[var(--cf-fg-muted)] mb-1"
+              className="block text-xs font-medium text-[var(--cf-fg-muted)] mb-1"
             >
               New Teen Steward User ID
             </label>
@@ -369,7 +365,7 @@ export function CompanionAndHandoverPanel({
                     <p className="text-xs font-bold text-[var(--cf-fg)]">
                       {conn.label}
                     </p>
-                    <p className="text-[11px] font-mono text-[var(--cf-fg-muted)]">
+                    <p className="text-xs font-mono text-[var(--cf-fg-muted)]">
                       {conn.id} • {conn.connector_id}
                     </p>
                   </div>

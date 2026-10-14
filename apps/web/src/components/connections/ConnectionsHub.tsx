@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -64,7 +60,7 @@ import type {
   TeenHandoverPayload,
   TeenHandoverResponse,
   ViewerSectionKey,
-} from '@/types/autonomyBatch6';
+} from '@/types/routinesAndCompanion';
 import type {
   AuditChainVerificationResponse,
   OsServiceDescriptorItem,
@@ -72,12 +68,12 @@ import type {
   SmartSchedulingSlotItem,
   V2ConnectorSummary,
   ZocdocBookingPreview,
-} from '@/types/autonomyBatch7';
+} from '@/types/coordinatedCare';
 import type {
   DiscoverSmartSchedulingSlotsPayload,
   PreviewZocdocBookingPayload,
   VerifySmartHealthCardPayload,
-} from '@/lib/autonomyBatch7Client';
+} from '@/lib/coordinatedCareClient';
 
 export type ConnectionsHubTab =
   | 'connections'
@@ -440,13 +436,13 @@ export function ConnectionsHub({
                           <h4 className="text-sm font-bold text-[var(--cf-fg)]">
                             {connector.name}
                           </h4>
-                          <span className="text-[11px] font-mono text-[var(--cf-fg-muted)]">
+                          <span className="text-xs font-mono text-[var(--cf-fg-muted)]">
                             {connector.id} • v{connector.version}
                           </span>
                         </div>
                         <span
                           className={cn(
-                            'px-2 py-0.5 rounded text-[10px] font-semibold border',
+                            'px-2 py-0.5 rounded text-xs font-semibold border',
                             isTrustedDevice
                               ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
                               : 'bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
@@ -464,7 +460,7 @@ export function ConnectionsHub({
                         {connector.categories.map((cat) => (
                           <span
                             key={cat}
-                            className="px-2 py-0.5 rounded bg-[var(--cf-surface-2)] border border-[var(--cf-border)] text-[11px] font-medium text-[var(--cf-fg)]"
+                            className="px-2 py-0.5 rounded bg-[var(--cf-surface-2)] border border-[var(--cf-border)] text-xs font-medium text-[var(--cf-fg)]"
                           >
                             {cat}
                           </span>
@@ -475,7 +471,7 @@ export function ConnectionsHub({
                         {connector.allowed_hosts.map((host) => (
                           <span
                             key={host}
-                            className="inline-flex items-center gap-1 text-[10px] font-mono text-[var(--cf-fg-muted)]"
+                            className="inline-flex items-center gap-1 text-xs font-mono text-[var(--cf-fg-muted)]"
                           >
                             <Globe className="w-2.5 h-2.5 text-emerald-600" />
                             {host}
@@ -545,7 +541,7 @@ export function ConnectionsHub({
                             <span
                               data-testid={`connection-status-badge-${conn.id}`}
                               className={cn(
-                                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border',
+                                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border',
                                 getStatusBadgeClasses(conn.status)
                               )}
                             >
@@ -560,7 +556,7 @@ export function ConnectionsHub({
                             </span>
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-3 text-[11px] text-[var(--cf-fg-muted)]">
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--cf-fg-muted)]">
                             <span className="font-mono">
                               Connector: {conn.connector_id} (v
                               {conn.consented_version})

@@ -1,19 +1,15 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Adversarial stress harness for Emergency Refusal & Explicit Routing.
+"""Boundary stress harness for Emergency Refusal & Explicit Routing.
 
 Tasks:
 1. Adversarially stress test the remediated emergency refusal logic in `InputGuardrailNode`:
@@ -39,7 +35,7 @@ from langchain_core.messages import HumanMessage
 
 
 # ============================================================================
-# Section 1: InputGuardrailNode Emergency Refusal Adversarial Tests
+# Section 1: InputGuardrailNode Emergency Refusal Boundary Tests
 # ============================================================================
 
 class TestInputGuardrailPureEmergency:

@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -261,7 +257,7 @@ export function HelpersClient({
             placeholder="Search helpers or skills..."
             className="w-full h-10 pl-10 pr-12 text-sm rounded-xl border border-[var(--cf-border-strong)] bg-[var(--cf-surface)] text-[var(--cf-fg)] placeholder:text-[var(--cf-fg-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--cf-focus)] transition-all"
           />
-          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono font-medium rounded border border-[var(--cf-border)] bg-[var(--cf-surface-2)] text-[var(--cf-fg-subtle)]">
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs font-mono font-medium rounded border border-[var(--cf-border)] bg-[var(--cf-surface-2)] text-[var(--cf-fg-subtle)]">
             /
           </kbd>
         </div>
@@ -414,7 +410,7 @@ export function HelpersClient({
                         {/* Safety Tier Badge */}
                         <span
                           className={cn(
-                            'inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full mt-1',
+                            'inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full mt-1',
                             isClinical &&
                               'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60',
                             isWellness &&
@@ -444,7 +440,7 @@ export function HelpersClient({
                         {agent.care_stages.slice(0, 3).map((stage) => (
                           <span
                             key={stage}
-                            className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-[var(--cf-surface-2)] text-[var(--cf-fg-subtle)]"
+                            className="text-xs font-medium px-2 py-0.5 rounded-md bg-[var(--cf-surface-2)] text-[var(--cf-fg-subtle)]"
                           >
                             {formatCareStage(stage)}
                           </span>
@@ -455,7 +451,7 @@ export function HelpersClient({
 
                   {/* Footer with Skills metadata & Chat Action */}
                   <div className="pt-3 border-t border-[var(--cf-border)] flex items-center justify-between gap-2 mt-auto">
-                    <span className="text-[11px] text-[var(--cf-fg-subtle)] truncate">
+                    <span className="text-xs text-[var(--cf-fg-subtle)] truncate">
                       Skills: {agent.skills?.slice(0, 2).join(', ') || 'base'}
                     </span>
                     <Link
@@ -505,16 +501,16 @@ export function HelpersClient({
                       <h2 className="text-base font-semibold text-[var(--cf-fg)] truncate">
                         {skill.title || skill.name}
                       </h2>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--cf-surface-2)] text-[var(--cf-fg-subtle)]">
+                      <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-[var(--cf-surface-2)] text-[var(--cf-fg-subtle)]">
                         v{skill.version}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--cf-surface-2)] text-[var(--cf-fg-muted)]">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[var(--cf-surface-2)] text-[var(--cf-fg-muted)]">
                         {skill.domain || 'clinical'}
                       </span>
-                      <span className="text-[11px] text-[var(--cf-fg-subtle)]">
+                      <span className="text-xs text-[var(--cf-fg-subtle)]">
                         {formatRiskClass(skill.risk_class)}
                       </span>
                     </div>

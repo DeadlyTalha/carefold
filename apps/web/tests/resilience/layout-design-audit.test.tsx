@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -54,9 +50,9 @@ describe('Layout & Dead-Code Verification Suite', () => {
   });
 
   // =========================================================================
-  // Challenge #171: 100dvh Layout & Zero Outer Page Scrollbars on /chat
+  // Issue #171: 100dvh Layout & Zero Outer Page Scrollbars on /chat
   // =========================================================================
-  describe('Challenge #171: 100dvh Layout & Zero Outer Page Scrollbars', () => {
+  describe('Issue #171: 100dvh Layout & Zero Outer Page Scrollbars', () => {
     const globalsCssPath = path.resolve(__dirname, '../../src/app/globals.css');
 
     it('asserts globals.css defines 100dvh bounds and overflow:hidden on body:has([data-chat-page])', () => {
@@ -112,9 +108,9 @@ describe('Layout & Dead-Code Verification Suite', () => {
   });
 
   // =========================================================================
-  // Challenge #172: Mobile 390px/320px Zero Horizontal Overflow
+  // Issue #172: Mobile 390px/320px Zero Horizontal Overflow
   // =========================================================================
-  describe('Challenge #172: Mobile 390px/320px Zero Horizontal Overflow', () => {
+  describe('Issue #172: Mobile 390px/320px Zero Horizontal Overflow', () => {
     it('verifies StartersChips wrap and break long/unbroken strings without overflow', () => {
       const adversarialStarters = [
         'Short prompt',
@@ -194,9 +190,9 @@ describe('Layout & Dead-Code Verification Suite', () => {
   });
 
   // =========================================================================
-  // Challenge #182: 44x44px Touch Targets Across Interactive Controls
+  // Issue #182: 44x44px Touch Targets Across Interactive Controls
   // =========================================================================
-  describe('Challenge #182: 44x44px Touch Targets Verification', () => {
+  describe('Issue #182: 44x44px Touch Targets Verification', () => {
     it('verifies StartersChips satisfy 44px min-height hitbox requirement', () => {
       render(<StartersChips starters={['Test prompt']} onSelectStarter={vi.fn()} />);
       const chip = screen.getByTestId('starter-chip');
@@ -216,7 +212,7 @@ describe('Layout & Dead-Code Verification Suite', () => {
         <MessageToolbar
           role="assistant"
           content="Copyable text"
-          messageId="m1"
+          messageId="msg_one"
           onRegenerate={vi.fn()}
         />
       );
@@ -256,9 +252,9 @@ describe('Layout & Dead-Code Verification Suite', () => {
   });
 
   // =========================================================================
-  // Challenge #184: Dead Components Purged & Zero Broken Imports
+  // Issue #184: Dead Components Purged & Zero Broken Imports
   // =========================================================================
-  describe('Challenge #184: Dead Component Purge & Zero Broken Imports', () => {
+  describe('Issue #184: Dead Component Purge & Zero Broken Imports', () => {
     const webSrcDir = path.resolve(__dirname, '../../src');
     const componentsDir = path.resolve(webSrcDir, 'components');
 

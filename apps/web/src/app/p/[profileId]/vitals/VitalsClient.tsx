@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -45,12 +41,14 @@ import type {
   LatestVitalsState,
 } from '@/types/vitals';
 import type { BpChartPoint } from '@/components/vitals/BloodPressureTrendChart';
+import { useI18n } from '@/i18n';
 
 export interface VitalsClientProps {
   profileId: string;
 }
 
 export function VitalsClient({ profileId }: VitalsClientProps) {
+  const { t } = useI18n();
   const [observations, setObservations] = useState<VitalsObservationItem[]>([]);
   const [trends, setTrends] = useState<VitalsTrendsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -146,7 +144,7 @@ export function VitalsClient({ profileId }: VitalsClientProps) {
   }, [observations]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto py-2">
+    <div className="space-y-6">
       {/* Top Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--cf-border)]">
         <div>
@@ -155,10 +153,10 @@ export function VitalsClient({ profileId }: VitalsClientProps) {
             className="text-2xl font-bold tracking-tight text-[var(--cf-fg)] flex items-center gap-2.5"
           >
             <HeartPulse className="w-6 h-6 text-rose-500" />
-            Vitals & Biometrics
+            {t('vitals.title')}
           </h1>
           <p className="text-xs sm:text-sm text-[var(--cf-fg-muted)] mt-1">
-            Track physiological vital signs, diurnal blood pressure trends, and clinical safety thresholds.
+            {t('vitals.subtitle')}
           </p>
         </div>
 
@@ -172,7 +170,7 @@ export function VitalsClient({ profileId }: VitalsClientProps) {
             title={hideWeight ? 'Reveal Weight & BMI' : 'Mask Weight & BMI'}
           >
             {hideWeight ? <EyeOff className="w-4 h-4 text-amber-500" /> : <Eye className="w-4 h-4" />}
-            <span>{hideWeight ? 'Weight Hidden' : 'Hide Weight'}</span>
+            <span>{hideWeight ? t('vitals.weight_hidden') : t('vitals.hide_weight')}</span>
           </button>
 
           {/* Refresh Button */}
@@ -193,7 +191,7 @@ export function VitalsClient({ profileId }: VitalsClientProps) {
             className="min-h-[40px]"
           >
             <Plus className="w-4 h-4 mr-1.5" />
-            Log Reading
+            {t('vitals.log_reading')}
           </Button>
         </div>
       </div>
@@ -207,7 +205,7 @@ export function VitalsClient({ profileId }: VitalsClientProps) {
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center gap-3 text-[var(--cf-fg-subtle)]">
           <Loader2 className="w-8 h-8 animate-spin text-[var(--cf-primary)]" />
-          <p className="text-sm">Loading physiological records...</p>
+          <p className="text-sm">{t('vitals.loading')}</p>
         </div>
       ) : (
         <>

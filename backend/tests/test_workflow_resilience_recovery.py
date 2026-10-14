@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Workflow Resilience, State Persistence, and Error Recovery Test Suite.
 
@@ -305,7 +301,7 @@ class TestThreadStatePersistence:
         cleared = await service.clear_thread_state(thread_id)
         assert cleared is True
 
-        # EMPIRICAL OBSERVATION: clear_thread_state in service.py currently returns
+        # SYSTEMATIC OBSERVATION: clear_thread_state in service.py currently returns
         # `state is not None`, but does NOT execute a DELETE/purge against checkpointer!
         # Thus state_after is still present in the checkpointer:
         state_after = await service.get_thread_state(thread_id)

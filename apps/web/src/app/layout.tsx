@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 import type { Metadata } from 'next';
@@ -78,10 +74,19 @@ export const fraunces = localFont({
 
 export const metadata: Metadata = {
   title: 'Carefold — Specialist Health Agents',
-  description: 'Local-first runtime and marketplace for specialist health agents (wellness, care navigation, clinic-admin).'
+  description: 'Local-first runtime and marketplace for specialist health agents (wellness, care navigation, clinic-admin).',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon.svg', type: 'image/svg+xml' }
+    ],
+    apple: '/icon.svg'
+  },
+  manifest: '/manifest.json'
 };
 
 import { AppLayout } from '@/components/layout/AppLayout';
+import { I18nProvider } from '@/i18n';
 
 export default function RootLayout({
   children
@@ -91,6 +96,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      dir="ltr"
       className={`${inter.variable} ${fraunces.variable}`}
       suppressHydrationWarning
     >
@@ -99,11 +105,13 @@ export default function RootLayout({
       </head>
       <body className="antialiased min-h-screen flex flex-col font-sans bg-canvas text-fg transition-colors">
         <ThemeProvider>
-          <AuthProvider>
-            <AppLayout>
-              {children}
-            </AppLayout>
-          </AuthProvider>
+          <I18nProvider>
+            <AuthProvider>
+              <AppLayout>
+                {children}
+              </AppLayout>
+            </AuthProvider>
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

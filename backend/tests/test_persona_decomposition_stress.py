@@ -1,21 +1,17 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Adversarial Test Suite for Root Profile & Agent Persona Decomposition.
+"""Boundary Test Suite for Root Profile & Agent Persona Decomposition.
 
-Adversarial Stress Invariants:
+Boundary Stress Invariants:
 1. Decomposed Persona Integrity:
    - All 21 public agent packs + template: persona_slim.md token budget constraints (40 <= words < 600).
    - Sections 1 & 2 (ROLE & EMPATHY, CLINICAL SCOPE & FOCUS) must be present in sequence.
@@ -64,7 +60,7 @@ def get_public_agent_dirs() -> List[Path]:
 
 
 class TestDecomposedPersonaAdversarial:
-    """Adversarial stress-testing of persona decomposition and token budgets."""
+    """Boundary stress-testing of persona decomposition and token budgets."""
 
     def test_all_agent_packs_inventory(self):
         """Verify public agent packs exist with all required decomposition artifacts."""
@@ -140,7 +136,7 @@ class TestDecomposedPersonaAdversarial:
 
 
 class TestProtocolRelocationAdversarial:
-    """Adversarial stress-testing of Section 3 interaction protocol relocation to skills."""
+    """Boundary stress-testing of Section 3 interaction protocol relocation to skills."""
 
     @pytest.mark.parametrize("agent_dir", get_public_agent_dirs(), ids=lambda d: d.name)
     def test_protocol_relocated_and_intact_in_primary_skill(self, agent_dir: Path):
@@ -170,7 +166,7 @@ class TestProtocolRelocationAdversarial:
 
 
 class TestRootCarefoldProfileAdversarial:
-    """Adversarial validation of root carefold-profile.yaml."""
+    """Boundary validation of root carefold-profile.yaml."""
 
     def test_profile_file_exists_and_licensed(self):
         """Verify carefold-profile.yaml exists and contains Apache-2.0 license header."""
@@ -242,7 +238,7 @@ class TestRootCarefoldProfileAdversarial:
 
 
 class TestPromptAssemblyAndTokenBudgetInvariants:
-    """Adversarial stress-testing of prompt assembly and token budget reduction."""
+    """Boundary stress-testing of prompt assembly and token budget reduction."""
 
     @pytest.mark.parametrize("agent_dir", get_public_agent_dirs(), ids=lambda d: d.name)
     def test_baseline_system_prompt_reduction_exceeds_60_percent(self, agent_dir: Path):

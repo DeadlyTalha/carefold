@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Integration tests for safe SQLite schema evolution and data backfill for attachments."""
 
@@ -52,7 +48,7 @@ async def test_fresh_db_has_attachment_storage_columns_and_indices(tmp_path: Pat
 
 @pytest.mark.asyncio
 async def test_migration_adds_missing_columns_and_backfills_legacy_db(tmp_path: Path):
-    """Simulates a legacy pre-M3 database and verifies safe schema evolution and backfill."""
+    """Simulates a legacy pre-Phase3 database and verifies safe schema evolution and backfill."""
     db_file = tmp_path / "legacy_test.db"
 
     # 1. Create a legacy SQLite table using raw sqlite3 matching workspace/carefold.db exactly

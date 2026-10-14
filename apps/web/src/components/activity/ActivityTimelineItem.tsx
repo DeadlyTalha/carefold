@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -163,7 +159,7 @@ export function ActivityTimelineItem({
             <span
               data-testid="actor-badge"
               className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border',
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border',
                 actorColorClass()
               )}
             >
@@ -175,7 +171,7 @@ export function ActivityTimelineItem({
             <span
               data-testid="tool-badge"
               className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border',
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border',
                 badgeInfo.colorClass
               )}
             >
@@ -194,7 +190,7 @@ export function ActivityTimelineItem({
             <span
               data-testid="activity-timestamp"
               title={fullTime}
-              className="text-[11px] text-[var(--cf-fg-subtle)] flex items-center gap-1 font-mono ml-auto"
+              className="text-xs text-[var(--cf-fg-subtle)] flex items-center gap-1 font-mono ml-auto"
             >
               <Clock className="w-3 h-3" />
               {relativeTime}

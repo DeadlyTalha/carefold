@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -37,8 +33,10 @@ import {
 import { withdrawAllClinicalConsents, withdrawClinicalConsent } from '@/lib/clinicalConsent';
 import { useClinicalConsents } from '@/lib/useClinicalConsents';
 import { MemoryManagementPanel } from '@/components/memory/MemoryManagementPanel';
+import { useI18n } from '@/i18n';
 
 export default function PrivacySettingsPage() {
+  const { t } = useI18n();
   const [settings, setSettings] = useState<CarefoldUserSettings>(DEFAULT_USER_SETTINGS);
   const [storageSummary, setStorageSummary] = useState<BrowserStorageSummary>({
     conversationCount: 0,
@@ -86,10 +84,10 @@ export default function PrivacySettingsPage() {
     <div className="space-y-8">
       <div>
         <h2 className="text-xl font-bold text-[var(--cf-fg)] tracking-tight">
-          Privacy, Consent & Data Settings
+          {t('settings.privacy.title')}
         </h2>
         <p className="text-xs text-[var(--cf-fg-muted)] mt-1">
-          Review on-device data sovereignty, clinical consents, and manage local browser data.
+          {t('settings.privacy.description')}
         </p>
       </div>
 
@@ -111,7 +109,7 @@ export default function PrivacySettingsPage() {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-[var(--cf-fg)] flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span>Clinical Assist Consents</span>
+            <span>{t('settings.privacy.clinicalConsents')}</span>
           </h3>
           {consentEntries.length > 1 && (
             <button
@@ -125,7 +123,7 @@ export default function PrivacySettingsPage() {
           )}
         </div>
         <p className="text-xs text-[var(--cf-fg-muted)]">
-          Clinical prep helpers only run after you give explicit consent. Withdrawing consent takes effect on your next message.
+          {t('settings.privacy.clinicalConsentsDesc')}
         </p>
         {consentEntries.length === 0 ? (
           <p data-testid="clinical-consent-empty" className="text-xs text-[var(--cf-fg-subtle)] italic py-2">
@@ -143,7 +141,7 @@ export default function PrivacySettingsPage() {
                   <div className="font-semibold text-[var(--cf-fg)] truncate capitalize">
                     {agentId.replace(/-/g, ' ')}
                   </div>
-                  <div className="text-[11px] text-[var(--cf-fg-subtle)]">
+                  <div className="text-xs text-[var(--cf-fg-subtle)]">
                     Consent given {new Date(record.grantedAt).toLocaleString()}
                   </div>
                 </div>
@@ -167,18 +165,18 @@ export default function PrivacySettingsPage() {
         <div>
           <h3 className="text-sm font-semibold text-[var(--cf-fg)] flex items-center gap-2">
             <HardDrive className="w-4 h-4 text-[var(--cf-fg-subtle)]" />
-            <span>Local Browser Data & Storage</span>
+            <span>{t('settings.privacy.localBrowserData')}</span>
           </h3>
           <p className="text-xs text-[var(--cf-fg-muted)] mt-1">
-            Data is stored in your web browser. You can clear conversations or remove saved keys at any time.
+            {t('settings.privacy.localBrowserDataDesc')}
           </p>
         </div>
 
         {/* Storage Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="p-3.5 rounded-xl border border-[var(--cf-border)] bg-[var(--cf-surface-2)]">
-            <div className="text-[11px] font-semibold text-[var(--cf-fg-subtle)] uppercase tracking-wider">
-              Stored Conversations
+            <div className="text-xs font-semibold text-[var(--cf-fg-subtle)] uppercase tracking-wider">
+              {t('settings.privacy.storedConversations')}
             </div>
             <div data-testid="stored-conversations-stat" className="text-lg font-bold text-[var(--cf-fg)] mt-1">
               {storageSummary.conversationCount}{' '}
@@ -189,8 +187,8 @@ export default function PrivacySettingsPage() {
           </div>
 
           <div className="p-3.5 rounded-xl border border-[var(--cf-border)] bg-[var(--cf-surface-2)]">
-            <div className="text-[11px] font-semibold text-[var(--cf-fg-subtle)] uppercase tracking-wider">
-              Saved API Keys
+            <div className="text-xs font-semibold text-[var(--cf-fg-subtle)] uppercase tracking-wider">
+              {t('settings.privacy.savedApiKeys')}
             </div>
             <div data-testid="stored-keys-stat" className="text-lg font-bold text-[var(--cf-fg)] mt-1">
               {storageSummary.hasStoredApiKeys ? storageSummary.storedKeyProviders.length : 'None'}{' '}

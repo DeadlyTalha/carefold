@@ -1,21 +1,17 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Notes Database Isolation & Scoping Test Suite.
 
-Empirically tests:
+Systematically tests:
 1. Multi-tenant slug isolation: identical slugs across different users and different profiles.
 2. Permission scoping: 'manage' required for updates/deletes; 'view_clinical' vs 'view_paperwork'.
 3. Rejection of unassigned or unauthorized profiles (403/404 handling).
@@ -46,8 +42,8 @@ from carefold.main import app
 
 
 @pytest.fixture
-async def notes_challenge_env(temp_workspace: Path, monkeypatch: pytest.MonkeyPatch):
-    """Sets up an isolated in-memory DB and local SQL auth provider for adversarial challenge tests."""
+async def notes_auth_test_env(temp_workspace: Path, monkeypatch: pytest.MonkeyPatch):
+    """Sets up an isolated in-memory DB and local SQL auth provider for boundary verification tests."""
     engine = create_db_engine("sqlite+aiosqlite:///:memory:")
     await init_db(engine)
     session_factory = get_session_factory(engine)
@@ -107,11 +103,11 @@ def _register_user(client: TestClient, email: str, password: str, name: str) -> 
 
 
 # ==============================================================================
-# Challenge 1: Multi-Tenant Slug Isolation
+# Verification 1: Multi-Tenant Slug Isolation
 # ==============================================================================
 
 @pytest.mark.asyncio
-async def test_cross_user_identical_slug_isolation(notes_challenge_env):
+async def test_cross_user_identical_slug_isolation(notes_auth_test_env):
     """Stress-test: User A and User B create notes with identical slugs in their respective profiles.
     
     Verifies:
@@ -209,7 +205,7 @@ async def test_cross_user_identical_slug_isolation(notes_challenge_env):
 
 
 @pytest.mark.asyncio
-async def test_same_user_cross_profile_slug_behavior(notes_challenge_env):
+async def test_same_user_cross_profile_slug_behavior(notes_auth_test_env):
     """Stress-test: Same user creating identical slugs across two different profiles they own.
     
     Verifies how the system resolves or scopes notes when the same user has two profiles.
@@ -248,11 +244,11 @@ async def test_same_user_cross_profile_slug_behavior(notes_challenge_env):
 
 
 # ==============================================================================
-# Challenge 2: Permission Scoping (manage vs view_clinical vs view_paperwork)
+# Verification 2: Permission Scoping (manage vs view_clinical vs view_paperwork)
 # ==============================================================================
 
 @pytest.mark.asyncio
-async def test_permission_scoping_clinical_vs_paperwork(notes_challenge_env):
+async def test_permission_scoping_clinical_vs_paperwork(notes_auth_test_env):
     """Stress-test: Comprehensive verification of access levels on clinical notes.
     
     - 'manage': create, read, update, delete
@@ -382,11 +378,11 @@ async def test_permission_scoping_clinical_vs_paperwork(notes_challenge_env):
 
 
 # ==============================================================================
-# Challenge 3: Rejection of Unassigned or Unauthorized Profiles
+# Verification 3: Rejection of Unassigned or Unauthorized Profiles
 # ==============================================================================
 
 @pytest.mark.asyncio
-async def test_unauthorized_and_nonexistent_profiles(notes_challenge_env):
+async def test_unauthorized_and_nonexistent_profiles(notes_auth_test_env):
     """Stress-test: 403 and 404 responses for unauthorized and non-existent profiles."""
     with TestClient(app) as client:
         user_a = _register_user(client, "alice_unauth@test.local", "Password123!", "Alice Unauth")
@@ -466,7 +462,7 @@ async def test_unauthorized_and_nonexistent_profiles(notes_challenge_env):
 
 
 # ==============================================================================
-# Challenge 4: Path Traversal & Symlink Attacks
+# Verification 4: Path Traversal & Symlink Attacks
 # ==============================================================================
 
 @pytest.mark.parametrize(
@@ -565,11 +561,11 @@ def test_traversal_in_title_and_symlink_defense(client: TestClient, tmp_path: Pa
 
 
 # ==============================================================================
-# Challenge 5: Concurrency / Race Conditions
+# Verification 5: Concurrency / Race Conditions
 # ==============================================================================
 
 @pytest.mark.asyncio
-async def test_concurrent_note_creation_identical_slugs(notes_challenge_env):
+async def test_concurrent_note_creation_identical_slugs(notes_auth_test_env):
     """Stress-test: Simultaneous creation of notes with identical slugs."""
     from httpx import ASGITransport, AsyncClient
 
@@ -636,7 +632,7 @@ async def test_concurrent_note_creation_identical_slugs(notes_challenge_env):
 
 
 @pytest.mark.asyncio
-async def test_concurrent_note_updates(notes_challenge_env):
+async def test_concurrent_note_updates(notes_auth_test_env):
     """Stress-test: Simultaneous updating of the same note."""
     from httpx import ASGITransport, AsyncClient
 
@@ -696,11 +692,11 @@ async def test_concurrent_note_updates(notes_challenge_env):
 
 
 # ==============================================================================
-# Challenge 6: Zero .md files written outside test sandboxes
+# Verification 6: Zero .md files written outside test sandboxes
 # ==============================================================================
 
 @pytest.mark.asyncio
-async def test_zero_loose_md_files(notes_challenge_env):
+async def test_zero_loose_md_files(notes_auth_test_env):
     """Stress-test: Zero .md files created during CRUD operations."""
     notes_dir = settings.get_notes_dir()
     initial_mds = list(notes_dir.glob("**/*.md"))

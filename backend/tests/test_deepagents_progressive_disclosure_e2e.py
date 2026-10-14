@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Opaque-box, requirement-driven E2E test suite for ADR-0003.
 
@@ -473,7 +469,7 @@ Dyspnea log preparation.
         assert "EXPLICIT EMERGENCY RED FLAGS" not in persona_slim
 
     def test_persona_compact_token_budget_verification(self):
-        """Empirically measures word/token count of slim persona (strictly ≤ 600 words)."""
+        """Systematically measures word/token count of slim persona (strictly ≤ 600 words)."""
         sample_slim = """# ROLE & EMPATHY
 You are the Carefold Cardiology Navigator. You approach every interaction with deep clinical empathy,
 calm reassurance, and structured precision. You assist patients who are preparing for visits with cardiologists,
@@ -691,7 +687,7 @@ Please do not change medication without your doctor or prescribing clinician.
 # =============================================================================
 
 class TestBoundaryCases:
-    """Tier 2: Boundary, corner, and adversarial stress verification."""
+    """Tier 2: Boundary, corner, and boundary stress verification."""
 
     def test_boundary_empty_or_missing_frontmatter_name(self):
         """Verifies validation failure on missing or blank skill name in frontmatter."""
@@ -725,7 +721,7 @@ Do not change medication without the prescribing clinician.
         assert meta.get("risk_class", "wellness") == "wellness"
 
     def test_boundary_unauthorized_tools_outside_phase0(self):
-        """Tests adversarial tools outside Phase 0 (python_exec, sh, rm_rf)."""
+        """Tests boundary tools outside Phase 0 (python_exec, sh, rm_rf)."""
         adversarial_tools = ["sh", "python_exec", "curl", "system_exec", "rm_rf"]
         for tool in adversarial_tools:
             with pytest.raises(ToolValidationError):
@@ -885,7 +881,7 @@ class TestCrossFeatureCombinations:
         assert ref_content == "# BP Log Template"
 
     def test_cross_feature_prompt_token_reduction_baseline(self):
-        """Empirically measures ≥60% token reduction in initial prompt compared to eager stuffing."""
+        """Systematically measures ≥60% token reduction in initial prompt compared to eager stuffing."""
         # Legacy eager stuffed prompt (persona + all instructions + all references)
         legacy_stuffed = (
             "SAFETY PREAMBLE\n" + "x " * 200 + "\n"

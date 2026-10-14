@@ -1,19 +1,15 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Adversarial Test Suite for LangChain Multi-Provider Model Factory.
+"""Boundary Test Suite for LangChain Multi-Provider Model Factory.
 
 Challenges:
 1. Client Key Overrides & Process Environment Isolation (no os.environ leak or mutation)
@@ -108,12 +104,12 @@ def test_apiKey_camelcase_alias(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
     # 1. apiKey alias works when api_key is None
-    m1 = create_chat_model(provider="openai", apiKey="camel-case-key-1")
-    assert m1.openai_api_key.get_secret_value() == "camel-case-key-1"
+    msg_one = create_chat_model(provider="openai", apiKey="camel-case-key-1")
+    assert msg_one.openai_api_key.get_secret_value() == "camel-case-key-1"
 
     # 2. When both are passed, api_key takes precedence
-    m2 = create_chat_model(provider="openai", api_key="snake-case-priority", apiKey="ignored-camel")
-    assert m2.openai_api_key.get_secret_value() == "snake-case-priority"
+    msg_two = create_chat_model(provider="openai", api_key="snake-case-priority", apiKey="ignored-camel")
+    assert msg_two.openai_api_key.get_secret_value() == "snake-case-priority"
 
 
 def test_concurrent_multi_client_isolation(monkeypatch):
@@ -329,7 +325,7 @@ def test_provider_empty_and_none_defaults_to_ollama():
 
 @pytest.mark.asyncio
 async def test_offline_mock_zero_socket_activity(monkeypatch):
-    """Empirical verification: MockChatModel executes 100% offline without making any network socket connections.
+    """Systematic verification: MockChatModel executes 100% offline without making any network socket connections.
     
     We monkeypatch socket.socket.connect to raise RuntimeError if ANY outbound network call is attempted.
     """

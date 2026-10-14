@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -278,7 +274,7 @@ export function ProfileSwitcher({
               className={cn(
                 'absolute left-0 z-50 w-72 mt-2 rounded-2xl bg-[var(--cf-surface)] border border-[var(--cf-border)] shadow-xl p-2 focus:outline-none transition-all',
                 mode === 'mobile-sheet'
-                  ? 'fixed inset-x-0 bottom-0 left-0 right-0 w-full rounded-b-none border-x-0 border-b-0 max-h-[85vh] animate-in slide-in-from-bottom duration-200'
+                  ? 'fixed inset-x-0 bottom-0 left-0 right-0 w-full rounded-b-none border-x-0 border-b-0 max-h-[85vh] duration-200'
                   : 'top-full'
               )}
             >
@@ -286,7 +282,7 @@ export function ProfileSwitcher({
                 <span className="text-xs font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)]">
                   Care Profiles
                 </span>
-                <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--cf-surface-2)] text-[var(--cf-fg-subtle)] border border-[var(--cf-border)]">
+                <kbd className="text-xs font-mono px-1.5 py-0.5 rounded bg-[var(--cf-surface-2)] text-[var(--cf-fg-subtle)] border border-[var(--cf-border)]">
                   G then P
                 </kbd>
               </div>

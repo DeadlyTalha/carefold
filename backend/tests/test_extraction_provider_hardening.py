@@ -1,22 +1,18 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Tier 5 Adversarial Coverage Hardening Test Suite.
+"""Tier 5 Boundary Coverage Hardening Test Suite.
 
-White-box adversarial stress tests for:
-- PII sanitization and adversarial evasion attempts (diacritics, zero-width spaces, phone extensions, clinical terms)
+White-box boundary stress tests for:
+- PII sanitization and boundary evasion attempts (diacritics, zero-width spaces, phone extensions, clinical terms)
 - Numerical grounding validator attacks (percentages vs currency, transposed decimals, float tolerance, negative values)
 - Model provider factory & provider strategies (missing env vars, malformed endpoints, invalid models, timeouts)
 - Tool execution security (directory traversal, oversized files, corrupted UTF-8, sandbox violations)
@@ -125,7 +121,7 @@ from carefold.workflows.subgraphs.extraction.tool import (
 
 
 # ============================================================================
-# 1. PII Sanitizer & Adversarial Evasion Hardening
+# 1. PII Sanitizer & Boundary Evasion Hardening
 # ============================================================================
 
 class TestPIIEvasionHardening:
@@ -191,10 +187,10 @@ class TestPIIEvasionHardening:
         assert "123 Hauptstrasse" in sanitized_german
 
     def test_pii_zero_width_space_evasion_probe(self) -> None:
-        """Adversarial evasion probe: test zero-width space injection (\u200b).
+        """Boundary evasion probe: test zero-width space injection (\u200b).
 
         Attackers insert invisible zero-width spaces into SSNs and phone numbers to bypass
-        regex tokenization. This test empirically documents the regex boundary.
+        regex tokenization. This test systematically documents the regex boundary.
         """
         zw_ssn = "SSN: 123\u200b-45\u200b-6789"
         zw_phone = "Phone: (555)\u200b 234-5678"
@@ -312,7 +308,7 @@ class TestPIIEvasionHardening:
 
 
 # ============================================================================
-# 2. Adversarial Numerical Grounding Attacks
+# 2. Boundary Numerical Grounding Attacks
 # ============================================================================
 
 class TestNumericalGroundingHardening:
@@ -399,7 +395,7 @@ class TestNumericalGroundingHardening:
         assert res_zero.is_grounded is True
 
     def test_grounding_semantic_gap_raw_counts(self) -> None:
-        """Empirically probe raw count tokens without unit suffixes.
+        """Systematically probe raw count tokens without unit suffixes.
 
         When raw text contains a number without unit tokens (e.g. '20 visits'),
         extract_numeric_tokens sets is_currency=False, is_percentage=False, suffix=''.
@@ -671,7 +667,7 @@ class TestToolExecutionHardening:
 
         # Probing backslash traversal on POSIX:
         # On POSIX (macOS/Linux), backslash is not a directory separator, so Path('attachments') / '..\\cmd.exe'
-        # resolves to a literal file name inside the sandbox. We empirically verify this boundary.
+        # resolves to a literal file name inside the sandbox. We systematically verify this boundary.
         backslash_payload = "..\\..\\windows\\system32\\cmd.exe"
         resolved_backslash = resolve_sandboxed_path(sandbox_dir, backslash_payload, must_exist=False)
         assert resolved_backslash.is_relative_to(sandbox_dir.resolve())

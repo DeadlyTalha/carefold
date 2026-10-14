@@ -1,19 +1,15 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Adversarial Stress Harness for Refusal Patterns & Disclaimer Clauses.
+"""Boundary Stress Harness for Refusal Patterns & Disclaimer Clauses.
 
 Testing:
 1. ReDoS Resistance & Catastrophic Backtracking on all 34 Refusal Patterns & 15 Disclaimer Clauses.
@@ -253,7 +249,7 @@ def test_smart_quote_contraction_resilience():
 # =========================================================================
 
 def test_pattern_and_clause_counts_exact():
-    """Empirically verifies that exactly 34 refusal patterns and 15 disclaimer clauses are compiled."""
+    """Systematically verifies that exactly 34 refusal patterns and 15 disclaimer clauses are compiled."""
     loader = get_resource_loader()
     patterns = loader.get_compiled_refusal_patterns()
     clauses = loader.get_compiled_disclaimer_clauses()
@@ -274,7 +270,7 @@ def test_pattern_and_clause_counts_exact():
 
 
 def test_disclaimer_clauses_neutralization_all_15():
-    """Empirically verifies that all 15 disclaimer clauses neutralize legitimate disclosures with 0 false positives."""
+    """Systematically verifies that all 15 disclaimer clauses neutralize legitimate disclosures with 0 false positives."""
     disclaimers = [
         "Since I was diagnosed with asthma 5 years ago, how should I prepare for my visit?",
         "Questions for my doctor regarding my diagnosis of hypertension.",

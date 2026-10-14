@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Test Harness for
 Schema Migrations & Viewer Invites Lifecycle.
@@ -52,7 +48,7 @@ from carefold.main import app
 # ==============================================================================
 
 @pytest.fixture
-async def chal_test_env(temp_workspace: Path, monkeypatch):
+async def invite_test_env(temp_workspace: Path, monkeypatch):
     """Sets up an isolated in-memory DB and local SQL auth provider for API probes."""
     engine = create_db_engine("sqlite+aiosqlite:///:memory:")
     await init_db(engine)
@@ -539,7 +535,7 @@ async def test_unique_invite_code_constraint_orm_and_sql(tmp_path: Path):
 # ==============================================================================
 
 @pytest.mark.asyncio
-async def test_invite_lifecycle_creation_and_7_day_duration(chal_test_env):
+async def test_invite_lifecycle_creation_and_7_day_duration(invite_test_env):
     """Stress-test: API invite creation generates cf-inv- token with exactly ~7 days lifespan."""
     with TestClient(app) as client:
         owner = _register_user(client, "alice_life@carefold.local", "Alice Life")
@@ -572,7 +568,7 @@ async def test_invite_lifecycle_creation_and_7_day_duration(chal_test_env):
 
 
 @pytest.mark.asyncio
-async def test_invite_acceptance_and_dual_permission_scenarios(chal_test_env):
+async def test_invite_acceptance_and_dual_permission_scenarios(invite_test_env):
     """Stress-test: Accept invite with different permission flags (clinical only vs paperwork only).
 
     Verifies granted access_level reflects invite permissions.
@@ -618,14 +614,14 @@ async def test_invite_acceptance_and_dual_permission_scenarios(chal_test_env):
 
 
 @pytest.mark.asyncio
-async def test_invite_rejection_expired_code(chal_test_env):
+async def test_invite_rejection_expired_code(invite_test_env):
     """Stress-test: Expired invitation rejection.
 
     Probes:
     1. Past timestamp in expires_at is rejected with HTTP 400.
     2. No ProfileAccess is granted on expired redemption attempt.
     """
-    session_factory = chal_test_env["session_factory"]
+    session_factory = invite_test_env["session_factory"]
 
     with TestClient(app) as client:
         owner = _register_user(client, "owner_exp@carefold.local", "Owner Exp")
@@ -662,7 +658,7 @@ async def test_invite_rejection_expired_code(chal_test_env):
 
 
 @pytest.mark.asyncio
-async def test_double_acceptance_replay_attack_rejected(chal_test_env):
+async def test_double_acceptance_replay_attack_rejected(invite_test_env):
     """Stress-test: Double acceptance replay attack.
 
     Probes:
@@ -703,7 +699,7 @@ async def test_double_acceptance_replay_attack_rejected(chal_test_env):
 
 
 @pytest.mark.asyncio
-async def test_self_invite_acceptance_rejected(chal_test_env):
+async def test_self_invite_acceptance_rejected(invite_test_env):
     """Stress-test: Profile owner cannot accept an invite for their own profile."""
     with TestClient(app) as client:
         owner = _register_user(client, "owner_self@carefold.local", "Owner Self")
@@ -725,7 +721,7 @@ async def test_self_invite_acceptance_rejected(chal_test_env):
 
 
 @pytest.mark.asyncio
-async def test_invalid_and_whitespace_invite_codes(chal_test_env):
+async def test_invalid_and_whitespace_invite_codes(invite_test_env):
     """Stress-test: Invalid, nonexistent, or whitespace invite codes are safely handled."""
     with TestClient(app) as client:
         user = _register_user(client, "user_invalid@carefold.local", "User Invalid")
@@ -744,7 +740,7 @@ async def test_invalid_and_whitespace_invite_codes(chal_test_env):
 
 
 @pytest.mark.asyncio
-async def test_invite_revocation_and_unauthorized_deletion(chal_test_env):
+async def test_invite_revocation_and_unauthorized_deletion(invite_test_env):
     """Stress-test: Revoking an invite prevents subsequent acceptance, and unauthorized revokes are blocked."""
     with TestClient(app) as client:
         owner = _register_user(client, "owner_rev@carefold.local", "Owner Rev")
@@ -773,9 +769,9 @@ async def test_invite_revocation_and_unauthorized_deletion(chal_test_env):
 
 
 @pytest.mark.asyncio
-async def test_list_invites_filtering_and_include_expired(chal_test_env):
+async def test_list_invites_filtering_and_include_expired(invite_test_env):
     """Stress-test: list_viewer_invites correctly filters out expired/accepted unless include_expired=true."""
-    session_factory = chal_test_env["session_factory"]
+    session_factory = invite_test_env["session_factory"]
 
     with TestClient(app) as client:
         owner = _register_user(client, "owner_filter@carefold.local", "Owner Filter")

@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -44,6 +40,7 @@ import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { AgentFormModal } from '@/components/agents/AgentFormModal';
 import { SkillFormModal } from '@/components/skills/SkillFormModal';
+import { useI18n } from '@/i18n';
 
 export interface AgentsClientProps {
   initialAgents: AgentSummary[];
@@ -71,6 +68,7 @@ export function AgentsClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useI18n();
 
   const [agents, setAgents] = useState<AgentSummary[]>(initialAgents);
   const [skills, setSkills] = useState<SkillSummary[]>(initialSkills);
@@ -193,10 +191,10 @@ export function AgentsClient({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-[var(--cf-fg)]">
-            Agents &amp; Skills
+            {t('agents.title')}
           </h1>
           <p className="text-sm text-[var(--cf-fg-muted)] mt-1 max-w-2xl">
-            Specialist agents and clinical skill packs running on this computer. Private, task-scoped, and zero cloud telemetry.
+            {t('agents.subtitle')}
           </p>
         </div>
 
@@ -209,7 +207,7 @@ export function AgentsClient({
               onClick={() => setIsCreateAgentOpen(true)}
               leftIcon={<Plus className="w-4 h-4" />}
             >
-              Create Agent
+              {t('agents.create_agent')}
             </Button>
           ) : (
             <Button
@@ -218,7 +216,7 @@ export function AgentsClient({
               onClick={() => setIsCreateSkillOpen(true)}
               leftIcon={<Plus className="w-4 h-4" />}
             >
-              Create Skill
+              {t('agents.create_skill')}
             </Button>
           )}
 
@@ -229,12 +227,12 @@ export function AgentsClient({
             options={[
               {
                 value: 'assistants',
-                label: 'Agents',
+                label: t('agents.tab_agents'),
                 badge: filteredAgents.length
               },
               {
                 value: 'skills',
-                label: 'Skills',
+                label: t('agents.tab_skills'),
                 badge: filteredSkills.length
               }
             ]}
@@ -250,7 +248,7 @@ export function AgentsClient({
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={`Search ${activeTab === 'assistants' ? 'agents' : 'skills'} by name, keyword, or domain... (Press / to focus)`}
+          placeholder={activeTab === 'assistants' ? t('agents.search_agents') : t('agents.search_skills')}
           aria-label="Search agents and skills"
           className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--cf-border-strong)] bg-[var(--cf-surface)] text-sm text-[var(--cf-fg)] placeholder:text-[var(--cf-fg-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--cf-focus)] transition-all min-h-[44px]"
         />
@@ -260,16 +258,16 @@ export function AgentsClient({
       {activeTab === 'assistants' ? (
         <div className="flex flex-wrap items-center gap-2 mb-6 text-xs">
           <span className="font-semibold text-[var(--cf-fg-subtle)] uppercase tracking-wider mr-1">
-            Filter:
+            {t('agents.filter_label')}
           </span>
 
           {/* Care Stage Filters */}
           {[
-            { id: 'all', label: 'Any time' },
-            { id: 'pre_visit', label: 'Before visit' },
-            { id: 'during_visit', label: 'At visit' },
-            { id: 'post_visit', label: 'After visit' },
-            { id: 'daily_living', label: 'Day to day' }
+            { id: 'all', label: t('agents.stage_all') },
+            { id: 'pre_visit', label: t('agents.stage_pre_visit') },
+            { id: 'during_visit', label: t('agents.stage_during_visit') },
+            { id: 'post_visit', label: t('agents.stage_post_visit') },
+            { id: 'daily_living', label: t('agents.stage_daily_living') }
           ].map((stage) => {
             const isSelected = selectedCareStage === stage.id;
             return (
@@ -287,10 +285,10 @@ export function AgentsClient({
 
           {/* Risk Filters */}
           {[
-            { id: 'all', label: 'All Risk Levels' },
-            { id: 'clinical_assist', label: 'Clinical prep' },
-            { id: 'admin', label: 'Administrative' },
-            { id: 'wellness', label: 'Wellness' }
+            { id: 'all', label: t('agents.risk_all') },
+            { id: 'clinical_assist', label: t('agents.risk_clinical') },
+            { id: 'admin', label: t('agents.risk_admin') },
+            { id: 'wellness', label: t('agents.risk_wellness') }
           ].map((rf) => {
             const isSelected = selectedRisk === rf.id;
             return (
@@ -314,20 +312,20 @@ export function AgentsClient({
             icon={forCaregivers ? <Check className="w-3.5 h-3.5" /> : undefined}
             className={forCaregivers ? 'font-semibold shadow-sm' : ''}
           >
-            For Caregivers
+            {t('agents.for_caregivers')}
           </Chip>
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-2 mb-6 text-xs">
           <span className="font-semibold text-[var(--cf-fg-subtle)] uppercase tracking-wider mr-1">
-            Domain:
+            {t('agents.domain_label')}
           </span>
 
           {[
-            { id: 'all', label: 'All Domains' },
-            { id: 'clinical', label: 'Clinical' },
-            { id: 'navigation', label: 'Navigation' },
-            { id: 'wellness', label: 'Wellness' }
+            { id: 'all', label: t('agents.domain_all') },
+            { id: 'clinical', label: t('agents.domain_clinical') },
+            { id: 'navigation', label: t('agents.domain_navigation') },
+            { id: 'wellness', label: t('agents.domain_wellness') }
           ].map((df) => {
             const isSelected = selectedDomain === df.id;
             return (
@@ -364,7 +362,7 @@ export function AgentsClient({
                     </div>
                     <span
                       className={cn(
-                        'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold',
+                        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold',
                         isClinical
                           ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
                           : 'bg-[var(--cf-surface-2)] text-[var(--cf-fg-subtle)] border border-[var(--cf-border)]'
@@ -387,7 +385,7 @@ export function AgentsClient({
                     href={`/agents/${agent.id}`}
                     className="text-xs font-semibold text-[var(--cf-fg-muted)] hover:text-[var(--cf-fg)] transition min-h-[36px] inline-flex items-center"
                   >
-                    View details
+                    {t('agents.view_details')}
                   </Link>
 
                   <Link
@@ -395,7 +393,7 @@ export function AgentsClient({
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white dark:bg-emerald-500 dark:text-[#04201a] shadow-sm transition min-h-[36px]"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
-                    <span>Consult for {activeProfileName}</span>
+                    <span>{t('agents.consult_for', { name: activeProfileName })}</span>
                   </Link>
                 </div>
               </div>
@@ -411,7 +409,7 @@ export function AgentsClient({
             >
               <div>
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/60 flex items-center justify-center text-purple-700 dark:text-purple-300 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 flex items-center justify-center text-emerald-800 dark:text-emerald-300 shrink-0">
                     <Sparkles className="w-5 h-5" />
                   </div>
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-[var(--cf-surface-2)] text-[var(--cf-fg-subtle)] border border-[var(--cf-border)]">
@@ -435,7 +433,7 @@ export function AgentsClient({
                   href={`/skills/${skill.id}`}
                   className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline min-h-[36px] inline-flex items-center"
                 >
-                  Skill documentation &rarr;
+                  {t('agents.skill_docs')} &rarr;
                 </Link>
               </div>
             </div>

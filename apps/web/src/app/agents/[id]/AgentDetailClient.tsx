@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -414,18 +410,18 @@ export function AgentDetailClient({ agent: previewAgent, consentRequired = false
 
       {/* For Developers Collapsible Disclosure (#175) */}
       <details
-        data-testid="agent-developer-disclosure"
+        data-testid="agent-developer-details"
         className="group bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm transition-colors"
       >
         <summary className="cursor-pointer font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-zinc-300 flex items-center justify-between select-none">
           <div className="flex items-center gap-2">
             <Code className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
-            <span>For Developers & Clinical Reviewers</span>
+            <span>For developers</span>
           </div>
           <span className="text-xs text-slate-400 group-open:rotate-180 transition-transform">▼</span>
         </summary>
 
-        <div className="mt-6 pt-6 border-t border-slate-100 dark:border-zinc-800 space-y-6">
+        <div data-testid="agent-developer-disclosure" className="mt-6 pt-6 border-t border-slate-100 dark:border-zinc-800 space-y-6">
           {/* CLI Execution */}
           <div>
             <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wider mb-2">CLI Execution</h3>

@@ -1,19 +1,15 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Deep Adversarial Test Suite for Tool Sandbox and Runtime Security.
+"""Deep Boundary Test Suite for Tool Sandbox and Runtime Security.
 
 Verifies:
 1. attach-read: Path traversal permutations, encoding attacks, scheme injections,
@@ -117,7 +113,7 @@ def sandbox_env(tmp_path: Path):
 
 
 # =========================================================================
-# 1. ATTACH-READ ADVERSARIAL STRESS
+# 1. ATTACH-READ BOUNDARY STRESS
 # =========================================================================
 
 @pytest.mark.asyncio
@@ -305,7 +301,7 @@ async def test_attach_read_symlink_defense(sandbox_env):
 
 
 # =========================================================================
-# 2. WORKSPACE-NOTE ADVERSARIAL STRESS
+# 2. WORKSPACE-NOTE BOUNDARY STRESS
 # =========================================================================
 
 @pytest.mark.asyncio
@@ -440,7 +436,7 @@ async def test_workspace_note_concurrency_stress(sandbox_env):
 
 
 # =========================================================================
-# 3. SKILL-DOCS ADVERSARIAL STRESS
+# 3. SKILL-DOCS BOUNDARY STRESS
 # =========================================================================
 
 @pytest.mark.asyncio

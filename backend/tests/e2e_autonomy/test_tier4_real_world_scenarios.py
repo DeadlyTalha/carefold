@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Tier 4: Real-World Application Scenarios — Multi-Step Autonomous Workflows.
 
@@ -89,7 +85,7 @@ async def test_t4_scenario_chronic_care_hypertension_visit_prep(
     )
     args_export = {
         "url": "https://portal.provider.org/v2/dossier",
-        "patient": "Bharat",
+        "patient": "Alex",
         "avg_bp": "140/89",
     }
 
@@ -100,7 +96,7 @@ async def test_t4_scenario_chronic_care_hypertension_visit_prep(
     approval_id = res4.approval_id
 
     # Step 5: Patient reviews dossier card and approves
-    approval_store.decide(approval_id, sample_profile_id, "approved", None, "patient-bharat", ["manage"])
+    approval_store.decide(approval_id, sample_profile_id, "approved", None, "patient-alex", ["manage"])
 
     # Step 6: Atomic resume completes export
     res5 = await execute_tool_call(

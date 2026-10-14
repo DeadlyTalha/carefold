@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -45,12 +41,14 @@ import type {
   ReminderItem,
   SnoozeInterval,
 } from '@/types/schedule';
+import { useI18n } from '@/i18n';
 
 export interface AppointmentsClientProps {
   profileId: string;
 }
 
 export function AppointmentsClient({ profileId }: AppointmentsClientProps) {
+  const { t } = useI18n();
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
   const [reminders, setReminders] = useState<ReminderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -156,7 +154,7 @@ export function AppointmentsClient({ profileId }: AppointmentsClientProps) {
   );
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto py-2">
+    <div className="space-y-6">
       {/* Top Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--cf-border)]">
         <div>
@@ -165,10 +163,10 @@ export function AppointmentsClient({ profileId }: AppointmentsClientProps) {
             className="text-2xl font-bold tracking-tight text-[var(--cf-fg)] flex items-center gap-2.5"
           >
             <CalendarIcon className="w-6 h-6 text-blue-500" />
-            Clinical Visits & Schedule
+            {t('schedule.title')}
           </h1>
           <p className="text-xs sm:text-sm text-[var(--cf-fg-muted)] mt-1">
-            Organize doctor visits, prep packs, booking scripts, and daily health reminders.
+            {t('schedule.subtitle')}
           </p>
         </div>
 
@@ -182,7 +180,7 @@ export function AppointmentsClient({ profileId }: AppointmentsClientProps) {
             title="Download .ics Calendar (RFC 5545)"
           >
             <Download className="w-4 h-4 text-emerald-600" />
-            <span>Download .ics</span>
+            <span>{t('schedule.download_ics')}</span>
           </button>
 
           {/* Refresh Button */}
@@ -211,8 +209,8 @@ export function AppointmentsClient({ profileId }: AppointmentsClientProps) {
           value={mobileView}
           onChange={(val) => setMobileView(val as any)}
           options={[
-            { label: `Visits (${appointments.length})`, value: 'visits' },
-            { label: `Reminders (${reminders.filter((r) => r.status !== 'completed').length})`, value: 'reminders' },
+            { label: t('schedule.visits_tab', { count: appointments.length }), value: 'visits' },
+            { label: t('schedule.reminders_tab', { count: reminders.filter((r) => r.status !== 'completed').length }), value: 'reminders' },
           ]}
         />
       </div>
@@ -220,7 +218,7 @@ export function AppointmentsClient({ profileId }: AppointmentsClientProps) {
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center gap-3 text-[var(--cf-fg-subtle)]">
           <Loader2 className="w-8 h-8 animate-spin text-[var(--cf-primary)]" />
-          <p className="text-sm">Loading schedule & reminders...</p>
+          <p className="text-sm">{t('schedule.loading')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -232,7 +230,7 @@ export function AppointmentsClient({ profileId }: AppointmentsClientProps) {
           >
             <div className="flex items-center justify-between pb-2 border-b border-[var(--cf-border)]">
               <h2 className="font-semibold text-sm text-[var(--cf-fg)] uppercase tracking-wider">
-                Upcoming Doctor Visits ({sortedAppointments.length})
+                {t('schedule.upcoming_visits', { count: sortedAppointments.length })}
               </h2>
             </div>
 
@@ -242,9 +240,9 @@ export function AppointmentsClient({ profileId }: AppointmentsClientProps) {
                 className="py-12 text-center text-sm text-[var(--cf-fg-subtle)] border-dashed border-2 border-[var(--cf-border)] rounded-2xl p-6"
               >
                 <CalendarIcon className="w-8 h-8 mx-auto text-[var(--cf-fg-subtle)] mb-2 opacity-50" />
-                <p className="font-medium text-[var(--cf-fg-muted)]">No upcoming visits scheduled</p>
+                <p className="font-medium text-[var(--cf-fg-muted)]">{t('schedule.no_upcoming_visits')}</p>
                 <p className="text-xs mt-0.5">
-                  Ask your Carefold assistant to draft a specialist consultation or prep pack.
+                  {t('schedule.no_upcoming_visits_desc')}
                 </p>
               </div>
             ) : (

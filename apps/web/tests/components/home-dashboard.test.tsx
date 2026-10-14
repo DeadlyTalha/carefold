@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -51,10 +47,10 @@ const mockRosaAppointment = {
   prepCompletedQuestions: 4,
   prepTotalQuestions: 6,
   checklist: [
-    { id: 'c1', text: 'Questions for cardiologist ready', isDone: true },
-    { id: 'c2', text: 'Bring current medication list and BP log', isDone: false },
-    { id: 'c3', text: 'Bring prior auth approval letter', isDone: false },
-    { id: 'c4', text: 'Note recent symptom dates', isDone: false }
+    { id: 'item_one', text: 'Questions for cardiologist ready', isDone: true },
+    { id: 'item_two', text: 'Bring current medication list and BP log', isDone: false },
+    { id: 'item_three', text: 'Bring prior auth approval letter', isDone: false },
+    { id: 'item_four', text: 'Note recent symptom dates', isDone: false }
   ],
   savedToNotesTimestamp: "Saved to Rosa's notes · Oct 6"
 };

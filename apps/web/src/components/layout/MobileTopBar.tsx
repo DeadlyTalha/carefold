@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -23,11 +19,13 @@ import { usePathname } from 'next/navigation';
 import { ChevronDown, Search, Settings, Sun, Moon, LogIn, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, type MemberColorSlot } from '@/components/ui/Avatar';
+import { CarefoldLogo } from '@/components/ui/CarefoldLogo';
 import { ProfileSwitcher } from '@/components/layout/ProfileSwitcher';
 import { useOptionalTheme } from '@/components/ThemeProvider';
 import { useAuth } from '@/lib/auth';
-import { getHouseholdProfile } from '@/lib/familyProfiles';
+import { getHouseholdProfile, HOUSEHOLD_PROFILES_CHANGED_EVENT } from '@/lib/familyProfiles';
 import { profilePath } from '@/lib/routes';
+import { useI18n } from '@/i18n';
 
 export interface MobileTopBarProps extends React.HTMLAttributes<HTMLElement> {
   activeProfile?: {
@@ -52,7 +50,19 @@ export function MobileTopBar({
   const pathname = usePathname();
   const themeContext = useOptionalTheme();
   const { isAuthenticated, user, logout } = useAuth();
+  const { t } = useI18n();
   const [isProfileSwitcherOpen, setIsProfileSwitcherOpen] = React.useState(false);
+  const [hasMounted, setHasMounted] = React.useState(false);
+  const [profileRev, setProfileRev] = React.useState(0);
+
+  React.useEffect(() => {
+    setHasMounted(true);
+    const handleProfilesChanged = () => setProfileRev((r) => r + 1);
+    window.addEventListener(HOUSEHOLD_PROFILES_CHANGED_EVENT, handleProfilesChanged);
+    return () => {
+      window.removeEventListener(HOUSEHOLD_PROFILES_CHANGED_EVENT, handleProfilesChanged);
+    };
+  }, []);
 
   // Derive active profile dynamically from household store or URL pathname
   const derivedProfile = React.useMemo(() => {
@@ -60,10 +70,14 @@ export function MobileTopBar({
     const match = pathname.match(/^\/p\/([^/]+)/);
     const profileId = match ? match[1] : 'me';
 
-    const userFallbackName = user?.full_name?.trim() || user?.username?.trim() || 'Me';
-    const userShortName = user?.full_name ? user.full_name.trim().split(/\s+/)[0] : (user?.username || 'Me');
+    const userFallbackName = hasMounted
+      ? (user?.full_name?.trim() || user?.username?.trim() || 'Me')
+      : 'Me';
+    const userShortName = hasMounted
+      ? (user?.full_name ? user.full_name.trim().split(/\s+/)[0] : (user?.username || 'Me'))
+      : 'Me';
 
-    const household = getHouseholdProfile(profileId);
+    const household = hasMounted ? getHouseholdProfile(profileId) : null;
     if (household) {
       const isSelf = household.role === 'self' || household.relationship?.toLowerCase() === 'self' || profileId === 'me';
       const resolvedName = (isSelf && (household.name === 'Me' || !household.name)) ? userFallbackName : household.name;
@@ -87,7 +101,7 @@ export function MobileTopBar({
       shortName: isGenericId ? userShortName : profileId,
       colorSlot: 1 as MemberColorSlot
     };
-  }, [activeProfileProp, pathname, user]);
+  }, [activeProfileProp, pathname, user, hasMounted, profileRev]);
 
   return (
     <header
@@ -104,13 +118,8 @@ export function MobileTopBar({
         aria-label="Carefold Home"
         className="min-h-[44px] flex items-center gap-1.5 focus-visible:outline-2 focus-visible:outline-[var(--cf-focus)]"
       >
-        <div
-          className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0"
-          aria-hidden="true"
-        >
-          C
-        </div>
-        <span className="hidden min-[380px]:inline font-bold text-sm text-[var(--cf-fg)] tracking-tight">Carefold</span>
+        <CarefoldLogo size={20} />
+        <span className="hidden min-[380px]:inline font-bold text-sm text-[var(--cf-fg)] tracking-tight">{t('common.appName')}</span>
       </Link>
 
       {/* Profile Switcher Pill Trigger */}
@@ -155,7 +164,7 @@ export function MobileTopBar({
           <button
             type="button"
             onClick={onOpenSearch}
-            aria-label="Search"
+            aria-label={t('common.search')}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-[var(--cf-fg-muted)] hover:text-[var(--cf-fg)] hover:bg-[var(--cf-surface)] transition-all focus-visible:outline-2 focus-visible:outline-[var(--cf-focus)]"
           >
             <Search className="w-4 h-4" />
@@ -177,8 +186,8 @@ export function MobileTopBar({
             onClick={async () => {
               await logout();
             }}
-            aria-label="Sign out"
-            title="Sign out"
+            aria-label={t('common.signOut')}
+            title={t('common.signOut')}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-[var(--cf-fg-muted)] hover:text-rose-600 hover:bg-[var(--cf-surface)] transition-all focus-visible:outline-2 focus-visible:outline-[var(--cf-focus)]"
           >
             <LogOut className="w-4 h-4" />
@@ -186,8 +195,8 @@ export function MobileTopBar({
         ) : (
           <Link
             href="/login"
-            aria-label="Sign in"
-            title="Sign in"
+            aria-label={t('common.signIn')}
+            title={t('common.signIn')}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-[var(--cf-fg-muted)] hover:text-emerald-600 hover:bg-[var(--cf-surface)] transition-all focus-visible:outline-2 focus-visible:outline-[var(--cf-focus)]"
           >
             <LogIn className="w-4 h-4" />
@@ -198,8 +207,8 @@ export function MobileTopBar({
         <button
           type="button"
           onClick={() => themeContext?.toggleTheme()}
-          aria-label="Switch to light or dark mode"
-          title="Switch to light or dark mode"
+          aria-label={t('nav.switchTheme')}
+          title={t('nav.switchTheme')}
           className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-[var(--cf-fg-muted)] hover:text-[var(--cf-fg)] hover:bg-[var(--cf-surface)] transition-all focus-visible:outline-2 focus-visible:outline-[var(--cf-focus)]"
         >
           <Sun className="hidden dark:block w-4 h-4 text-amber-400" />

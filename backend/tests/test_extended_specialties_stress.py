@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Stress Test Suite for Extended Specialty Navigators.
 
@@ -98,10 +94,10 @@ def _get_persona_text(agent_yaml_path: Path, data: dict) -> str:
 
 
 class TestPersonaWordCountAndStructureStress:
-    """Empirically stress-tests persona word counts and section structural integrity."""
+    """Systematically stress-tests persona word counts and section structural integrity."""
 
     def test_word_count_strictness_across_all_5_personas(self, temp_workspace: Path):
-        """EMPIRICAL VERIFICATION: Every persona must exceed 250 words under both whitespace
+        """SYSTEMATIC VERIFICATION: Every persona must exceed 250 words under both whitespace
         and regex word boundary tokenization, and be within reasonable limits (< 2000 words).
         """
         agents_dir = temp_workspace / "agents"
@@ -128,7 +124,7 @@ class TestPersonaWordCountAndStructureStress:
             assert ws_count < 600, f"Agent '{agent_id}' persona word count {ws_count} is excessively long"
 
     def test_mandatory_headings_exact_sequence_and_substantive_content(self, temp_workspace: Path):
-        """EMPIRICAL VERIFICATION: All 5 mandatory uppercase headers must be present in
+        """SYSTEMATIC VERIFICATION: All 5 mandatory uppercase headers must be present in
         exact sequential order, and every section must contain substantive content (>= 20 words).
         """
         agents_dir = temp_workspace / "agents"
@@ -173,7 +169,7 @@ class TestClosedToolRegistryAndSecurity:
     """Asserts that all agents and skills strictly comply with Phase 0 closed tool registry."""
 
     def test_strict_phase0_tool_containment_and_zero_delegation(self, temp_workspace: Path):
-        """EMPIRICAL VERIFICATION: All agents declare only Phase 0 tools, never declare
+        """SYSTEMATIC VERIFICATION: All agents declare only Phase 0 tools, never declare
         forbidden delegation or code execution tools, and explicitly set can_delegate: false.
         """
         agents_dir = temp_workspace / "agents"
@@ -224,7 +220,7 @@ class TestSkillIntendedUseDisclaimers:
     """Asserts that all companion skills contain all 3 mandatory clinical disclaimers."""
 
     def test_mandatory_intended_use_statements_present_verbatim(self, temp_workspace: Path):
-        """EMPIRICAL VERIFICATION: Every SKILL.md body must contain the 3 required intended-use
+        """SYSTEMATIC VERIFICATION: Every SKILL.md body must contain the 3 required intended-use
         statements verbatim, and check_mandatory_intended_use() must pass without exception.
         """
         skills_dir = temp_workspace / "skills"
@@ -278,7 +274,7 @@ class TestSkillReferenceDocumentsDepthAndStubs:
     ]
 
     def test_reference_documents_depth_and_structure(self, temp_workspace: Path):
-        """All declared reference documents in M2 skills must have # and ## headers,
+        """All declared reference documents in Phase2 skills must have # and ## headers,
         byte size >= 200, and zero refusal/greeting phrases.
         """
         skills_dir = temp_workspace / "skills"
@@ -401,7 +397,7 @@ class TestSafetyBoundariesAndEmergencyFlags:
 # ============================================================================
 
 class TestCatalogIndexingAndTwoHopRouting:
-    """Asserts that all 5 M2 agents index into SQLite FTS5 catalog and are discoverable."""
+    """Asserts that all 5 Phase2 agents index into SQLite FTS5 catalog and are discoverable."""
 
     @pytest.mark.asyncio
     async def test_all_5_agents_index_and_search_cleanly(self, temp_workspace: Path):

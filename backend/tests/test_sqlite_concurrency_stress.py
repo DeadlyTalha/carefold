@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Stress tests for concurrent SQLite async writes under WAL modeusy timeout,
 URL normalization, and password masking in sanitize_db_url.
@@ -39,7 +35,7 @@ from carefold.db.session import (
 
 
 # ==============================================================================
-# 1. EMPIRICAL CONCURRENCY TESTS (SQLite WAL + 10s busy timeout)
+# 1. SYSTEMATIC CONCURRENCY TESTS (SQLite WAL + 10s busy timeout)
 # ==============================================================================
 
 @pytest.mark.asyncio
@@ -199,10 +195,10 @@ async def test_concurrent_readers_and_writers_simultaneous(tmp_path: Path):
 
 @pytest.mark.asyncio
 async def test_control_contrast_wal_vs_non_wal(tmp_path: Path):
-    """Empirical control experiment: Verify that without WAL / busy_timeout,
+    """Systematic control experiment: Verify that without WAL / busy_timeout,
 
     concurrent writes frequently encounter database locking or timeout failures.
-    This empirically proves the effectiveness of Carefold's WAL + 10s busy timeout configuration.
+    This systematically proves the effectiveness of Carefold's WAL + 10s busy timeout configuration.
     """
     db_file = tmp_path / "control_nowal.db"
     # Connect directly without WAL/busy_timeout pragma and with 0 timeout
@@ -249,7 +245,7 @@ async def test_control_contrast_wal_vs_non_wal(tmp_path: Path):
 # ==============================================================================
 
 def test_normalize_database_url_comprehensive():
-    """Empirical verification of URL normalization across schemes, query params, and paths."""
+    """Systematic verification of URL normalization across schemes, query params, and paths."""
     # 1. postgres:// -> postgresql+asyncpg://
     assert (
         normalize_database_url("postgres://app:secret@db.service.internal:5432/carefold")
@@ -327,7 +323,7 @@ def test_normalize_database_url_comprehensive():
 # ==============================================================================
 
 def test_sanitize_db_url_credential_masking():
-    """Empirical verification that passwords and credentials are never exposed in sanitized URLs."""
+    """Systematic verification that passwords and credentials are never exposed in sanitized URLs."""
     # 1. Standard password
     url1 = "postgresql+asyncpg://admin_user:SuperSecretPassword123@db.prod.internal:5432/carefold_prod"
     res1 = sanitize_db_url(url1)

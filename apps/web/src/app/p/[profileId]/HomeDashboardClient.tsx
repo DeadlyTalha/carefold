@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -45,6 +41,7 @@ import { getHouseholdProfile, fetchHouseholdProfiles } from '@/lib/familyProfile
 import { useAuth } from '@/lib/auth';
 import { profilePath } from '@/lib/routes';
 import { ProfileEditModal } from '@/components/family/ProfileEditModal';
+import { useI18n } from '@/i18n';
 
 export interface CareProfile {
   id: string;
@@ -128,9 +125,15 @@ export function HomeDashboardClient({
 }: HomeDashboardClientProps) {
   const router = useRouter();
   const { user, isLoading, isAuthenticated } = useAuth();
+  const { t } = useI18n();
   const [askDraft, setAskDraft] = useState('');
   const [profileOverride, setProfileOverride] = useState<CareProfile | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -161,10 +164,14 @@ export function HomeDashboardClient({
   // Resolved Profile Info
   const baseProfile: CareProfile = React.useMemo(() => {
     if (resolvedInitialProfile) return resolvedInitialProfile;
-    const userFallbackName = user?.full_name?.trim() || user?.username?.trim() || 'Me';
-    const userShortName = user?.full_name ? user.full_name.trim().split(/\s+/)[0] : (user?.username || 'Me');
+    const userFallbackName = hasMounted
+      ? (user?.full_name?.trim() || user?.username?.trim() || t('nav.me'))
+      : t('nav.me');
+    const userShortName = hasMounted && user?.full_name
+      ? user.full_name.trim().split(/\s+/)[0]
+      : (hasMounted && user?.username ? user.username : t('nav.me'));
 
-    const household = getHouseholdProfile(profileId);
+    const household = hasMounted ? getHouseholdProfile(profileId) : undefined;
     if (household) {
       const isSelf = household.role === 'self' || household.relationship?.toLowerCase() === 'self' || profileId === 'me';
       const resolvedName = (isSelf && (household.name === 'Me' || !household.name)) ? userFallbackName : household.name;
@@ -194,7 +201,7 @@ export function HomeDashboardClient({
       role: 'Personal care profile',
       colorSlot: 1
     };
-  }, [resolvedInitialProfile, profileId, user]);
+  }, [resolvedInitialProfile, profileId, user, hasMounted, t]);
 
   const profile: CareProfile = profileOverride || baseProfile;
 
@@ -203,14 +210,14 @@ export function HomeDashboardClient({
     if (currentName && currentName.toLowerCase() !== 'me') {
       return currentName;
     }
-    if (user?.full_name?.trim()) {
+    if (hasMounted && user?.full_name?.trim()) {
       return user.full_name.trim();
     }
-    if (user?.username?.trim()) {
+    if (hasMounted && user?.username?.trim()) {
       return user.username.trim();
     }
-    return 'Me';
-  }, [profile.name, user?.full_name, user?.username]);
+    return t('nav.me');
+  }, [profile.name, user?.full_name, user?.username, hasMounted, t]);
 
   // Appointment Data (null if isEmpty or not provided)
   const appointment: UpcomingAppointment | null = React.useMemo(() => {
@@ -242,10 +249,10 @@ export function HomeDashboardClient({
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  }, []);
+    if (hour < 12) return t('home.greeting_morning');
+    if (hour < 18) return t('home.greeting_afternoon');
+    return t('home.greeting_evening');
+  }, [t]);
 
   const [checklist, setChecklist] = useState(() => appointment?.checklist || []);
 
@@ -326,7 +333,10 @@ export function HomeDashboardClient({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[var(--cf-fg)]">
+              <h1
+                suppressHydrationWarning
+                className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[var(--cf-fg)]"
+              >
                 {greeting}, {displayName}
               </h1>
               <button
@@ -358,7 +368,7 @@ export function HomeDashboardClient({
             leftIcon={<Edit3 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
             className="min-h-[44px]"
           >
-            Manage Profile
+            {t('home.manage_profile')}
           </Button>
 
           <Chip
@@ -366,7 +376,7 @@ export function HomeDashboardClient({
             variant="neutral"
             icon={<Lock className="w-3.5 h-3.5 text-[var(--cf-fg-subtle)]" />}
           >
-            Private on this computer · Only {displayName}&apos;s data shown
+            {t('home.private_badge', { name: displayName })}
           </Chip>
         </div>
       </section>
@@ -382,14 +392,14 @@ export function HomeDashboardClient({
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <h2 id="section-next-visit" className="text-base font-semibold text-[var(--cf-fg)]">
-                Next visit prep
+                {t('home.next_visit_prep')}
               </h2>
             </div>
             <Link
               href={profilePath(profile.id, 'chat?agent=visit-steward')}
               className="text-xs font-semibold text-[var(--cf-primary-hover)] hover:underline"
             >
-              All visits
+              {t('home.all_visits')}
             </Link>
           </div>
 
@@ -401,7 +411,7 @@ export function HomeDashboardClient({
                   aria-hidden="true"
                   className="w-14 h-14 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/40 flex flex-col items-center justify-center shrink-0 shadow-sm"
                 >
-                  <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
                     {appointment.monthShort}
                   </span>
                   <span className="text-xl font-bold text-[var(--cf-fg)] leading-none">
@@ -435,9 +445,12 @@ export function HomeDashboardClient({
               {/* Prep Sheet Progress & Checklist */}
               <div className="p-4 rounded-xl bg-[var(--cf-surface-2)] border border-[var(--cf-border)] space-y-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-[var(--cf-fg)]">Prep sheet</span>
+                  <span className="font-semibold text-[var(--cf-fg)]">{t('home.prep_sheet')}</span>
                   <span className="text-[var(--cf-fg-subtle)]">
-                    {appointment.prepCompletedQuestions} of {appointment.prepTotalQuestions} questions ready
+                    {t('home.questions_ready', {
+                      completed: appointment.prepCompletedQuestions,
+                      total: appointment.prepTotalQuestions
+                    })}
                   </span>
                 </div>
 
@@ -477,7 +490,7 @@ export function HomeDashboardClient({
                         className={cn(
                           'w-4 h-4 rounded mt-0.5 flex items-center justify-center shrink-0 border transition-colors',
                           item.isDone
-                            ? 'bg-emerald-600 border-emerald-600 text-white'
+                            ? 'bg-emerald-700 border-emerald-700 text-white'
                             : 'border-[var(--cf-border-strong)] bg-[var(--cf-surface)]'
                         )}
                       >
@@ -500,7 +513,7 @@ export function HomeDashboardClient({
                     leftIcon={<MessageSquare className="w-4 h-4" />}
                     onClick={() => router.push(profilePath(profile.id, `chat?agent=${encodeURIComponent(appointment.specialistId || 'visit-steward')}`))}
                   >
-                    Continue prep
+                    {t('home.continue_prep')}
                   </Button>
                   <Button
                     variant="secondary"
@@ -508,12 +521,12 @@ export function HomeDashboardClient({
                     leftIcon={<Printer className="w-4 h-4" />}
                     onClick={() => window.print()}
                   >
-                    Print prep sheet
+                    {t('home.print_prep_sheet')}
                   </Button>
                 </div>
 
                 {appointment.savedToNotesTimestamp && (
-                  <span className="text-[11px] text-[var(--cf-fg-subtle)]">
+                  <span className="text-xs text-[var(--cf-fg-subtle)]">
                     {appointment.savedToNotesTimestamp}
                   </span>
                 )}
@@ -522,10 +535,10 @@ export function HomeDashboardClient({
           ) : (
             <EmptyState
               icon={<Calendar className="w-6 h-6 text-emerald-600" />}
-              title="No upcoming visits scheduled"
-              description="Add an appointment or ask Visit Steward to help prepare questions and documents for an upcoming doctor visit."
+              title={t('home.no_upcoming_visits')}
+              description={t('home.no_upcoming_visits_desc')}
               action={{
-                label: 'Prepare with Visit Steward',
+                label: t('home.prepare_with_steward'),
                 onClick: () => router.push(profilePath(profile.id, 'chat?agent=visit-steward'))
               }}
             />
@@ -540,14 +553,14 @@ export function HomeDashboardClient({
           <div className="flex items-center gap-2 pb-3 mb-4 border-b border-[var(--cf-border)]">
             <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <h2 id="section-ask" className="text-base font-semibold text-[var(--cf-fg)]">
-              Ask about {displayName}
+              {t('home.ask_about', { name: displayName })}
             </h2>
           </div>
 
           <form onSubmit={handleAskSubmit} className="space-y-3">
             <textarea
               aria-label={`Ask Carefold about ${displayName}`}
-              placeholder={`Ask anything about ${displayName.split(' ')[0].toLowerCase()}'s health, paperwork, or visits...`}
+              placeholder={t('home.ask_placeholder', { name: displayName.split(' ')[0].toLowerCase() })}
               value={askDraft}
               onChange={(e) => setAskDraft(e.target.value)}
               onKeyDown={(e) => {
@@ -565,27 +578,27 @@ export function HomeDashboardClient({
                 type="submit"
                 disabled={!askDraft.trim()}
               >
-                Ask helper
+                {t('home.ask_helper')}
               </Button>
             </div>
           </form>
 
           {/* Quick Starters */}
           <div className="space-y-2 mt-4 pt-3 border-t border-[var(--cf-border)]">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)] block">
-              Suggested starters
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)] block">
+              {t('home.suggested_starters')}
             </span>
             {[
               {
-                label: 'Prepare for cardiologist visit',
+                label: t('home.starter_cardiologist'),
                 prompt: 'Prepare questions for cardiologist visit on Tuesday'
               },
               {
-                label: 'Review recent bills',
+                label: t('home.starter_bills'),
                 prompt: 'Review recent medical bills and insurance statements'
               },
               {
-                label: 'Check medication schedule',
+                label: t('home.starter_meds'),
                 prompt: 'Check current medication schedule and daily routines'
               }
             ].map((starter) => (
@@ -615,7 +628,7 @@ export function HomeDashboardClient({
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                 <h2 id="section-paperwork" className="text-base font-semibold text-[var(--cf-fg)]">
-                  Paperwork & coverage
+                  {t('home.paperwork_coverage')}
                 </h2>
               </div>
               {paperwork && (
@@ -638,15 +651,15 @@ export function HomeDashboardClient({
                 {/* Financial KV Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-3 rounded-xl bg-[var(--cf-surface-2)] text-xs border border-[var(--cf-border)] mt-2">
                   <div>
-                    <span className="text-[10px] text-[var(--cf-fg-subtle)] block">Deductible</span>
+                    <span className="text-xs text-[var(--cf-fg-subtle)] block">Deductible</span>
                     <span className="font-semibold text-[var(--cf-fg)]">$450 / $1,500</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-[var(--cf-fg-subtle)] block">Copay</span>
+                    <span className="text-xs text-[var(--cf-fg-subtle)] block">Copay</span>
                     <span className="font-semibold text-[var(--cf-fg)]">$35 Specialist</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-[var(--cf-fg-subtle)] block">You may owe</span>
+                    <span className="text-xs text-[var(--cf-fg-subtle)] block">You may owe</span>
                     <span className="font-bold text-amber-700 dark:text-amber-400">{paperwork.patientOwedAmount}</span>
                   </div>
                 </div>
@@ -654,10 +667,10 @@ export function HomeDashboardClient({
             ) : (
               <EmptyState
                 icon={<FileText className="w-6 h-6 text-sky-600" />}
-                title="No insurance paperwork on file"
-                description="Drop medical bills, explanation of benefits, or prior authorization letters into chat to extract structured summaries."
+                title={t('home.no_paperwork')}
+                description={t('home.no_paperwork_desc')}
                 action={{
-                  label: 'Upload paperwork',
+                  label: t('home.upload_paperwork'),
                   onClick: () => router.push(profilePath(profile.id, 'chat'))
                 }}
               />
@@ -686,14 +699,14 @@ export function HomeDashboardClient({
               <div className="flex items-center gap-2">
                 <Heart className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <h2 id="section-routines" className="text-base font-semibold text-[var(--cf-fg)]">
-                  Daily routines
+                  {t('home.daily_routines')}
                 </h2>
               </div>
               <Link
                 href={profilePath(profile.id, 'chat?agent=habit-companion')}
                 className="text-xs font-semibold text-[var(--cf-primary-hover)] hover:underline"
               >
-                Log
+                {t('home.log')}
               </Link>
             </div>
 
@@ -720,23 +733,23 @@ export function HomeDashboardClient({
                       ))}
                     </div>
 
-                    <span className="text-[11px] text-[var(--cf-fg-subtle)] font-semibold w-6 text-right shrink-0">
+                    <span className="text-xs text-[var(--cf-fg-subtle)] font-semibold w-6 text-right shrink-0">
                       {routine.summaryCount}
                     </span>
                   </div>
                 ))}
 
-                <p className="text-[11px] text-[var(--cf-fg-subtle)] mt-3 pt-2 border-t border-[var(--cf-border)]">
+                <p className="text-xs text-[var(--cf-fg-subtle)] mt-3 pt-2 border-t border-[var(--cf-border)]">
                   Tracking only — no judgement on readings.
                 </p>
               </div>
             ) : (
               <EmptyState
                 icon={<Activity className="w-6 h-6 text-emerald-600" />}
-                title="No active daily routines"
-                description="Ask Habit Companion to set up gentle daily habit check-ins and routine tracking."
+                title={t('home.no_routines')}
+                description={t('home.no_routines_desc')}
                 action={{
-                  label: 'Set up routines',
+                  label: t('home.setup_routines'),
                   onClick: () => router.push(profilePath(profile.id, 'chat?agent=habit-companion'))
                 }}
               />
@@ -754,14 +767,14 @@ export function HomeDashboardClient({
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <h2 id="section-notes" className="text-base font-semibold text-[var(--cf-fg)]">
-                  Recent notes
+                  {t('home.recent_notes')}
                 </h2>
               </div>
               <Link
                 href={profilePath(profile.id, 'library')}
                 className="text-xs font-semibold text-[var(--cf-primary-hover)] hover:underline"
               >
-                Library
+                {t('nav.library')}
               </Link>
             </div>
 
@@ -776,7 +789,7 @@ export function HomeDashboardClient({
                     <div className="font-semibold text-[var(--cf-fg)] truncate">
                       {note.title}
                     </div>
-                    <div className="text-[11px] text-[var(--cf-fg-subtle)] mt-0.5">
+                    <div className="text-xs text-[var(--cf-fg-subtle)] mt-0.5">
                       {note.authorAgentTitle} · {note.dateFormatted}
                     </div>
                   </Link>
@@ -785,10 +798,10 @@ export function HomeDashboardClient({
             ) : (
               <EmptyState
                 icon={<BookOpen className="w-6 h-6 text-indigo-600" />}
-                title="No notes for this person yet"
-                description="Notes generated during consultations with clinical guides and stewards will appear here."
+                title={t('home.no_notes')}
+                description={t('home.no_notes_desc')}
                 action={{
-                  label: 'Start a consultation',
+                  label: t('home.start_consultation'),
                   onClick: () => router.push(profilePath(profile.id, 'chat'))
                 }}
               />
@@ -801,7 +814,7 @@ export function HomeDashboardClient({
                 href={profilePath(profile.id, 'library')}
                 className="text-xs font-semibold text-[var(--cf-primary-hover)] hover:underline inline-flex items-center gap-1 min-h-[36px]"
               >
-                View all notes in Library →
+                {t('home.view_all_notes')}
               </Link>
             </div>
           )}

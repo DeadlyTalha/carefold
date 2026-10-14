@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Unit and integration tests for Clinical & Wearable File Imports (AU-38 / E10.1, E10.2, E10.7, E8.0)."""
 
@@ -405,7 +401,7 @@ async def test_stage_commit_idempotency_and_discard_workflow(import_db_env):
         assert audits[0].external_ref == f"import_batch:{batch.id}"
 
         # 3. Re-import identical bundle and commit -> idempotent upsert (no duplicate HealthResources)
-        batch2 = await stage_import(
+        import_set2 = await stage_import(
             session=session,
             profile_id=profile_id,
             filename="visit_bundle.json",
@@ -416,7 +412,7 @@ async def test_stage_commit_idempotency_and_discard_workflow(import_db_env):
         commit_res2 = await commit_import_batch(
             session=session,
             profile_id=profile_id,
-            batch_id=batch2.id,
+            batch_id=import_set2.id,
             actor_user_id=user_id,
         )
         assert commit_res2["updated_count"] == 6
@@ -428,18 +424,18 @@ async def test_stage_commit_idempotency_and_discard_workflow(import_db_env):
         assert len(hr_reimport) == 6
 
         # 4. Stage and discard a batch -> status becomes 'discarded', no new HealthResources
-        batch3 = await stage_import(
+        import_set3 = await stage_import(
             session=session,
             profile_id=profile_id,
             filename="summary.xml",
             content=SAMPLE_CCDA_XML,
             user_id=user_id,
         )
-        discarded = await discard_import_batch(session, profile_id=profile_id, batch_id=batch3.id)
+        discarded = await discard_import_batch(session, profile_id=profile_id, batch_id=import_set3.id)
         assert discarded is True
 
         refreshed_b3 = (
-            await session.execute(select(ImportBatch).where(ImportBatch.id == batch3.id))
+            await session.execute(select(ImportBatch).where(ImportBatch.id == import_set3.id))
         ).scalar_one()
         assert refreshed_b3.status == "discarded"
 

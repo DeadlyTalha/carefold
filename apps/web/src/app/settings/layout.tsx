@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -22,24 +18,28 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Cpu, ShieldCheck, Server, KeyRound, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const SETTINGS_NAV_ITEMS = [
-  { href: '/settings/model', label: 'Model & Providers', icon: Cpu, testId: 'settings-nav-model' },
-  { href: '/settings/privacy', label: 'Privacy & Data', icon: ShieldCheck, testId: 'settings-nav-privacy' },
-  { href: '/settings/diagnostics', label: 'Diagnostics & Health', icon: Server, testId: 'settings-nav-diagnostics' },
-  { href: '/settings/account', label: 'Account & Security', icon: KeyRound, testId: 'settings-nav-account' },
-  { href: '/settings/display', label: 'Appearance & Display', icon: Palette, testId: 'settings-nav-display' },
-];
+import { useI18n } from '@/i18n';
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { t } = useI18n();
+
+  const settingsNavItems = [
+    { href: '/settings/model', label: t('settings.nav.model'), icon: Cpu, testId: 'settings-nav-model' },
+    { href: '/settings/privacy', label: t('settings.nav.privacy'), icon: ShieldCheck, testId: 'settings-nav-privacy' },
+    { href: '/settings/diagnostics', label: t('settings.nav.diagnostics'), icon: Server, testId: 'settings-nav-diagnostics' },
+    { href: '/settings/account', label: t('settings.nav.account'), icon: KeyRound, testId: 'settings-nav-account' },
+    { href: '/settings/display', label: t('settings.nav.display'), icon: Palette, testId: 'settings-nav-display' },
+  ];
 
   return (
     <div className="max-w-[var(--cf-content-wide)] mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl font-display font-bold text-[var(--cf-fg)] tracking-tight">Settings</h1>
+        <h1 className="text-2xl sm:text-3xl font-display font-bold text-[var(--cf-fg)] tracking-tight">
+          {t('settings.title')}
+        </h1>
         <p className="text-xs sm:text-sm text-[var(--cf-fg-muted)] mt-1">
-          Manage local runtime endpoints, patient privacy, diagnostics, and account security.
+          {t('settings.subtitle')}
         </p>
       </div>
 
@@ -47,7 +47,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         {/* Desktop Sidebar Navigation (256px / 240px) */}
         <aside className="hidden md:block sticky top-20 bg-[var(--cf-surface)] border border-[var(--cf-border)] rounded-2xl p-3 shadow-sm">
           <nav className="flex flex-col gap-1" aria-label="Settings subpages">
-            {SETTINGS_NAV_ITEMS.map((item) => {
+            {settingsNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || (item.href === '/settings/model' && pathname === '/settings');
               return (
@@ -73,7 +73,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
         {/* Mobile Horizontal Tab Navigation */}
         <div className="md:hidden flex overflow-x-auto no-scrollbar touch-pan-x gap-2 pb-2 -mx-3.5 px-3.5 border-b border-[var(--cf-border)] mb-4">
-          {SETTINGS_NAV_ITEMS.map((item) => {
+          {settingsNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || (item.href === '/settings/model' && pathname === '/settings');
             return (

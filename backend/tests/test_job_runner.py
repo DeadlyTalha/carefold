@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Milestone 5 Test Suite: Wall-Clock Job Runner (AU-21, R8).
 
@@ -675,7 +671,7 @@ async def test_recent_reminder_lt_24h_not_marked_missed(memory_job_runner: JobRu
         profile_id="prof-1",
         kind="reminder",
         routine_id="r1",
-        connection_id="c1",
+        connection_id="item_one",
         payload={},
         next_run_at=now - 7200.0,  # 2 hours overdue (<24h)
         status="pending",
@@ -1092,7 +1088,7 @@ async def test_process_leased_job_handler_failure_exponential_backoff(
 
 
 # =========================================================================
-# Suite 7: Adversarial Stress Tests (Milestone 2 / Challenger 2)
+# Suite 7: Boundary Stress Tests (Milestone 2 / Verification 2)
 # =========================================================================
 
 
@@ -1514,7 +1510,7 @@ async def test_unregistered_job_kind_releases_lease_without_crash(
     and the runner loop continues executing normally.
     """
     now_dt = datetime.now(timezone.utc)
-    job_id = "job-unregistered-adversarial-01"
+    job_id = "job-unregistered-boundary-01"
 
     async with db_session_factory() as session:
         job = DBJob(

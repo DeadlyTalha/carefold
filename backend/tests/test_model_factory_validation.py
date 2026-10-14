@@ -1,21 +1,17 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Adversarial stress and penetration test suite for Carefold model factory and MockChatModel.
+"""Boundary stress and penetration test suite for Carefold model factory and MockChatModel.
 
-Evaluates 6 challenge dimensions:
+Evaluates 6 verification dimensions:
 1. Concurrent invocations (multi-threaded, multi-task asyncio, racing queue pops).
 2. Malformed parameters (types, boundaries, missing, extra kwargs).
 3. Invalid provider strings (unknown, injection, unicode homoglyphs, null bytes, casing).
@@ -170,7 +166,7 @@ def test_whitespace_api_key_resolution():
 
 
 # ============================================================================
-# Section 3: Invalid Provider Strings & Adversarial Names
+# Section 3: Invalid Provider Strings & Boundary Names
 # ============================================================================
 
 @pytest.mark.parametrize("invalid_provider", [
@@ -195,7 +191,7 @@ def test_whitespace_api_key_resolution():
     "offline",
 ])
 def test_invalid_providers(invalid_provider: str):
-    """Verify that all unsupported, adversarial, injection, and homoglyph provider names
+    """Verify that all unsupported, boundary, injection, and homoglyph provider names
     are cleanly rejected with UnsupportedProviderError."""
     with pytest.raises(UnsupportedProviderError) as exc:
         create_chat_model(provider=invalid_provider)

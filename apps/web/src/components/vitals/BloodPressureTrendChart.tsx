@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -151,7 +147,7 @@ export function BloodPressureTrendChart({
                     y={y + 3.5}
                     textAnchor="end"
                     className={cn(
-                      'text-[10px] font-mono select-none',
+                      'text-xs font-mono select-none',
                       isCrisis
                         ? 'fill-red-500 font-semibold'
                         : isStage2
@@ -235,7 +231,7 @@ export function BloodPressureTrendChart({
                   {hoveredPoint.systolic} / {hoveredPoint.diastolic} mmHg
                 </span>
               </div>
-              <div className="text-[var(--cf-fg-muted)] text-[11px] mt-0.5">
+              <div className="text-[var(--cf-fg-muted)] text-xs mt-0.5">
                 {new Date(hoveredPoint.timestamp).toLocaleString(undefined, {
                   month: 'short',
                   day: 'numeric',
@@ -244,7 +240,7 @@ export function BloodPressureTrendChart({
                 })}
               </div>
               {hoveredPoint.classification && (
-                <div className="mt-1 font-semibold text-[var(--cf-primary)] text-[11px]">
+                <div className="mt-1 font-semibold text-[var(--cf-primary)] text-xs">
                   {hoveredPoint.classification}
                 </div>
               )}

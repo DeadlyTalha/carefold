@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -132,10 +128,12 @@ describe('ChatClient Scroll Tracking & Viewport Integration', () => {
     }
   });
 
-  it('uses dynamic viewport height 100dvh and overflow-hidden on outer card', () => {
+  it('uses clean flex container sizing and overflow-hidden on outer card', () => {
     const { container } = render(<ChatClient initialAgents={mockAgents} />);
     const outerCard = container.querySelector('.flex.flex-col');
-    expect(outerCard?.className).toContain('h-[calc(100dvh-120px)]');
+    expect(outerCard?.className).toContain('h-full');
+    expect(outerCard?.className).toContain('flex-1');
+    expect(outerCard?.className).toContain('min-h-0');
     expect(outerCard?.className).toContain('overflow-hidden');
     expect(outerCard?.className).not.toContain('100vh');
   });

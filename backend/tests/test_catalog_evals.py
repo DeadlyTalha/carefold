@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Automated Search Evaluation and Verification Suite.
 
@@ -19,7 +15,7 @@ Tests:
 1. SQLite FTS5 catalog indexing of the 8 new core organ agents & skills without errors.
 2. Search query routing: 'hypertension', 'asthma', 'migraine', 'colonoscopy', 'eGFR',
    'diabetes CGM', 'joint pain', 'rash lesion' returning respective organ navigators as top candidates.
-3. Adversarial query stress: special characters, SQL/FTS injection attempts, punctuation, and multi-word terms.
+3. Boundary query stress: special characters, SQL/FTS injection attempts, punctuation, and multi-word terms.
 4. Golden offline evaluations: all 48 golden eval cases across the 8 agents executed with 100% pass rate.
 5. Strict zero file leak detection: verifies that skills/ directory has 0 additions, deletions, or modifications
    after running the evaluation suites.
@@ -104,7 +100,7 @@ CORE_8_SPECIALISTS: Dict[str, Dict[str, Any]] = {
 # ============================================================================
 
 class TestSqliteCatalogIndexingEmpirical:
-    """Empirical tests for SQLite FTS5 catalog indexing of the 8 core organ agents and skills."""
+    """Systematic tests for SQLite FTS5 catalog indexing of the 8 core organ agents and skills."""
 
     @pytest.mark.asyncio
     async def test_all_8_agents_index_in_memory_cleanly(self, temp_workspace: Path):
@@ -207,7 +203,7 @@ class TestSqliteCatalogIndexingEmpirical:
 # ============================================================================
 
 class TestTwoHopSearchQueriesRouting:
-    """Empirical tests for candidate retrieval across the 8 core organ navigators."""
+    """Systematic tests for candidate retrieval across the 8 core organ navigators."""
 
     @pytest.fixture
     async def full_marketplace_catalog(self, temp_workspace: Path) -> SqliteCatalogAdapter:
@@ -290,12 +286,12 @@ class TestTwoHopSearchQueriesRouting:
             sanitized = sanitize_fts_query(raw_query)
             assert isinstance(sanitized, str)
 
-            # Search catalog directly with the adversarial query
+            # Search catalog directly with the boundary query
             results = await full_marketplace_catalog.search_agents(query=raw_query, limit=5)
-            assert len(results) > 0, f"Adversarial query '{raw_query}' returned 0 results"
+            assert len(results) > 0, f"Boundary query '{raw_query}' returned 0 results"
             matched_ids = [r.id for r in results]
             assert expected_id in matched_ids, (
-                f"Adversarial query '{raw_query}' failed to retrieve expected '{expected_id}'. Got: {matched_ids}"
+                f"Boundary query '{raw_query}' failed to retrieve expected '{expected_id}'. Got: {matched_ids}"
             )
 
     @pytest.mark.asyncio
@@ -335,11 +331,11 @@ def take_skills_snapshot(skills_dir: Path) -> Dict[str, Tuple[int, float]]:
 
 
 class TestGoldenOfflineEvalsAndLeakDetection:
-    """Empirical tests running all 48 golden eval cases and asserting ZERO file leaks into skills/."""
+    """Systematic tests running all 48 golden eval cases and asserting ZERO file leaks into skills/."""
 
     @pytest.mark.asyncio
     async def test_all_48_golden_eval_cases_pass_with_zero_skill_leaks(self, temp_workspace: Path):
-        """EMPIRICAL VERIFICATION:
+        """SYSTEMATIC VERIFICATION:
         1. Take baseline snapshot of skills/.
         2. Run all 48 golden evaluation cases across all 8 core organ agents.
         3. Confirm 100% pass rate.

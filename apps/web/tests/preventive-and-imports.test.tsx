@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -82,7 +78,7 @@ const SAMPLE_PREVENTIVE_ITEMS: PreventiveItem[] = [
 ];
 
 const SAMPLE_IMPORT_BATCH: ImportBatchResponse = {
-  batch_id: 'batch-101',
+  batch_id: 'import_set-101',
   profile_id: 'prof-1',
   format: 'fhir_r4',
   source_name: 'MyChart',
@@ -246,11 +242,11 @@ describe('Preventive Care and Clinical Import Components Suite', () => {
       // Deselect index 1 and commit only index 0
       fireEvent.click(screen.getByTestId('staged-record-checkbox-1'));
       fireEvent.click(screen.getByTestId('commit-import-batch-btn'));
-      expect(onCommit).toHaveBeenCalledWith('batch-101', [0]);
+      expect(onCommit).toHaveBeenCalledWith('import_set-101', [0]);
 
       // Discard
       fireEvent.click(screen.getByTestId('discard-import-batch-btn'));
-      expect(onDiscard).toHaveBeenCalledWith('batch-101');
+      expect(onDiscard).toHaveBeenCalledWith('import_set-101');
     });
 
     it('stages and commits a clinical export through ClinicalImportWizard', async () => {
@@ -339,15 +335,15 @@ describe('Preventive Care and Clinical Import Components Suite', () => {
         expect.objectContaining({ method: 'POST' })
       );
 
-      await commitImportBatch('prof-1', 'batch-1', [0, 1]);
+      await commitImportBatch('prof-1', 'import_set-1', [0, 1]);
       expect(fetchSpy).toHaveBeenCalledWith(
-        '/api/v1/profiles/prof-1/imports/batch-1/commit',
+        '/api/v1/profiles/prof-1/imports/import_set-1/commit',
         expect.objectContaining({ method: 'POST' })
       );
 
-      await discardImportBatch('prof-1', 'batch-1');
+      await discardImportBatch('prof-1', 'import_set-1');
       expect(fetchSpy).toHaveBeenCalledWith(
-        '/api/v1/profiles/prof-1/imports/batch-1/discard',
+        '/api/v1/profiles/prof-1/imports/import_set-1/discard',
         expect.objectContaining({ method: 'POST' })
       );
     });

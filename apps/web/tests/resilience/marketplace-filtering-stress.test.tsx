@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 import { describe, it, expect } from 'vitest';
@@ -144,7 +140,7 @@ describe('Stress Suite: Marketplace UI & Icon Resolution', () => {
       expect(screen.queryByTestId('category-badge')).not.toBeInTheDocument();
     });
 
-    it('challenges built-in Object properties as icon names (e.g. constructor, toString)', () => {
+    it('validates built-in Object properties as icon names (e.g. constructor, toString)', () => {
       // In JS ES Modules, namespace objects (import * as LucideIcons) have a null prototype ([Module: null prototype]),
       // so 'constructor' in LucideIcons evaluates to false and safely falls back without throwing!
       const agentWithConstructorIcon: AgentSummary = {
@@ -159,7 +155,7 @@ describe('Stress Suite: Marketplace UI & Icon Resolution', () => {
       expect(container.querySelector('svg.lucide-shield')).toBeInTheDocument();
     });
 
-    it('challenges non-icon exports like createLucideIcon', () => {
+    it('validates non-icon exports like createLucideIcon', () => {
       const agentWithCreateLucideIcon: AgentSummary = {
         ...baseAgent,
         id: 'helper-fn-icon-agent',

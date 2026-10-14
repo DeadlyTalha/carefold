@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Multi-format document intelligence and text extraction test suite (AU-22).
 
@@ -682,7 +678,7 @@ async def test_handle_extract_text_job_missing_attachment_in_db(
 
 
 # =========================================================================
-# 7. Adversarial Stress Tests (Empirical Challenge Suite)
+# 7. Boundary Stress Tests (Systematic Verification Suite)
 # =========================================================================
 
 def test_malformed_truncated_pdf_streams():
@@ -704,14 +700,14 @@ def test_malformed_truncated_pdf_streams():
         b"stream\n"
         b"BT\n"
         b"/F1 12 Tf\n"
-        b"(Adversarial Stream Fallback Recovery) Tj\n"
+        b"(Boundary Stream Fallback Recovery) Tj\n"
         b"ET\n"
         b"endstream\n"
     )
     res_stream = extract_document_text(stream_no_obj, filename="unwrapped_stream.pdf")
     assert res_stream.status == "completed"
     assert res_stream.format == "pdf"
-    assert "Adversarial Stream Fallback Recovery" in res_stream.text
+    assert "Boundary Stream Fallback Recovery" in res_stream.text
     assert res_stream.metadata.get("parser") == "regex_stream"
     assert res_stream.metadata.get("fallback_from_pypdf") is True
 
@@ -722,11 +718,11 @@ def test_malformed_truncated_pdf_streams():
     assert "Hello World" in res_hex.text
     assert res_hex.metadata.get("fallback_from_pypdf") is True
 
-    # 4. Array string TJ operations: [(Adversarial) 10 ( Array)] TJ
-    array_stream = b"%PDF-1.4\nBT /F1 12 Tf [(Adversarial) 10 ( Array)] TJ ET\n"
+    # 4. Array string TJ operations: [(Boundary) 10 ( Array)] TJ
+    array_stream = b"%PDF-1.4\nBT /F1 12 Tf [(Boundary) 10 ( Array)] TJ ET\n"
     res_array = extract_document_text(array_stream, filename="array.pdf")
     assert res_array.status == "completed"
-    assert "Adversarial Array" in res_array.text
+    assert "Boundary Array" in res_array.text
 
     # 5. Unterminated BT block
     res_unterminated = extract_document_text(b"%PDF-1.4\nBT (Unterminated text", filename="unterminated.pdf")

@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -38,8 +34,10 @@ import {
   ProfileEditModal,
   type ShareBundleRecord
 } from '@/components/family';
+import { useI18n } from '@/i18n';
 
 export default function FamilyPage() {
+  const { t } = useI18n();
   const [profiles, setProfiles] = useState<CareProfile[]>([]);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -167,22 +165,22 @@ export default function FamilyPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-8 sm:space-y-10">
+    <div className="space-y-6">
       {/* Header Breadcrumbs & Action Cluster */}
       <div className="space-y-4">
         <nav aria-label="Breadcrumb" className="text-xs text-[var(--cf-fg-subtle)] flex items-center gap-1.5">
-          <span>Household</span>
+          <span>{t('family.breadcrumb_household')}</span>
           <span>/</span>
-          <span className="text-[var(--cf-fg)] font-medium">Family</span>
+          <span className="text-[var(--cf-fg)] font-medium">{t('family.title')}</span>
         </nav>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-display font-bold text-[var(--cf-fg)] tracking-tight">
-              Family
+              {t('family.title')}
             </h1>
             <p className="text-xs sm:text-sm text-[var(--cf-fg-muted)] mt-1.5 max-w-2xl leading-relaxed">
-              People you help care for on this computer. Each person&apos;s chats, documents and notes are kept separate.
+              {t('family.subtitle')}
             </p>
           </div>
 
@@ -203,7 +201,7 @@ export default function FamilyPage() {
                 })
               }
             >
-              Add member
+              {t('family.add_member')}
             </Button>
 
             <Button
@@ -213,7 +211,7 @@ export default function FamilyPage() {
               data-testid="invite-viewer-btn"
               onClick={() => setInviteModalOpen(true)}
             >
-              Invite a viewer
+              {t('family.invite_viewer')}
             </Button>
 
             <Button
@@ -223,7 +221,7 @@ export default function FamilyPage() {
               data-testid="export-bundle-btn"
               onClick={() => setShareModalOpen(true)}
             >
-              Export share bundle
+              {t('family.export_bundle')}
             </Button>
           </div>
         </div>
@@ -233,7 +231,7 @@ export default function FamilyPage() {
       <section aria-labelledby="members-heading" className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 id="members-heading" className="text-lg font-bold text-[var(--cf-fg)]">
-            Household Members ({profiles.length})
+            {t('family.household_members', { count: profiles.length })}
           </h2>
         </div>
 
@@ -261,21 +259,21 @@ export default function FamilyPage() {
         <div className="p-5 rounded-2xl bg-[var(--cf-surface)] border border-[var(--cf-border)] shadow-sm space-y-6">
           <div>
             <h2 id="invitations-shares-heading" className="text-base font-bold text-[var(--cf-fg)] tracking-tight">
-              Invitations and shares
+              {t('family.invitations_shares')}
             </h2>
             <p className="text-xs text-[var(--cf-fg-muted)] mt-1">
-              Active local viewer invitations and printed care sheets. Viewers sign in on your local device or network.
+              {t('family.invitations_subtitle')}
             </p>
           </div>
 
           {/* Active Invitations List */}
           <div className="space-y-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)] block">
-              Active Viewers
+              {t('family.active_viewers')}
             </span>
 
             {invitations.length === 0 ? (
-              <p className="text-xs text-[var(--cf-fg-subtle)] italic">No active viewer invitations.</p>
+              <p className="text-xs text-[var(--cf-fg-subtle)] italic">{t('family.no_active_viewers')}</p>
             ) : (
               <div className="divide-y divide-[var(--cf-border)]" data-testid="invitations-list">
                 {invitations.map((invite) => (
@@ -289,14 +287,14 @@ export default function FamilyPage() {
                       <div className="space-y-0.5 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-[var(--cf-fg)]">{invite.inviteeName}</span>
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400 shrink-0">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400 shrink-0">
                             <Eye className="w-3 h-3 shrink-0" />
                             <span>Viewer &middot; {invite.targetProfileName}</span>
                           </span>
                         </div>
                         <p className="text-[var(--cf-fg-subtle)] flex items-center gap-1.5 flex-wrap">
                           <Key className="w-3 h-3 text-[var(--cf-fg-subtle)] shrink-0" />
-                          <span>Code: <code className="font-mono bg-[var(--cf-surface-2)] px-1 py-0.5 rounded text-[11px]">{invite.inviteCode}</code></span>
+                          <span>Code: <code className="font-mono bg-[var(--cf-surface-2)] px-1 py-0.5 rounded text-xs">{invite.inviteCode}</code></span>
                           <span>&middot;</span>
                           <span>
                             {invite.permissions.view_clinical ? 'Visit prep & clinical' : ''}
@@ -314,7 +312,7 @@ export default function FamilyPage() {
                       onClick={() => handleRevokeInvite(invite.id)}
                       data-testid={`revoke-invite-${invite.id}`}
                     >
-                      Revoke
+                      {t('family.revoke')}
                     </Button>
                   </div>
                 ))}
@@ -325,12 +323,12 @@ export default function FamilyPage() {
           {/* Exported Share Bundles History */}
           <div className="space-y-3 pt-3 border-t border-[var(--cf-border)]">
             <span className="text-xs font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)] block">
-              Recent Printed &amp; Exported Bundles
+              {t('family.recent_bundles')}
             </span>
 
             <div className="divide-y divide-[var(--cf-border)]" data-testid="bundles-list">
               {shareBundles.length === 0 ? (
-                <p className="text-xs text-[var(--cf-fg-subtle)] italic py-2">No export history recorded on this device.</p>
+                <p className="text-xs text-[var(--cf-fg-subtle)] italic py-2">{t('family.no_export_history')}</p>
               ) : (
                 shareBundles.map((bundle) => (
                   <div key={bundle.id} className="py-2.5 flex items-center justify-between gap-3 text-xs">
@@ -340,12 +338,12 @@ export default function FamilyPage() {
                       </div>
                       <div className="min-w-0">
                         <span className="font-medium text-[var(--cf-fg)] block truncate">{bundle.title}</span>
-                        <span className="text-[11px] text-[var(--cf-fg-subtle)] block">
+                        <span className="text-xs text-[var(--cf-fg-subtle)] block">
                           {bundle.profileName ? `${bundle.profileName} · ` : ''}Printed care sheet
                         </span>
                       </div>
                     </div>
-                    <span className="text-[11px] text-[var(--cf-fg-subtle)] shrink-0">{bundle.exportedAt}</span>
+                    <span className="text-xs text-[var(--cf-fg-subtle)] shrink-0">{bundle.exportedAt}</span>
                   </div>
                 ))
               )}
@@ -356,7 +354,7 @@ export default function FamilyPage() {
           <div className="p-3.5 rounded-xl bg-[var(--cf-surface-2)] border border-[var(--cf-border)] flex items-start gap-3 text-xs text-[var(--cf-fg-muted)]">
             <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
             <p className="leading-relaxed">
-              Viewers sign in to this Carefold on your computer or local network. Nothing is uploaded to a Carefold server &mdash; your medical data stays on this device.
+              {t('family.local_privacy_note')}
             </p>
           </div>
         </div>

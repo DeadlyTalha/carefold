@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Unit tests for Batch 7 Stream 1: OAuth Relay (AU-70), Audit Hash Chain (AU-78),
 Local Hybrid Search Reranker (AU-79), OS Service Packaging (AU-81), and Compliance Docs (AU-64, AU-65).
@@ -333,7 +329,7 @@ def test_local_cross_reranker_boosts_loinc_code_and_clinical_section() -> None:
         ),
         SearchResult(
             document_id="doc-vitals-loinc",
-            chunk_id="doc-vitals-loinc#c1",
+            chunk_id="doc-vitals-loinc#item_one",
             content="Vital Signs: Blood pressure panel (LOINC 85354-9) recorded at 128/82 mmHg during Cardiology Assessment.",
             score=0.55,
             lexical_score=0.60,

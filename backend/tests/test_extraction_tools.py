@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Document Extraction and Grounding Tools Test Suite.
 
@@ -48,7 +44,7 @@ Authoritative stress-testing and verification for:
    - Missing attachment handling: FileNotFoundError on non-existent sandboxed files.
 6. Concurrency & Stress Harness:
    - Multi-threaded and multi-task concurrent executions.
-7. Empirical Defects Verification:
+7. Systematic Defects Verification:
    - Defect 1: Truncation of uncomma'd 4-digit dollar figures ($1000 -> $100, $6000 -> $600) in _heuristic_dossier_extractor.
    - Defect 2: Alternation omission in copay regex (Primary care copay: $25 dropped or misclassified to office_visit).
 """
@@ -118,7 +114,7 @@ from carefold.workflows.subgraphs.extraction.tool import (
 
 
 class MockStructuredChatModel(BaseChatModel):
-    """Subclass of BaseChatModel implementing with_structured_output for empirical testing."""
+    """Subclass of BaseChatModel implementing with_structured_output for systematic testing."""
     target_dossier: Any = None
 
     @property

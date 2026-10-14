@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -72,6 +68,7 @@ import { loadHouseholdProfiles, getHouseholdProfile } from '@/lib/familyProfiles
 import { profilePath } from '@/lib/routes';
 import type { AgentSummary, ChatMessage } from '@/lib/types';
 import type { CareProfile } from '@/app/p/[profileId]/HomeDashboardClient';
+import { useI18n } from '@/i18n';
 
 export interface ChatStudioShellProps {
   profileId?: string;
@@ -150,12 +147,20 @@ export function ChatStudioShell({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { t } = useI18n();
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   // Active Profile Resolution
   const profile: CareProfile = useMemo(() => {
     if (initialProfile) return initialProfile;
-    const userFallbackName = user?.full_name?.trim() || user?.username?.trim() || 'Me';
-    const household = getHouseholdProfile(profileIdProp);
+    const userFallbackName = hasMounted
+      ? (user?.full_name?.trim() || user?.username?.trim() || t('nav.me'))
+      : t('nav.me');
+    const household = hasMounted ? getHouseholdProfile(profileIdProp) : undefined;
     if (household) {
       const isSelf = household.role === 'self' || household.relationship?.toLowerCase() === 'self' || profileIdProp === 'me';
       const resolvedName = (isSelf && (household.name === 'Me' || !household.name)) ? userFallbackName : household.name;
@@ -179,7 +184,7 @@ export function ChatStudioShell({
       colorSlot: 1,
       role: 'Personal care'
     };
-  }, [initialProfile, profileIdProp, user]);
+  }, [initialProfile, profileIdProp, user, hasMounted, t]);
 
   // Agent Selection Dropdown
   const [isAgentMenuOpen, setIsAgentMenuOpen] = useState<boolean>(false);
@@ -801,12 +806,12 @@ export function ChatStudioShell({
         {!isThreadSidebarCollapsed && (
           <aside
             aria-label={`${profile.name}'s consultation sessions`}
-            className="hidden md:flex flex-col w-[300px] shrink-0 min-h-0 h-full border-r border-[var(--cf-border)] bg-[var(--cf-canvas)] animate-in fade-in duration-150"
+            className="hidden md:flex flex-col w-[300px] shrink-0 min-h-0 h-full border-r border-[var(--cf-border)] bg-[var(--cf-canvas)] duration-150"
           >
             {/* Thread Header */}
             <div className="flex items-center justify-between p-4 pb-3">
               <h2 className="text-sm font-bold text-[var(--cf-fg)] tracking-tight truncate">
-                {profile.name}&apos;s chats
+                {t('chat.chats_header', { name: profile.name })}
               </h2>
               <div className="flex items-center gap-1">
                 <Button
@@ -839,7 +844,7 @@ export function ChatStudioShell({
                 type="text"
                 value={threadSearch}
                 onChange={(e) => setThreadSearch(e.target.value)}
-                placeholder="Search sessions..."
+                placeholder={t('chat.search_sessions')}
                 className="w-full h-8 pl-8 pr-3 text-xs rounded-lg border border-[var(--cf-border)] bg-[var(--cf-surface)] text-[var(--cf-fg)] placeholder:text-[var(--cf-fg-subtle)] focus:outline-none focus:ring-1 focus:ring-[var(--cf-focus)] transition-all"
               />
             </div>
@@ -849,8 +854,8 @@ export function ChatStudioShell({
           <div className="flex-1 overflow-y-auto px-2 space-y-4">
             {/* This Week Group */}
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)] px-2.5 mb-1.5">
-                This week
+              <div className="text-xs font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)] px-2.5 mb-1.5">
+                {t('chat.this_week')}
               </div>
               <div className="space-y-1">
                 {filteredThreads
@@ -875,7 +880,7 @@ export function ChatStudioShell({
                           <div className="text-xs font-semibold text-[var(--cf-fg)] truncate">
                             {t.title}
                           </div>
-                          <div className="text-[11px] text-[var(--cf-fg-subtle)] flex items-center justify-between mt-0.5">
+                          <div className="text-xs text-[var(--cf-fg-subtle)] flex items-center justify-between mt-0.5">
                             <span>{t.agentTitle}</span>
                             <span>{t.timeStr}</span>
                           </div>
@@ -902,8 +907,8 @@ export function ChatStudioShell({
             {/* Earlier Group */}
             {filteredThreads.some((t) => t.group === 'earlier') && (
               <div>
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)] px-2.5 mb-1.5">
-                  Earlier
+                <div className="text-xs font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)] px-2.5 mb-1.5">
+                  {t('chat.earlier')}
                 </div>
                 <div className="space-y-1">
                   {filteredThreads
@@ -928,7 +933,7 @@ export function ChatStudioShell({
                             <div className="text-xs font-semibold text-[var(--cf-fg)] truncate">
                               {t.title}
                             </div>
-                            <div className="text-[11px] text-[var(--cf-fg-subtle)] flex items-center justify-between mt-0.5">
+                            <div className="text-xs text-[var(--cf-fg-subtle)] flex items-center justify-between mt-0.5">
                               <span>{t.agentTitle}</span>
                               <span>{t.timeStr}</span>
                             </div>
@@ -955,9 +960,9 @@ export function ChatStudioShell({
           </div>
 
           {/* Privacy Footer */}
-          <div className="p-3 border-t border-[var(--cf-border)] text-[11px] text-[var(--cf-fg-subtle)] flex items-center gap-2">
+          <div className="p-3 border-t border-[var(--cf-border)] text-xs text-[var(--cf-fg-subtle)] flex items-center gap-2">
             <Lock className="w-3.5 h-3.5 shrink-0" />
-            <span>Only {profile.name}&apos;s chats are listed. They&apos;re stored on this computer.</span>
+            <span>{t('chat.private_chats_footer', { name: profile.name })}</span>
           </div>
         </aside>
         )}
@@ -1015,7 +1020,7 @@ export function ChatStudioShell({
                     />
                   </button>
                 </div>
-                <span className="text-[11px] text-[var(--cf-fg-subtle)] block truncate">
+                <span className="text-xs text-[var(--cf-fg-subtle)] block truncate">
                   {selectedAgent.risk_class === 'clinical_assist'
                     ? 'Clinical prep · consent given'
                     : 'Everyday wellness'}
@@ -1027,7 +1032,7 @@ export function ChatStudioShell({
                     role="listbox"
                     aria-label="Available Carefold Agents"
                     data-testid="agent-dropdown-menu"
-                    className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-h-96 rounded-2xl bg-[var(--cf-surface)] border border-[var(--cf-border)] shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100"
+                    className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-h-96 rounded-2xl bg-[var(--cf-surface)] border border-[var(--cf-border)] shadow-xl z-50 overflow-hidden flex flex-col duration-100"
                   >
                     {/* Optional Quick Filter */}
                     {agents.length > 5 && (
@@ -1036,7 +1041,7 @@ export function ChatStudioShell({
                           <Search className="w-3.5 h-3.5 absolute left-2.5 text-[var(--cf-fg-subtle)] pointer-events-none" />
                           <input
                             type="text"
-                            placeholder="Filter specialists..."
+                            placeholder={t('chat.filter_specialists')}
                             value={agentSearchQuery}
                             onChange={(e) => setAgentSearchQuery(e.target.value)}
                             className="w-full text-xs pl-8 pr-2.5 py-1.5 rounded-lg bg-[var(--cf-surface)] border border-[var(--cf-border)] text-[var(--cf-fg)] placeholder:text-[var(--cf-fg-subtle)] focus:outline-none focus:ring-1 focus:ring-emerald-500"
@@ -1081,7 +1086,7 @@ export function ChatStudioShell({
                                 className={cn(
                                   'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold',
                                   isSelected
-                                    ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-[#04201a]'
+                                    ? 'bg-emerald-700 text-white dark:bg-emerald-500 dark:text-[#04201a]'
                                     : 'bg-[var(--cf-surface-2)] text-[var(--cf-fg-muted)]'
                                 )}
                               >
@@ -1095,7 +1100,7 @@ export function ChatStudioShell({
                                   )}
                                 </div>
                                 {a.description && (
-                                  <p className="text-[11px] text-[var(--cf-fg-subtle)] line-clamp-1 mt-0.5">
+                                  <p className="text-xs text-[var(--cf-fg-subtle)] line-clamp-1 mt-0.5">
                                     {a.description}
                                   </p>
                                 )}
@@ -1123,7 +1128,7 @@ export function ChatStudioShell({
                 title={`Everything in this chat is about ${profile.name}`}
               >
                 <Avatar name={profile.name} size="xs" colorSlot={profile.colorSlot} />
-                <span>About {profile.name.split(' ')[0]}</span>
+                <span>{t('chat.about_person', { name: profile.name.split(' ')[0] })}</span>
               </div>
 
               {/* Export Menu */}
@@ -1162,7 +1167,7 @@ export function ChatStudioShell({
                 {messages.length === 0 && (
                   <div className="space-y-6 py-8">
                     <div className="text-center text-xs text-[var(--cf-fg-subtle)]">
-                      Start a conversation about {profile.name}&apos;s care with {selectedAgent.title}.
+                      {t('chat.start_conversation', { name: profile.name, agent: selectedAgent.title })}
                     </div>
                     {starters.length > 0 && (
                       <div className="w-full text-left">
@@ -1317,10 +1322,10 @@ export function ChatStudioShell({
                 type="button"
                 onClick={() => scrollToBottom(true)}
                 aria-label="Scroll to bottom"
-                className="absolute bottom-4 right-6 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--cf-surface)] border border-[var(--cf-border-strong)] text-xs font-semibold text-[var(--cf-fg)] shadow-md hover:bg-[var(--cf-surface-2)] transition-all animate-in fade-in cursor-pointer"
+                className="absolute bottom-4 right-6 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--cf-surface)] border border-[var(--cf-border-strong)] text-xs font-semibold text-[var(--cf-fg)] shadow-md hover:bg-[var(--cf-surface-2)] transition-all cursor-pointer"
               >
                 <ArrowDown className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>Latest messages</span>
+                <span>{t('chat.latest_messages')}</span>
               </button>
             )}
           </div>
@@ -1331,7 +1336,7 @@ export function ChatStudioShell({
               <div className="rounded-2xl border border-[var(--cf-border-strong)] bg-[var(--cf-surface)] p-3 shadow-sm focus-within:ring-2 focus-within:ring-[var(--cf-focus)] transition-all">
                 <textarea
                   aria-label={`Message ${selectedAgent.title}`}
-                  placeholder={`Ask ${selectedAgent.title} about ${profile.name}…`}
+                  placeholder={t('chat.composer_placeholder', { agent: selectedAgent.title, name: profile.name })}
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={(e) => {
@@ -1403,8 +1408,8 @@ export function ChatStudioShell({
               </div>
 
               {/* Persistent 1-Line Quiet Safety Footer Disclaimer */}
-              <p className="text-[11px] text-[var(--cf-fg-subtle)] text-center mt-2">
-                Carefold helps you prepare. It doesn&apos;t diagnose. In an emergency, call 911.
+              <p className="text-xs text-[var(--cf-fg-subtle)] text-center mt-2">
+                {t('chat.disclaimer')}
               </p>
             </div>
           </div>
@@ -1452,7 +1457,7 @@ export function ChatStudioShell({
           <div className="flex-1 overflow-y-auto px-2 space-y-4">
             {/* This Week Group */}
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)] px-2.5 mb-1.5">
+              <div className="text-xs font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)] px-2.5 mb-1.5">
                 This week
               </div>
               <div className="space-y-1">
@@ -1481,7 +1486,7 @@ export function ChatStudioShell({
                           <div className="text-xs font-semibold text-[var(--cf-fg)] truncate">
                             {t.title}
                           </div>
-                          <div className="text-[11px] text-[var(--cf-fg-subtle)] flex items-center justify-between mt-0.5">
+                          <div className="text-xs text-[var(--cf-fg-subtle)] flex items-center justify-between mt-0.5">
                             <span>{t.agentTitle}</span>
                             <span>{t.timeStr}</span>
                           </div>
@@ -1508,7 +1513,7 @@ export function ChatStudioShell({
             {/* Earlier Group */}
             {filteredThreads.some((t) => t.group === 'earlier') && (
               <div>
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)] px-2.5 mb-1.5">
+                <div className="text-xs font-semibold uppercase tracking-wider text-[var(--cf-fg-subtle)] px-2.5 mb-1.5">
                   Earlier
                 </div>
                 <div className="space-y-1">
@@ -1537,7 +1542,7 @@ export function ChatStudioShell({
                             <div className="text-xs font-semibold text-[var(--cf-fg)] truncate">
                               {t.title}
                             </div>
-                            <div className="text-[11px] text-[var(--cf-fg-subtle)] flex items-center justify-between mt-0.5">
+                            <div className="text-xs text-[var(--cf-fg-subtle)] flex items-center justify-between mt-0.5">
                               <span>{t.agentTitle}</span>
                               <span>{t.timeStr}</span>
                             </div>
@@ -1564,7 +1569,7 @@ export function ChatStudioShell({
           </div>
 
           {/* Privacy Footer */}
-          <div className="p-3 border-t border-[var(--cf-border)] text-[11px] text-[var(--cf-fg-subtle)] flex items-center gap-2">
+          <div className="p-3 border-t border-[var(--cf-border)] text-xs text-[var(--cf-fg-subtle)] flex items-center gap-2">
             <Lock className="w-3.5 h-3.5 shrink-0" />
             <span>Only {profile.name}&apos;s chats are listed.</span>
           </div>
@@ -1578,7 +1583,7 @@ export function ChatStudioShell({
           aria-modal="true"
           aria-labelledby="delete-dialog-title"
           aria-describedby="delete-dialog-desc"
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 duration-150"
         >
           <div className="w-full max-w-sm bg-[var(--cf-surface)] rounded-2xl border border-[var(--cf-border)] p-5 shadow-xl space-y-4">
             <div className="flex items-start gap-3">

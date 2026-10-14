@@ -1,24 +1,20 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Security Test Suite for Catalog API Fuzzing & SQL Injection Hardening.
 
 Tests the integrated lifecycle:
 1. Filesystem agent & skill loading (including _system/ separation, template skipping, and taxonomy metadata).
 2. SqliteCatalogAdapter indexing and taxonomy parity (get_category_tree() vs filesystem manifests).
-3. Adversarial FTS query sanitization and SQL injection hardening.
+3. Boundary FTS query sanitization and SQL injection hardening.
 4. Two-hop orchestrator routing across all 5 canonical domains with candidate verification and 4-step fallback chain.
 5. FastAPI REST endpoints (/api/agents/categories, /api/agents, /api/skills) response schemas and pagination.
 """
@@ -219,12 +215,12 @@ async def test_catalog_indexing_and_category_tree_parity(repo_root: Path, tmp_pa
 
 
 # ============================================================================
-# Part 3: Adversarial FTS & SQL Injection Resistance
+# Part 3: Boundary FTS & SQL Injection Resistance
 # ============================================================================
 
 @pytest.mark.asyncio
 async def test_fts_query_sanitization_and_sql_injection(tmp_path: Path):
-    """Adversarially challenge FTS5 query parser with injection payloads and hostile text."""
+    """Adversarially verification FTS5 query parser with injection payloads and hostile text."""
     catalog = SqliteCatalogAdapter(db_path=tmp_path / "adversarial_fts.db")
 
     try:
@@ -298,7 +294,7 @@ def make_manifest(
 
 @pytest.mark.asyncio
 async def test_two_hop_routing_across_all_five_domains(tmp_path: Path):
-    """Empirically test Tier-1 classification and Tier-2 candidate retrieval across all 5 domains."""
+    """Systematically test Tier-1 classification and Tier-2 candidate retrieval across all 5 domains."""
     catalog = SqliteCatalogAdapter(db_path=tmp_path / "all_domains.db")
 
     try:
@@ -393,7 +389,7 @@ async def test_two_hop_routing_across_all_five_domains(tmp_path: Path):
 
 
 # ============================================================================
-# Part 5: Adversarial Fallback Chain in Two-Hop Orchestrator
+# Part 5: Boundary Fallback Chain in Two-Hop Orchestrator
 # ============================================================================
 
 @pytest.mark.asyncio
@@ -406,7 +402,7 @@ async def test_two_hop_fallback_chain(tmp_path: Path):
         bg = make_manifest("benefits-guide", AgentDomain.NAVIGATION, "navigation.insurance", ["insurance", "copay"], "Insurance guide")
         await catalog.index_agent(bg)
 
-        # Challenge Step 2: Tier-1 predicts unknown subcategory in navigation -> domain-only fallback succeeds
+        # Verification Step 2: Tier-1 predicts unknown subcategory in navigation -> domain-only fallback succeeds
         tier1_step2 = json.dumps({"domain": "navigation", "category": "navigation.unheard_subcat", "reasoning": "Test step 2"})
         tier2_step2 = json.dumps({"agent_id": "benefits-guide", "reasoning": "Fallback to domain candidate", "instructions": ""})
         model_step2 = FakeListChatModel(responses=[tier1_step2, tier2_step2])
@@ -415,7 +411,7 @@ async def test_two_hop_fallback_chain(tmp_path: Path):
         res_step2 = await orch_step2.execute({"messages": [HumanMessage(content="Random navigation question")]})
         assert res_step2["current_agent"] == "benefits-guide"
 
-        # Challenge Step 3: Tier-1 predicts unknown domain -> FTS keyword fallback succeeds
+        # Verification Step 3: Tier-1 predicts unknown domain -> FTS keyword fallback succeeds
         tier1_step3 = json.dumps({"domain": "astrology", "category": "astrology.horoscope", "reasoning": "Hallucinated domain"})
         tier2_step3 = json.dumps({"agent_id": "benefits-guide", "reasoning": "FTS matched copay tag", "instructions": ""})
         model_step3 = FakeListChatModel(responses=[tier1_step3, tier2_step3])
@@ -424,7 +420,7 @@ async def test_two_hop_fallback_chain(tmp_path: Path):
         res_step3 = await orch_step3.execute({"messages": [HumanMessage(content="What is my insurance copay?")]})
         assert res_step3["current_agent"] == "benefits-guide"
 
-        # Challenge Step 4: Complete gibberish with 0 matches -> pattern fallback
+        # Verification Step 4: Complete gibberish with 0 matches -> pattern fallback
         tier1_step4 = json.dumps({"domain": "quantum", "category": "quantum.entanglement", "reasoning": "Zero match"})
         model_step4 = FakeListChatModel(responses=[tier1_step4])
         orch_step4 = OrchestratorNode(model=model_step4, catalog=catalog)
@@ -441,7 +437,7 @@ async def test_two_hop_fallback_chain(tmp_path: Path):
 # ============================================================================
 
 def test_fastapi_endpoints_schemas_and_filters(client: TestClient):
-    """Empirically test /api/agents/categories, /api/agents, and /api/skills endpoints."""
+    """Systematically test /api/agents/categories, /api/agents, and /api/skills endpoints."""
 
     # 1. GET /api/agents/categories
     cat_resp = client.get("/api/agents/categories")
@@ -564,7 +560,7 @@ def test_fastapi_endpoints_schemas_and_filters(client: TestClient):
 
 
 # ============================================================================
-# Part 7: Adversarial Concurrency, Candidate Limits & Output Parsing
+# Part 7: Boundary Concurrency, Candidate Limits & Output Parsing
 # ============================================================================
 
 @pytest.mark.asyncio

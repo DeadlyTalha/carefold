@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -27,6 +23,7 @@ import {
 import { ActivityTimelineFeed } from '@/components/activity';
 import { fetchProfileActivity, undoActivityEvent } from '@/lib/activity';
 import type { ActivityItemResponse } from '@/types/activity';
+import { useI18n } from '@/i18n';
 
 export interface ProfileActivityClientProps {
   profileId: string;
@@ -41,6 +38,7 @@ export function ProfileActivityClient({
   initialTotal: _initialTotal = 0,
   initialHasMore: _initialHasMore = false,
 }: ProfileActivityClientProps) {
+  const { t } = useI18n();
   const [items, setItems] = useState<ActivityItemResponse[]>(initialItems);
   const [isLoading, setIsLoading] = useState(initialItems.length === 0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -111,7 +109,7 @@ export function ProfileActivityClient({
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto py-2">
+    <div className="space-y-6">
       {/* Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--cf-border)]">
         <div>
@@ -120,10 +118,10 @@ export function ProfileActivityClient({
             className="text-2xl font-bold tracking-tight text-[var(--cf-fg)] flex items-center gap-2.5"
           >
             <History className="w-6 h-6 text-emerald-600" />
-            Activity & History
+            {t('activity.title')}
           </h1>
           <p className="text-xs sm:text-sm text-[var(--cf-fg-muted)] mt-1">
-            Chronological audit timeline of actions performed for this profile with single-click undo.
+            {t('activity.subtitle')}
           </p>
         </div>
 
@@ -152,7 +150,7 @@ export function ProfileActivityClient({
         <div
           data-testid="activity-toast-success"
           role="status"
-          className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs flex items-center gap-2 shadow-sm animate-fade-in"
+          className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs flex items-center gap-2 shadow-sm animate-"
         >
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           <span className="font-medium">{toastMessage}</span>
@@ -168,7 +166,7 @@ export function ProfileActivityClient({
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center gap-3 text-[var(--cf-fg-subtle)]">
           <Loader2 className="w-8 h-8 animate-spin text-[var(--cf-primary)]" />
-          <p className="text-sm">Loading activity stream...</p>
+          <p className="text-sm">{t('activity.loading')}</p>
         </div>
       ) : (
         <ActivityTimelineFeed items={items} onUndo={handleUndo} />

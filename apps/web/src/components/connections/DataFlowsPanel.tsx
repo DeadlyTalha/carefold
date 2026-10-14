@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -101,7 +97,7 @@ export function DataFlowsPanel({
             <span
               data-testid="data-flows-model-locality-badge"
               className={cn(
-                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border',
+                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border',
                 model_provider.is_local
                   ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
                   : 'bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
@@ -121,14 +117,14 @@ export function DataFlowsPanel({
               <span>Inference Host:</span>
               <code
                 data-testid="data-flows-model-host"
-                className="px-2 py-0.5 rounded bg-[var(--cf-surface-2)] font-mono text-[11px] text-[var(--cf-fg)]"
+                className="px-2 py-0.5 rounded bg-[var(--cf-surface-2)] font-mono text-xs text-[var(--cf-fg)]"
               >
                 {model_provider.host}
               </code>
             </div>
             <p
               data-testid="data-flows-model-policy"
-              className="text-[11px] text-[var(--cf-fg-muted)] leading-relaxed pt-1 border-t border-[var(--cf-border)]"
+              className="text-xs text-[var(--cf-fg-muted)] leading-relaxed pt-1 border-t border-[var(--cf-border)]"
             >
               {model_provider.connector_context_policy ||
                 'Local-default inference enforced whenever external connector data is present in conversation context.'}
@@ -161,7 +157,7 @@ export function DataFlowsPanel({
             <span
               data-testid="data-flows-phi-sanitiser-badge"
               className={cn(
-                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border',
+                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border',
                 search_provider.phi_sanitiser_enabled
                   ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
                   : 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60'
@@ -182,7 +178,7 @@ export function DataFlowsPanel({
           </div>
 
           <div className="space-y-1.5 text-xs">
-            <span className="block text-[11px] text-[var(--cf-fg-muted)]">
+            <span className="block text-xs text-[var(--cf-fg-muted)]">
               Allowlisted Search Hosts:
             </span>
             <div
@@ -192,7 +188,7 @@ export function DataFlowsPanel({
               {search_provider.allowed_hosts.map((host) => (
                 <span
                   key={host}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--cf-surface-2)] border border-[var(--cf-border)] font-mono text-[11px] text-[var(--cf-fg)]"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--cf-surface-2)] border border-[var(--cf-border)] font-mono text-xs text-[var(--cf-fg)]"
                 >
                   <Globe className="w-3 h-3 text-blue-600 shrink-0" />
                   {host}
@@ -237,7 +233,7 @@ export function DataFlowsPanel({
               className="w-full text-left border-collapse text-xs"
             >
               <thead>
-                <tr className="border-b border-[var(--cf-border)] text-[11px] text-[var(--cf-fg-muted)]">
+                <tr className="border-b border-[var(--cf-border)] text-xs text-[var(--cf-fg-muted)]">
                   <th className="py-2 pr-3 font-semibold">Connector</th>
                   <th className="py-2 px-3 font-semibold">Status</th>
                   <th className="py-2 px-3 font-semibold">
@@ -261,14 +257,14 @@ export function DataFlowsPanel({
                       <div>
                         {conn.label || conn.connector_name || conn.connector_id}
                       </div>
-                      <div className="text-[11px] font-mono text-[var(--cf-fg-muted)]">
+                      <div className="text-xs font-mono text-[var(--cf-fg-muted)]">
                         {conn.connector_id}
                       </div>
                     </td>
                     <td className="py-3 px-3">
                       <span
                         data-testid={`data-flow-status-${conn.connection_id}`}
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--cf-surface-2)] border border-[var(--cf-border)] text-[var(--cf-fg)]"
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-[var(--cf-surface-2)] border border-[var(--cf-border)] text-[var(--cf-fg)]"
                       >
                         {conn.status}
                       </span>
@@ -281,7 +277,7 @@ export function DataFlowsPanel({
                         {conn.allowed_hosts.map((host) => (
                           <span
                             key={host}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--cf-surface-2)] border border-[var(--cf-border)] font-mono text-[11px] text-[var(--cf-fg)]"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--cf-surface-2)] border border-[var(--cf-border)] font-mono text-xs text-[var(--cf-fg)]"
                           >
                             <Globe className="w-3 h-3 text-emerald-600 shrink-0" />
                             {host}
@@ -297,7 +293,7 @@ export function DataFlowsPanel({
                         {conn.categories.map((cat) => (
                           <span
                             key={cat}
-                            className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[11px] font-medium"
+                            className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-medium"
                           >
                             {cat}
                           </span>
@@ -306,7 +302,7 @@ export function DataFlowsPanel({
                     </td>
                     <td
                       data-testid={`data-flow-terms-${conn.connection_id}`}
-                      className="py-3 px-3 font-mono text-[11px] text-[var(--cf-fg-muted)]"
+                      className="py-3 px-3 font-mono text-xs text-[var(--cf-fg-muted)]"
                     >
                       v{conn.terms_version}
                     </td>

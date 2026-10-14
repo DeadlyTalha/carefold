@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Declarative SQLAlchemy models for Carefold authentication and system settings."""
 
@@ -87,6 +83,13 @@ class User(Base):
         default="local",
         nullable=False,
         doc="Identity source: local, oidc, google, github",
+    )
+    preferred_locale: Mapped[str] = mapped_column(
+        String(16),
+        default="en-US",
+        server_default="en-US",
+        nullable=False,
+        doc="Preferred IETF BCP 47 locale tag (e.g. en-US, es-ES, fr-FR, hi-IN, ar-SA)",
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -830,6 +833,13 @@ class Profile(Base):
         nullable=False,
         doc="Whether this is the primary self/steward profile",
     )
+    preferred_locale: Mapped[str] = mapped_column(
+        String(16),
+        default="en-US",
+        server_default="en-US",
+        nullable=False,
+        doc="Preferred IETF BCP 47 locale tag for this care profile (e.g. en-US, es-ES, fr-FR, hi-IN, ar-SA)",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -1315,6 +1325,14 @@ class Note(Base):
         default="[]",
         doc="Serialized JSON array of note tags",
     )
+    locale: Mapped[str] = mapped_column(
+        String(16),
+        default="en-US",
+        server_default="en-US",
+        nullable=False,
+        index=True,
+        doc="IETF BCP 47 locale tag of the note content (e.g. en-US, es-ES)",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -1457,6 +1475,13 @@ class Attachment(Base):
         nullable=False,
         index=True,
         doc="Processing lifecycle state: pending, completed, failed, not_applicable",
+    )
+    locale: Mapped[str] = mapped_column(
+        String(16),
+        default="en-US",
+        server_default="en-US",
+        nullable=False,
+        doc="IETF BCP 47 locale tag of the attachment document (e.g. en-US, es-ES)",
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -2417,6 +2442,13 @@ class HealthResource(Base):
         default="active",
         nullable=False,
         doc="Status: active, amended, tombstone",
+    )
+    locale: Mapped[str] = mapped_column(
+        String(16),
+        default="en-US",
+        server_default="en-US",
+        nullable=False,
+        doc="IETF BCP 47 locale tag of resource display narrative while codes stay language-neutral",
     )
     effective_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

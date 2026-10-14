@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Unit and integration tests for OAuth 2.0 PKCE Broker & Versioned Token Refresh (AU-51)."""
 
@@ -57,16 +53,16 @@ async def db_session() -> AsyncSession:
 
 
 def test_pkce_s256_generation_and_verification() -> None:
-    """Verifies RFC 7636 PKCE S256 verifier/challenge generation and constant-time verification."""
-    verifier, challenge = generate_pkce_pair()
+    """Verifies RFC 7636 PKCE S256 verifier/code_challenge generation and constant-time verification."""
+    verifier, pkce_challenge = generate_pkce_pair()
     assert len(verifier) == 64
     assert "=" not in verifier
-    assert "=" not in challenge
-    assert verifier != challenge
+    assert "=" not in pkce_challenge
+    assert verifier != pkce_challenge
 
-    assert verify_pkce_challenge(verifier, challenge) is True
-    assert verify_pkce_challenge(verifier + "x", challenge) is False
-    assert verify_pkce_challenge("", challenge) is False
+    assert verify_pkce_challenge(verifier, pkce_challenge) is True
+    assert verify_pkce_challenge(verifier + "x", pkce_challenge) is False
+    assert verify_pkce_challenge("", pkce_challenge) is False
     assert verify_pkce_challenge(verifier, "") is False
 
 
@@ -97,7 +93,7 @@ def test_resolve_redirect_uri_local_and_server_modes() -> None:
 def test_oauth_state_hmac_signing_tampering_isolation_and_expiry() -> None:
     """Verifies HMAC-SHA256 OAuth state signing, tampering detection, cross-profile rejection, and TTL expiry."""
     secret = os.urandom(32)
-    verifier, challenge = generate_pkce_pair()
+    verifier, pkce_challenge = generate_pkce_pair()
 
     state = create_oauth_state(
         user_id="user-1",
@@ -160,11 +156,11 @@ def test_oauth_state_hmac_signing_tampering_isolation_and_expiry() -> None:
         client_id="byo-client-123",
         redirect_uri="http://127.0.0.1:8000/api/v1/oauth/callback",
         state=state,
-        code_challenge=challenge,
+        code_challenge=pkce_challenge,
         scopes=["user.metrics"],
     )
     assert "code_challenge_method=S256" in auth_url
-    assert f"code_challenge={challenge}" in auth_url
+    assert f"code_challenge={pkce_challenge}" in auth_url
 
 
 @pytest.mark.asyncio

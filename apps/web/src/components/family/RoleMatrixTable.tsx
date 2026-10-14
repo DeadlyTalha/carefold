@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 'use client';
@@ -228,7 +224,7 @@ export function RoleMatrixTable({ profiles: profilesProp, className }: RoleMatri
           <div className="flex items-center gap-2 font-semibold text-[var(--cf-fg)]">
             <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>Guardian / Manage</span>
-            <code className="text-[10px] text-[var(--cf-fg-subtle)] font-mono font-normal">(manage)</code>
+            <code className="text-xs text-[var(--cf-fg-subtle)] font-mono font-normal">(manage)</code>
           </div>
           <p className="text-xs text-[var(--cf-fg-muted)] leading-relaxed">
             Edit profile, invite viewers, configure care settings, and delete profiles.
@@ -238,7 +234,7 @@ export function RoleMatrixTable({ profiles: profilesProp, className }: RoleMatri
           <div className="flex items-center gap-2 font-semibold text-[var(--cf-fg)]">
             <Stethoscope className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
             <span>Visit prep &amp; clinical</span>
-            <code className="text-[10px] text-[var(--cf-fg-subtle)] font-mono font-normal">(view_clinical)</code>
+            <code className="text-xs text-[var(--cf-fg-subtle)] font-mono font-normal">(view_clinical)</code>
           </div>
           <p className="text-xs text-[var(--cf-fg-muted)] leading-relaxed">
             Read clinical notes, visit prep dossiers, and consult clinical assist agents.
@@ -248,7 +244,7 @@ export function RoleMatrixTable({ profiles: profilesProp, className }: RoleMatri
           <div className="flex items-center gap-2 font-semibold text-[var(--cf-fg)]">
             <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
             <span>Insurance &amp; paperwork</span>
-            <code className="text-[10px] text-[var(--cf-fg-subtle)] font-mono font-normal">(view_paperwork)</code>
+            <code className="text-xs text-[var(--cf-fg-subtle)] font-mono font-normal">(view_paperwork)</code>
           </div>
           <p className="text-xs text-[var(--cf-fg-muted)] leading-relaxed">
             Read insurance policies, claims, appeals, formulary, and prior authorizations.

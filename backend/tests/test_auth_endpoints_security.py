@@ -1,21 +1,17 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Empirical adversarial challenge test harness for Authentication REST endpoints.
+"""Systematic boundary verification test harness for Authentication REST endpoints.
 
-Authored by Challenger 1 (Milestone 3):
+Authored by Verification 1 (Milestone 3):
 1. Registration boundary cases (exact 10-char vs 9-char, missing char classes, case-insensitive collisions).
 2. Cookie and Bearer session flows (cookie creation, /me access, logout revoking session & DB record, subsequent 401).
 3. Disabled user handling (login returning 403, active session rejected with 403 upon status patching to disabled).
@@ -37,7 +33,7 @@ from carefold.db.session import create_db_engine, get_session_factory, init_db
 
 
 @pytest.fixture
-async def challenge_env(monkeypatch):
+async def auth_test_env(monkeypatch):
     """Configures an isolated in-memory DB and SqlAuthAdapter in local auth mode."""
     engine = create_db_engine("sqlite+aiosqlite:///:memory:")
     await init_db(engine)
@@ -54,11 +50,11 @@ async def challenge_env(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Challenge 1: Registration Boundary Cases
+# Verification 1: Registration Boundary Cases
 # ---------------------------------------------------------------------------
 
 
-def test_registration_password_length_boundary(client: TestClient, challenge_env):
+def test_registration_password_length_boundary(client: TestClient, auth_test_env):
     """Stress tests password length boundary: 9-char password vs exact 10-char password."""
     client.cookies.clear()
     # 9-character password: Aa1!bbbbb (len 9) -> Must fail with HTTP 400
@@ -100,7 +96,7 @@ def test_registration_password_length_boundary(client: TestClient, challenge_env
     assert res_11.status_code == 201, f"Expected 201 for 11-char password, got {res_11.status_code}: {res_11.text}"
 
 
-def test_registration_password_character_classes(client: TestClient, challenge_env):
+def test_registration_password_character_classes(client: TestClient, auth_test_env):
     """Stress tests password complexity: uppercase, lowercase, digit, and special character requirements."""
     client.cookies.clear()
     # Missing uppercase: aa1!bbbbbb (len 10) -> HTTP 400
@@ -142,7 +138,7 @@ def test_registration_password_character_classes(client: TestClient, challenge_e
     assert res_special_only.status_code == 201
 
 
-def test_registration_duplicate_username_case_insensitive(client: TestClient, challenge_env):
+def test_registration_duplicate_username_case_insensitive(client: TestClient, auth_test_env):
     """Stress tests case-insensitive duplicate username collision."""
     client.cookies.clear()
     # Initial registration: CamelCase username
@@ -174,7 +170,7 @@ def test_registration_duplicate_username_case_insensitive(client: TestClient, ch
     assert res4.status_code == 409, f"Expected 409 for duplicate mixed case username, got {res4.status_code}"
 
 
-def test_registration_duplicate_email_case_insensitive(client: TestClient, challenge_env):
+def test_registration_duplicate_email_case_insensitive(client: TestClient, auth_test_env):
     """Stress tests case-insensitive duplicate email collision."""
     client.cookies.clear()
     # Initial registration: Mixed case email
@@ -200,14 +196,14 @@ def test_registration_duplicate_email_case_insensitive(client: TestClient, chall
 
 
 # ---------------------------------------------------------------------------
-# Challenge 2: Cookie and Bearer Session Flow
+# Verification 2: Cookie and Bearer Session Flow
 # ---------------------------------------------------------------------------
 
 
-def test_cookie_and_bearer_session_flow(client: TestClient, challenge_env):
+def test_cookie_and_bearer_session_flow(client: TestClient, auth_test_env):
     """Stress tests cookie generation, Bearer header access, logout cookie removal, and session DB revocation."""
     client.cookies.clear()
-    _, session_factory = challenge_env
+    _, session_factory = auth_test_env
 
     # 1. Register test user
     reg = client.post(
@@ -271,11 +267,11 @@ def test_cookie_and_bearer_session_flow(client: TestClient, challenge_env):
 
 
 # ---------------------------------------------------------------------------
-# Challenge 3: Disabled User Handling
+# Verification 3: Disabled User Handling
 # ---------------------------------------------------------------------------
 
 
-def test_disabled_user_login_rejection(client: TestClient, challenge_env):
+def test_disabled_user_login_rejection(client: TestClient, auth_test_env):
     """Stress tests disabled user trying to login: must return 403 Forbidden.
 
     Specification:
@@ -283,7 +279,7 @@ def test_disabled_user_login_rejection(client: TestClient, challenge_env):
         user active who gets patched to disabled immediately has active session rejected with 403 on subsequent requests.'
     """
     client.cookies.clear()
-    sql_adapter, session_factory = challenge_env
+    sql_adapter, session_factory = auth_test_env
 
     # Register user
     reg = client.post(
@@ -314,7 +310,7 @@ def test_disabled_user_login_rejection(client: TestClient, challenge_env):
     assert "disabled" in login_resp.json()["detail"].lower()
 
 
-def test_active_user_patched_to_disabled_rejects_session(client: TestClient, challenge_env):
+def test_active_user_patched_to_disabled_rejects_session(client: TestClient, auth_test_env):
     """Stress tests active user session rejection: user active who gets patched to disabled
 
     immediately has active session rejected with 403 on subsequent requests.
@@ -324,7 +320,7 @@ def test_active_user_patched_to_disabled_rejects_session(client: TestClient, cha
         user active who gets patched to disabled immediately has active session rejected with 403 on subsequent requests.'
     """
     client.cookies.clear()
-    sql_adapter, session_factory = challenge_env
+    sql_adapter, session_factory = auth_test_env
 
     # 1. Register active user
     reg = client.post(
@@ -368,11 +364,11 @@ def test_active_user_patched_to_disabled_rejects_session(client: TestClient, cha
 
 
 # ---------------------------------------------------------------------------
-# Challenge 4: Password Reset Flow and Session Revocation
+# Verification 4: Password Reset Flow and Session Revocation
 # ---------------------------------------------------------------------------
 
 
-def test_password_reset_flow_and_session_revocation(client: TestClient, challenge_env):
+def test_password_reset_flow_and_session_revocation(client: TestClient, auth_test_env):
     """Stress tests password reset flow:
 
     1. Forgot password issues single-use token.

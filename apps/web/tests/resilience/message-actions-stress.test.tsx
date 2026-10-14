@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -70,7 +66,7 @@ const mockAgents: AgentSummary[] = [
   }
 ];
 
-describe('Resilience Challenge: Message Actions, Suggestions & Session Continuity', () => {
+describe('Resilience Suite: Message Actions, Suggestions & Session Continuity', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.restoreAllMocks();
@@ -82,9 +78,9 @@ describe('Resilience Challenge: Message Actions, Suggestions & Session Continuit
   });
 
   // =========================================================================
-  // 1. CLIPBOARD FAILURE RECOVERY & ADVERSARIAL CASES
+  // 1. CLIPBOARD FAILURE RECOVERY & BOUNDARY CASES
   // =========================================================================
-  describe('Resilience Challenge 1: Clipboard Failures & Edge Cases', () => {
+  describe('Resilience Suite 1: Clipboard Failures & Edge Cases', () => {
     it('handles navigator.clipboard.writeText rejection (e.g. NotAllowedError) gracefully', async () => {
       vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(
         new DOMException('Document is not focused', 'NotAllowedError')
@@ -249,7 +245,7 @@ describe('Resilience Challenge: Message Actions, Suggestions & Session Continuit
   // =========================================================================
   // 2. RAPID DOUBLE CLICKS ON RERUN & REGENERATE WHILE STREAMING
   // =========================================================================
-  describe('Resilience Challenge 2: Rapid Double Clicks on Rerun and Regenerate', () => {
+  describe('Resilience Suite 2: Rapid Double Clicks on Rerun and Regenerate', () => {
     it('prevents duplicate concurrent fetch calls on rapid double-clicks to Rerun', async () => {
       let callCount = 0;
       let resolveStreamPromise: (val: any) => void;
@@ -469,7 +465,7 @@ describe('Resilience Challenge: Message Actions, Suggestions & Session Continuit
   // =========================================================================
   // 3. SUGGESTED QUESTIONS CHIPS: RENDERING, LONG STRINGS & SPECIAL CHARS
   // =========================================================================
-  describe('Resilience Challenge 3: Suggested Questions Chips Edge Cases', () => {
+  describe('Resilience Suite 3: Suggested Questions Chips Edge Cases', () => {
     it('handles long suggestion strings without crashing or overflowing layout', () => {
       const veryLongSuggestion = 'What are all the detailed considerations and documentation required '.repeat(20);
       const onSelect = vi.fn();
@@ -667,7 +663,7 @@ describe('Resilience Challenge: Message Actions, Suggestions & Session Continuit
   // =========================================================================
   // 4. THREAD CONTINUITY IN LOCALSTORAGE ACROSS PAGE RELOADS
   // =========================================================================
-  describe('Resilience Challenge 4: Thread Continuity & Persistence Across Reloads', () => {
+  describe('Resilience Suite 4: Thread Continuity & Persistence Across Reloads', () => {
     it('restores conversation history and maintains active threadId across simulated reload', async () => {
       let callCount = 0;
       let capturedThreadId: string | null = null;

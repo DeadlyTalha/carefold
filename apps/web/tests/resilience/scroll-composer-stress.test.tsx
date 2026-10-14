@@ -1,18 +1,14 @@
 /*
  * Carefold — Healthcare AI Agent Marketplace & Runtime
- * Copyright 2026 Spectrayan
+ * Copyright 2026 Spectrayan (https://spectrayan.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the PolyForm Noncommercial License 1.0.0 and the
+ * Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+ * Personal and household local use only. Commercial use, hosted service
+ * offering, rebranding, white-labeling, and redistribution of modified
+ * forks are prohibited without a written commercial license from Spectrayan.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -135,7 +131,7 @@ describe('Stress Test: Scroll Tracking & Anti-Hijack Guarantee', () => {
       });
     }
 
-    // ADVERSARIAL ASSERTION: scrollIntoView MUST NOT have been called while scrolled up!
+    // BOUNDARY ASSERTION: scrollIntoView MUST NOT have been called while scrolled up!
     expect(scrollIntoViewSpy).not.toHaveBeenCalled();
 
     // Verify unread badge accumulated all 8 tokens
@@ -229,13 +225,13 @@ describe('Stress Test: Scroll Tracking & Anti-Hijack Guarantee', () => {
 });
 
 describe('Stress Test: Mobile Responsiveness, 100dvh & Double Scrollbars', () => {
-  it('container uses dynamic viewport 100dvh with outer overflow-hidden to prevent nested window scrollbars', () => {
+  it('container uses clean flex sizing (h-full flex-1 min-h-0) with outer overflow-hidden to prevent nested window scrollbars', () => {
     const { container } = render(<ChatClient initialAgents={mockAgents} />);
     const outerContainer = container.querySelector('.flex.flex-col') as HTMLElement;
 
-    // Must be 100dvh on mobile (<640px) and sm:100dvh
-    expect(outerContainer.className).toContain('h-[calc(100dvh-120px)]');
-    expect(outerContainer.className).toContain('sm:h-[calc(100dvh-140px)]');
+    expect(outerContainer.className).toContain('h-full');
+    expect(outerContainer.className).toContain('flex-1');
+    expect(outerContainer.className).toContain('min-h-0');
     // Must strictly contain overflow-hidden
     expect(outerContainer.className).toContain('overflow-hidden');
     // Must not contain 100vh static heights that cause mobile overflow
@@ -373,9 +369,9 @@ describe('Stress Test: ThinkingIndicator & ToolTrace Stability', () => {
 
 describe('Stress Test: Tailwind CSS v3 Hygiene Across Components', () => {
   it('validates rendered DOM across components contains 0 Tailwind v4 invalid classes', () => {
-    const { container: c1 } = render(<ThinkingIndicator />);
-    const { container: c2 } = render(<ScrollToBottomButton visible={true} onClick={vi.fn()} unreadCount={3} />);
-    const { container: c3 } = render(
+    const { container: item_one } = render(<ThinkingIndicator />);
+    const { container: item_two } = render(<ScrollToBottomButton visible={true} onClick={vi.fn()} unreadCount={3} />);
+    const { container: item_three } = render(
       <ToolTraceCard
         trace={{
           tool: 'test-tool',
@@ -386,9 +382,9 @@ describe('Stress Test: Tailwind CSS v3 Hygiene Across Components', () => {
         defaultExpanded={true}
       />
     );
-    const { container: c4 } = render(<ChatClient initialAgents={mockAgents} />);
+    const { container: item_four } = render(<ChatClient initialAgents={mockAgents} />);
 
-    const fullRenderedHtml = [c1.innerHTML, c2.innerHTML, c3.innerHTML, c4.innerHTML].join('\n');
+    const fullRenderedHtml = [item_one.innerHTML, item_two.innerHTML, item_three.innerHTML, item_four.innerHTML].join('\n');
 
     expect(fullRenderedHtml).not.toContain('shadow-xs');
     expect(fullRenderedHtml).not.toContain('shadow-2xs');

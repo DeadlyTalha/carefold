@@ -1,19 +1,15 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Test Harness for (Challenger M3-2).
+"""Test Harness for (Verification Phase3-2).
 
 Target:
 - R3: Backend Authentication & Admin REST Endpoints & Endpoint Protection
@@ -85,11 +81,11 @@ def parse_sse_events(raw_text: str) -> List[Dict[str, Any]]:
 
 
 # ============================================================================
-# Adversarial Test Fixtures
+# Boundary Test Fixtures
 # ============================================================================
 
 @pytest.fixture
-async def m3_challenge_env(monkeypatch):
+async def m3_auth_test_env(monkeypatch):
     """Establishes an isolated multi-role SQL auth and settings environment."""
     engine = create_db_engine("sqlite+aiosqlite:///:memory:")
     await init_db(engine)
@@ -212,13 +208,13 @@ ADMIN_ENDPOINTS = [
 @pytest.mark.parametrize("method,path_template,payload", ADMIN_ENDPOINTS)
 def test_admin_rbac_unauthenticated_rejected(
     client: TestClient,
-    m3_challenge_env,
+    m3_auth_test_env,
     method: str,
     path_template: str,
     payload: Optional[Dict[str, Any]],
 ):
-    """Adversarial Probe 1A: Unauthenticated requests to ANY /api/admin/* endpoint return 401."""
-    member_id = m3_challenge_env["member1"].id
+    """Boundary Probe 1A: Unauthenticated requests to ANY /api/admin/* endpoint return 401."""
+    member_id = m3_auth_test_env["member1"].id
     url = path_template.replace("{user_id}", member_id)
 
     resp = client.request(method, url, json=payload)
@@ -229,13 +225,13 @@ def test_admin_rbac_unauthenticated_rejected(
 @pytest.mark.parametrize("method,path_template,payload", ADMIN_ENDPOINTS)
 def test_admin_rbac_invalid_token_rejected(
     client: TestClient,
-    m3_challenge_env,
+    m3_auth_test_env,
     method: str,
     path_template: str,
     payload: Optional[Dict[str, Any]],
 ):
-    """Adversarial Probe 1B: Requests with invalid session tokens return 401."""
-    member_id = m3_challenge_env["member1"].id
+    """Boundary Probe 1B: Requests with invalid session tokens return 401."""
+    member_id = m3_auth_test_env["member1"].id
     url = path_template.replace("{user_id}", member_id)
 
     # 1. Invalid cookie
@@ -262,14 +258,14 @@ def test_admin_rbac_invalid_token_rejected(
 @pytest.mark.parametrize("method,path_template,payload", ADMIN_ENDPOINTS)
 def test_admin_rbac_member_role_forbidden(
     client: TestClient,
-    m3_challenge_env,
+    m3_auth_test_env,
     method: str,
     path_template: str,
     payload: Optional[Dict[str, Any]],
 ):
-    """Adversarial Probe 1C: Requests with member role return 403 Forbidden across all admin routes."""
-    member_token = m3_challenge_env["member1_token"]
-    member_id = m3_challenge_env["member1"].id
+    """Boundary Probe 1C: Requests with member role return 403 Forbidden across all admin routes."""
+    member_token = m3_auth_test_env["member1_token"]
+    member_id = m3_auth_test_env["member1"].id
     url = path_template.replace("{user_id}", member_id)
 
     # Cookie test
@@ -296,14 +292,14 @@ def test_admin_rbac_member_role_forbidden(
 @pytest.mark.parametrize("method,path_template,payload", ADMIN_ENDPOINTS)
 def test_admin_rbac_steward_role_forbidden(
     client: TestClient,
-    m3_challenge_env,
+    m3_auth_test_env,
     method: str,
     path_template: str,
     payload: Optional[Dict[str, Any]],
 ):
-    """Adversarial Probe 1D: Even privileged clinical stewards are forbidden (403) from admin endpoints."""
-    steward_token = m3_challenge_env["steward1_token"]
-    member_id = m3_challenge_env["member1"].id
+    """Boundary Probe 1D: Even privileged clinical stewards are forbidden (403) from admin endpoints."""
+    steward_token = m3_auth_test_env["steward1_token"]
+    member_id = m3_auth_test_env["member1"].id
     url = path_template.replace("{user_id}", member_id)
 
     resp = client.request(
@@ -320,10 +316,10 @@ def test_admin_rbac_steward_role_forbidden(
 # Probe Suite 2: Self-Deletion Prevention & Session Revocation
 # ============================================================================
 
-def test_admin_self_deletion_strictly_prevented(client: TestClient, m3_challenge_env):
-    """Adversarial Probe 2A: Admin attempting DELETE /api/admin/users/{current_admin_id} returns 400."""
-    admin1 = m3_challenge_env["admin1"]
-    admin1_token = m3_challenge_env["admin1_token"]
+def test_admin_self_deletion_strictly_prevented(client: TestClient, m3_auth_test_env):
+    """Boundary Probe 2A: Admin attempting DELETE /api/admin/users/{current_admin_id} returns 400."""
+    admin1 = m3_auth_test_env["admin1"]
+    admin1_token = m3_auth_test_env["admin1_token"]
     cookies = {"carefold_session": admin1_token}
 
     resp = client.delete(f"/api/admin/users/{admin1.id}", cookies=cookies)
@@ -341,12 +337,12 @@ def test_admin_self_deletion_strictly_prevented(client: TestClient, m3_challenge
 
 
 @pytest.mark.asyncio
-async def test_admin_delete_other_user_revokes_sessions(client: TestClient, m3_challenge_env):
-    """Adversarial Probe 2B: Deleting another user succeeds and revokes their active sessions."""
-    admin1_token = m3_challenge_env["admin1_token"]
-    member1 = m3_challenge_env["member1"]
-    member1_token = m3_challenge_env["member1_token"]
-    session_factory = m3_challenge_env["session_factory"]
+async def test_admin_delete_other_user_revokes_sessions(client: TestClient, m3_auth_test_env):
+    """Boundary Probe 2B: Deleting another user succeeds and revokes their active sessions."""
+    admin1_token = m3_auth_test_env["admin1_token"]
+    member1 = m3_auth_test_env["member1"]
+    member1_token = m3_auth_test_env["member1_token"]
+    session_factory = m3_auth_test_env["session_factory"]
 
     # 1. Verify member session is currently valid
     me_before = client.get("/api/auth/me", cookies={"carefold_session": member1_token})
@@ -379,11 +375,11 @@ async def test_admin_delete_other_user_revokes_sessions(client: TestClient, m3_c
     assert del_again.status_code == 404
 
 
-def test_admin_can_delete_another_admin_with_session_revocation(client: TestClient, m3_challenge_env):
-    """Adversarial Probe 2C: Admin 1 can delete Admin 2, revoking Admin 2's session; Admin 1 cannot delete self."""
-    admin1_token = m3_challenge_env["admin1_token"]
-    admin2 = m3_challenge_env["admin2"]
-    admin2_token = m3_challenge_env["admin2_token"]
+def test_admin_can_delete_another_admin_with_session_revocation(client: TestClient, m3_auth_test_env):
+    """Boundary Probe 2C: Admin 1 can delete Admin 2, revoking Admin 2's session; Admin 1 cannot delete self."""
+    admin1_token = m3_auth_test_env["admin1_token"]
+    admin2 = m3_auth_test_env["admin2"]
+    admin2_token = m3_auth_test_env["admin2_token"]
 
     # Admin 2 active
     resp2_before = client.get("/api/auth/me", cookies={"carefold_session": admin2_token})
@@ -402,7 +398,7 @@ def test_admin_can_delete_another_admin_with_session_revocation(client: TestClie
 
     # Admin 1 still cannot delete self
     self_del = client.delete(
-        f"/api/admin/users/{m3_challenge_env['admin1'].id}",
+        f"/api/admin/users/{m3_auth_test_env['admin1'].id}",
         cookies={"carefold_session": admin1_token},
     )
     assert self_del.status_code == 400
@@ -414,10 +410,10 @@ def test_admin_can_delete_another_admin_with_session_revocation(client: TestClie
 # ============================================================================
 
 @pytest.mark.asyncio
-async def test_settings_secrets_masked_in_get_settings(client: TestClient, m3_challenge_env):
-    """Adversarial Probe 3A: Sensitive keys returned from GET /api/admin/settings must be masked."""
-    admin1_token = m3_challenge_env["admin1_token"]
-    settings_port: SettingsPort = m3_challenge_env["settings"]
+async def test_settings_secrets_masked_in_get_settings(client: TestClient, m3_auth_test_env):
+    """Boundary Probe 3A: Sensitive keys returned from GET /api/admin/settings must be masked."""
+    admin1_token = m3_auth_test_env["admin1_token"]
+    settings_port: SettingsPort = m3_auth_test_env["settings"]
 
     # Seed secrets and public configuration
     await settings_port.set_setting("openai_api_key", "sk-proj-super-secret-openai-key-9988", is_secret=True)
@@ -451,10 +447,10 @@ async def test_settings_secrets_masked_in_get_settings(client: TestClient, m3_ch
 
 
 @pytest.mark.asyncio
-async def test_settings_secrets_masked_in_put_settings_response(client: TestClient, m3_challenge_env):
-    """Adversarial Probe 3B: PUT /api/admin/settings masks secrets in returned payload and preserves internal storage."""
-    admin1_token = m3_challenge_env["admin1_token"]
-    settings_port: SettingsPort = m3_challenge_env["settings"]
+async def test_settings_secrets_masked_in_put_settings_response(client: TestClient, m3_auth_test_env):
+    """Boundary Probe 3B: PUT /api/admin/settings masks secrets in returned payload and preserves internal storage."""
+    admin1_token = m3_auth_test_env["admin1_token"]
+    settings_port: SettingsPort = m3_auth_test_env["settings"]
 
     secret_key = "cohere_api_key"
     secret_val = "cohere-secret-token-abcdef123456"
@@ -490,8 +486,8 @@ async def test_settings_secrets_masked_in_put_settings_response(client: TestClie
 # Probe Suite 4: Endpoint Protection & SSE Verification for /api/chat
 # ============================================================================
 
-def test_api_chat_unauthenticated_returns_401_immediately(client: TestClient, m3_challenge_env):
-    """Adversarial Probe 4A: POST /api/chat without token returns 401 immediately prior to streaming."""
+def test_api_chat_unauthenticated_returns_401_immediately(client: TestClient, m3_auth_test_env):
+    """Boundary Probe 4A: POST /api/chat without token returns 401 immediately prior to streaming."""
     chat_payload = {
         "agentId": "visit-steward",
         "prompt": "Hello! Can you help me prepare for my visit?",
@@ -507,8 +503,8 @@ def test_api_chat_unauthenticated_returns_401_immediately(client: TestClient, m3
     assert resp.json()["detail"] == "Authentication required"
 
 
-def test_api_chat_invalid_token_returns_401_immediately(client: TestClient, m3_challenge_env):
-    """Adversarial Probe 4B: POST /api/chat with invalid token returns 401 immediately."""
+def test_api_chat_invalid_token_returns_401_immediately(client: TestClient, m3_auth_test_env):
+    """Boundary Probe 4B: POST /api/chat with invalid token returns 401 immediately."""
     chat_payload = {
         "agentId": "visit-steward",
         "prompt": "Hello! Can you help me prepare for my visit?",
@@ -537,9 +533,9 @@ def test_api_chat_invalid_token_returns_401_immediately(client: TestClient, m3_c
     assert resp_bearer.json()["detail"] == "Invalid or expired session"
 
 
-def test_api_chat_disabled_user_returns_403_immediately(client: TestClient, m3_challenge_env):
-    """Adversarial Probe 4C: POST /api/chat with disabled user returns 403 Forbidden immediately."""
-    disabled_token = m3_challenge_env["disabled1_token"]
+def test_api_chat_disabled_user_returns_403_immediately(client: TestClient, m3_auth_test_env):
+    """Boundary Probe 4C: POST /api/chat with disabled user returns 403 Forbidden immediately."""
+    disabled_token = m3_auth_test_env["disabled1_token"]
     chat_payload = {
         "agentId": "visit-steward",
         "prompt": "Hello! Can you help me prepare for my visit?",
@@ -560,9 +556,9 @@ def test_api_chat_disabled_user_returns_403_immediately(client: TestClient, m3_c
     )
 
 
-def test_api_chat_authenticated_streams_unbuffered_sse(client: TestClient, m3_challenge_env):
-    """Adversarial Probe 4D: POST /api/chat with valid token streams SSE events without proxy buffering."""
-    member_token = m3_challenge_env["member1_token"]
+def test_api_chat_authenticated_streams_unbuffered_sse(client: TestClient, m3_auth_test_env):
+    """Boundary Probe 4D: POST /api/chat with valid token streams SSE events without proxy buffering."""
+    member_token = m3_auth_test_env["member1_token"]
     prof_res = client.post(
         "/api/profiles",
         json={"name": "Member Profile", "relationship": "self"},
@@ -613,9 +609,9 @@ def test_api_chat_authenticated_streams_unbuffered_sse(client: TestClient, m3_ch
         assert len(suggestions) >= 2
 
 
-def test_api_chat_authenticated_via_bearer_header(client: TestClient, m3_challenge_env):
-    """Adversarial Probe 4E: POST /api/chat with Authorization Bearer header streams properly."""
-    admin_token = m3_challenge_env["admin1_token"]
+def test_api_chat_authenticated_via_bearer_header(client: TestClient, m3_auth_test_env):
+    """Boundary Probe 4E: POST /api/chat with Authorization Bearer header streams properly."""
+    admin_token = m3_auth_test_env["admin1_token"]
     prof_res = client.post(
         "/api/profiles",
         json={"name": "Admin Profile", "relationship": "self"},
@@ -651,9 +647,9 @@ def test_api_chat_authenticated_via_bearer_header(client: TestClient, m3_challen
 # Probe Suite 5: Additional Protected Routes Verification
 # ============================================================================
 
-def test_protected_routes_require_authentication(client: TestClient, m3_challenge_env):
-    """Adversarial Probe 5: Verifies /api/notes and /api/attachments require authentication."""
-    member_token = m3_challenge_env["member1_token"]
+def test_protected_routes_require_authentication(client: TestClient, m3_auth_test_env):
+    """Boundary Probe 5: Verifies /api/notes and /api/attachments require authentication."""
+    member_token = m3_auth_test_env["member1_token"]
 
     # 1. /api/notes
     notes_unauth = client.get("/api/notes")

@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Semantic clinical chunker with section boundary preservation and token overlap."""
 
@@ -21,6 +17,8 @@ from dataclasses import dataclass, field
 import logging
 import re
 from typing import Any, Dict, List, Optional, Tuple
+
+from carefold.i18n.locale import normalize_text_nfc
 
 logger = logging.getLogger("carefold.search.chunker")
 
@@ -144,6 +142,7 @@ class ClinicalChunker:
         """Estimates token count using tiktoken cl100k_base or word heuristic fallback."""
         if not text or not text.strip():
             return 0
+        text = normalize_text_nfc(text)
         words = text.split()
         if len(words) == 1:
             return 1
@@ -249,6 +248,7 @@ class ClinicalChunker:
         if not text or not text.strip():
             return []
 
+        text = normalize_text_nfc(text)
         base_meta = dict(metadata or {})
         should_coalesce = self.coalesce_sections if coalesce is None else coalesce
 

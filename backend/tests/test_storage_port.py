@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Comprehensive unit and security test suite for StoragePort and LocalStorageAdapter."""
 
@@ -245,16 +241,16 @@ async def test_filename_sanitization(storage_adapter: LocalStorageAdapter):
 @pytest.mark.asyncio
 async def test_duplicate_filename_collision_handling(storage_adapter: LocalStorageAdapter):
     """Verifies duplicate uploads generate non-conflicting names."""
-    m1 = await storage_adapter.save_file(b"v1", "notes.txt", user_id="u1", profile_id="p1")
-    m2 = await storage_adapter.save_file(b"v2", "notes.txt", user_id="u1", profile_id="p1")
-    m3 = await storage_adapter.save_file(b"v3", "notes.txt", user_id="u1", profile_id="p1")
+    msg_one = await storage_adapter.save_file(b"v1", "notes.txt", user_id="u1", profile_id="p1")
+    msg_two = await storage_adapter.save_file(b"v2", "notes.txt", user_id="u1", profile_id="p1")
+    msg_three = await storage_adapter.save_file(b"v3", "notes.txt", user_id="u1", profile_id="p1")
 
-    assert m1.filename == "notes.txt"
-    assert m2.filename == "notes_1.txt"
-    assert m3.filename == "notes_2.txt"
+    assert msg_one.filename == "notes.txt"
+    assert msg_two.filename == "notes_1.txt"
+    assert msg_three.filename == "notes_2.txt"
 
-    f1 = await storage_adapter.get_file(m1.storage_key, user_id="u1", profile_id="p1")
-    f2 = await storage_adapter.get_file(m2.storage_key, user_id="u1", profile_id="p1")
+    f1 = await storage_adapter.get_file(msg_one.storage_key, user_id="u1", profile_id="p1")
+    f2 = await storage_adapter.get_file(msg_two.storage_key, user_id="u1", profile_id="p1")
     assert f1.content == b"v1"
     assert f2.content == b"v2"
 

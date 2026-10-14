@@ -1,17 +1,13 @@
 # Carefold — Healthcare AI Agent Marketplace & Runtime
-# Copyright 2026 Spectrayan
+# Copyright 2026 Spectrayan (https://spectrayan.com)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the PolyForm Noncommercial License 1.0.0 and the
+# Carefold Additional Terms (see LICENSE and ADDITIONAL-TERMS.md).
+# Personal and household local use only. Commercial use, hosted service
+# offering, rebranding, white-labeling, and redistribution of modified
+# forks are prohibited without a written commercial license from Spectrayan.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
 """Stress harness for ResponseSynthesizerNode and Structured Audit Logging.
 
@@ -27,7 +23,7 @@ Tests:
 3. GraphBuilder integration:
    - Graph inspection: dispatcher, response_synthesizer, output_guardrail
    - Conditional routing for SINGLE vs PARALLEL vs PIPELINE execution plans
-4. Clinical safety adversarial emergency gating:
+4. Clinical safety boundary emergency gating:
    - Varied emergency formulations (acute chest pain, stroke FAST, anaphylaxis)
    - Verifying robust refusal flags and reason formatting
 """
@@ -52,7 +48,7 @@ from carefold.workflows.state import AgentState
 
 
 # ============================================================================
-# Section 1: ResponseSynthesizerNode Adversarial Stress Tests
+# Section 1: ResponseSynthesizerNode Boundary Stress Tests
 # ============================================================================
 
 class TestResponseSynthesizerAdversarial:
@@ -167,7 +163,7 @@ class TestResponseSynthesizerAdversarial:
 # ============================================================================
 
 class TestZeroBodyAuditConcurrency:
-    """Empirical verification of zero-body redaction and audit file locking."""
+    """Systematic verification of zero-body redaction and audit file locking."""
 
     @pytest.mark.asyncio
     async def test_zero_body_redaction_guarantee(self, tmp_path: Path):
@@ -256,7 +252,7 @@ class TestZeroBodyAuditConcurrency:
 # ============================================================================
 
 class TestGraphBuilderIntegration:
-    """Verifies graph compilation, inspection, and node wiring for M5."""
+    """Verifies graph compilation, inspection, and node wiring for Phase5."""
 
     def test_graph_inspection_includes_dispatcher_and_synthesizer(self):
         """Graph inspection must report dispatcher and response_synthesizer nodes."""
@@ -364,11 +360,11 @@ class TestGraphBuilderIntegration:
 
 
 # ============================================================================
-# Section 4: Clinical Safety Adversarial Emergency Gating
+# Section 4: Clinical Safety Boundary Emergency Gating
 # ============================================================================
 
 class TestClinicalSafetyEmergencyAdversarial:
-    """Empirical verification that acute emergency queries trigger refusal."""
+    """Systematic verification that acute emergency queries trigger refusal."""
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
