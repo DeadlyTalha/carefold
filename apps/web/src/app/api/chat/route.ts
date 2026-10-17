@@ -35,6 +35,8 @@ export async function POST(req: Request | NextRequest): Promise<Response> {
 
   const {
     agentId,
+    profileId,
+    profile_id,
     prompt,
     attachments,
     allow_clinical,
@@ -77,10 +79,16 @@ export async function POST(req: Request | NextRequest): Promise<Response> {
   // 3. Proxy to FastAPI Python backend (port 8010)
   const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:8010';
   const resolvedThreadId = threadId || `thread_${agentId}_${Date.now()}`;
+  const resolvedProfileId =
+    (typeof profile_id === 'string' && profile_id.trim()) ||
+    (typeof profileId === 'string' && profileId.trim()) ||
+    'me';
 
   const payload = {
     agent_id: agentId,
     agentId,
+    profile_id: resolvedProfileId,
+    profileId: resolvedProfileId,
     prompt: prompt.trim(),
     attachments: Array.isArray(attachments) ? attachments : [],
     messages: Array.isArray(messages) ? messages : [],
@@ -95,22 +103,53 @@ export async function POST(req: Request | NextRequest): Promise<Response> {
     threadId: resolvedThreadId
   };
 
-    const incomingCookie = req.headers.get('cookie');
-    const authHeader = req.headers.get('authorization');
+  const incomingCookie = req.headers.get('cookie');
+  const authHeader = req.headers.get('authorization');
   try {
-    const backendRes = await fetch(`${backendUrl}/api/v1/chat`, {
+    const proxyHeaders = {
+      'Content-Type': 'application/json',
+      ...(incomingCookie ? { cookie: incomingCookie } : {}),
+      ...(authHeader ? { authorization: authHeader } : {}),
+      ...(apiKey ? { 'x-api-key': apiKey } : {}),
+      ...(provider ? { 'x-provider': provider } : {}),
+      ...(model ? { 'x-model': model } : {})
+    };
+
+    let backendRes = await fetch(`${backendUrl}/api/v1/chat`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(incomingCookie ? { cookie: incomingCookie } : {}),
-        ...(authHeader ? { authorization: authHeader } : {}),
-        ...(apiKey ? { 'x-api-key': apiKey } : {}),
-        ...(provider ? { 'x-provider': provider } : {}),
-        ...(model ? { 'x-model': model } : {})
-      },
+      headers: proxyHeaders,
       body: JSON.stringify(payload),
       signal: req.signal
     });
+
+    if (backendRes.status === 404) {
+      const meRes = await fetch(`${backendUrl}/api/v1/profiles/me`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          ...(incomingCookie ? { cookie: incomingCookie } : {}),
+          ...(authHeader ? { authorization: authHeader } : {})
+        },
+        signal: req.signal
+      }).catch(() => null);
+
+      if (meRes && meRes.ok) {
+        const meProfile = await meRes.json().catch(() => null);
+        if (meProfile && typeof meProfile.id === 'string' && meProfile.id !== resolvedProfileId) {
+          const retryPayload = {
+            ...payload,
+            profile_id: meProfile.id,
+            profileId: meProfile.id
+          };
+          backendRes = await fetch(`${backendUrl}/api/v1/chat`, {
+            method: 'POST',
+            headers: proxyHeaders,
+            body: JSON.stringify(retryPayload),
+            signal: req.signal
+          });
+        }
+      }
+    }
 
     if (!backendRes.ok) {
       const errText = await backendRes.text().catch(() => '');

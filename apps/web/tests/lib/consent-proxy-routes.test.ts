@@ -97,4 +97,16 @@ describe('POST /api/chat proxy', () => {
     expect(backendCalls[0].body.allow_clinical).toBe(false);
     expect(backendCalls[1].body.allow_clinical).toBe(false);
   });
+
+  it('forwards explicit profileId / profile_id and defaults to "me" when omitted', async () => {
+    await postChat(chatRequest({}));
+    await postChat(chatRequest({ profileId: 'prof-123' }));
+    await postChat(chatRequest({ profile_id: 'prof-456' }));
+    expect(backendCalls[0].body.profile_id).toBe('me');
+    expect(backendCalls[0].body.profileId).toBe('me');
+    expect(backendCalls[1].body.profile_id).toBe('prof-123');
+    expect(backendCalls[1].body.profileId).toBe('prof-123');
+    expect(backendCalls[2].body.profile_id).toBe('prof-456');
+    expect(backendCalls[2].body.profileId).toBe('prof-456');
+  });
 });
