@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
@@ -36,6 +36,7 @@ import {
 import type { AttachmentItem, WorkspaceNoteDetail, WorkspaceNoteSummary } from '@/types/api';
 import {
   fetchAttachments,
+  fetchNotes,
   fetchNoteDetail,
   uploadAttachment,
   formatDate,
@@ -49,21 +50,82 @@ import { useI18n } from '@/i18n';
 interface LibraryClientProps {
   initialAttachments: AttachmentItem[];
   initialNotes: WorkspaceNoteSummary[];
+  profileId?: string;
 }
 
-export function LibraryClient({ initialAttachments, initialNotes }: LibraryClientProps) {
+function deduplicateAttachments(items: AttachmentItem[]): AttachmentItem[] {
+  const seen = new Set<string>();
+  const result: AttachmentItem[] = [];
+  for (const item of items) {
+    const key = item.id || item.path || item.filename;
+    if (!seen.has(key) && !seen.has(item.filename)) {
+      seen.add(key);
+      seen.add(item.filename);
+      result.push(item);
+    }
+  }
+  return result;
+}
+
+function deduplicateNotes(items: WorkspaceNoteSummary[]): WorkspaceNoteSummary[] {
+  const seen = new Set<string>();
+  const result: WorkspaceNoteSummary[] = [];
+  for (const item of items) {
+    const key = item.id || item.slug;
+    if (!seen.has(key) && !seen.has(item.slug)) {
+      seen.add(key);
+      seen.add(item.slug);
+      result.push(item);
+    }
+  }
+  return result;
+}
+
+export function LibraryClient({ initialAttachments, initialNotes, profileId }: LibraryClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { t } = useI18n();
+  const baseLibraryPath = profileId ? `/p/${encodeURIComponent(profileId)}/library` : '/library';
+  const baseChatPath = profileId ? `/p/${encodeURIComponent(profileId)}/chat` : '/chat';
 
   const tabParam = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState<'documents' | 'notes' | 'search'>(
     tabParam === 'notes' ? 'notes' : tabParam === 'search' ? 'search' : 'documents'
   );
 
-  const [attachments, setAttachments] = useState<AttachmentItem[]>(initialAttachments);
-  const [notes] = useState<WorkspaceNoteSummary[]>(initialNotes);
+  const [attachments, setAttachments] = useState<AttachmentItem[]>(() =>
+    deduplicateAttachments(initialAttachments)
+  );
+  const [notes, setNotes] = useState<WorkspaceNoteSummary[]>(() =>
+    deduplicateNotes(initialNotes)
+  );
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'test') return;
+    if (initialNotes.length === 0) {
+      fetchNotes()
+        .then((items) => {
+          if (Array.isArray(items) && items.length > 0) {
+            setNotes(deduplicateNotes(items));
+          }
+        })
+        .catch(() => {
+          // Ignore network errors in test/offline environments
+        });
+    }
+    if (initialAttachments.length === 0) {
+      fetchAttachments()
+        .then((items) => {
+          if (Array.isArray(items) && items.length > 0) {
+            setAttachments(deduplicateAttachments(items));
+          }
+        })
+        .catch(() => {
+          // Ignore network errors in test/offline environments
+        });
+    }
+  }, [initialNotes.length, initialAttachments.length]);
 
   // Selected note for modal viewer
   const [selectedNote, setSelectedNote] = useState<WorkspaceNoteDetail | null>(null);
@@ -86,7 +148,7 @@ export function LibraryClient({ initialAttachments, initialNotes }: LibraryClien
     setSearchQuery('');
     const newParams = new URLSearchParams(searchParams.toString());
     newParams.set('tab', tab);
-    router.replace(`/library?${newParams.toString()}`);
+    router.replace(`${baseLibraryPath}?${newParams.toString()}`);
   };
 
   // Filtered documents
@@ -177,7 +239,7 @@ export function LibraryClient({ initialAttachments, initialNotes }: LibraryClien
       await uploadAttachment(file);
       // Refresh list
       const updated = await fetchAttachments();
-      setAttachments(updated);
+      setAttachments(deduplicateAttachments(updated));
       setDuplicateWarning(null);
     } catch (err: any) {
       setUploadError(err.message || 'Failed to upload document');
@@ -438,11 +500,11 @@ export function LibraryClient({ initialAttachments, initialNotes }: LibraryClien
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
-                    {filteredAttachments.map((doc) => {
+                    {filteredAttachments.map((doc, idx) => {
                       const format = getFileFormat(doc.filename);
                       return (
                         <tr
-                          key={doc.filename}
+                          key={doc.id || doc.path || `${doc.filename}-${idx}`}
                           data-testid={`document-row-${doc.filename}`}
                           className="hover:bg-slate-50/75 dark:hover:bg-zinc-800/40 transition"
                         >
@@ -474,7 +536,7 @@ export function LibraryClient({ initialAttachments, initialNotes }: LibraryClien
                           </td>
                           <td className="px-6 py-4 text-right">
                             <Link
-                              href={`/chat?attach=${encodeURIComponent(doc.filename)}`}
+                              href={`${baseChatPath}?attach=${encodeURIComponent(doc.filename)}`}
                               data-testid={`use-in-chat-${doc.filename}`}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition"
                             >
@@ -515,7 +577,7 @@ export function LibraryClient({ initialAttachments, initialNotes }: LibraryClien
               {!searchQuery && (
                 <div className="mt-6">
                   <Link
-                    href="/chat"
+                    href={baseChatPath}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-[#04201a] font-medium text-sm transition"
                   >
                     <MessageSquare className="w-4 h-4" />
@@ -526,9 +588,9 @@ export function LibraryClient({ initialAttachments, initialNotes }: LibraryClien
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" data-testid="notes-grid">
-              {filteredNotes.map((note) => (
+              {filteredNotes.map((note, idx) => (
                 <div
-                  key={note.slug}
+                  key={note.id || `${note.slug}-${note.profile_id || idx}`}
                   data-testid={`note-card-${note.slug}`}
                   onClick={() => handleOpenNote(note.slug)}
                   className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm hover:border-emerald-500/50 dark:hover:border-emerald-500/50 hover:shadow-md transition cursor-pointer flex flex-col justify-between gap-4 group"

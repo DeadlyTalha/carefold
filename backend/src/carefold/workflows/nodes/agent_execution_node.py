@@ -281,9 +281,29 @@ class AgentExecutionNode(BaseNode):
                     if t not in effective_tool_names:
                         effective_tool_names.append(t)
 
+        # Expand declarative MCP database toolset if requested in state
+        db_toolset_name = state.get("db_toolset")
+        if db_toolset_name:
+            try:
+                from carefold.tools.mcp_db_toolbox import get_db_toolbox
+
+                toolbox = get_db_toolbox()
+                if str(db_toolset_name) == "auto":
+                    dom = str(getattr(manifest, "domain", "clinical") or "clinical")
+                    rc = str(getattr(manifest, "risk_class", "clinical_assist") or "clinical_assist")
+                    toolset_tools = toolbox.get_toolset_for_domain(dom, rc)
+                else:
+                    toolset_tools = toolbox.get_toolset(str(db_toolset_name))
+                for t_name in toolset_tools:
+                    if t_name not in effective_tool_names:
+                        effective_tool_names.append(t_name)
+            except Exception as err:
+                logger.debug("MCP DB toolset expansion skipped: %s", err)
+
         if self.tool_registry is not None and hasattr(self.tool_registry, "resolve"):
             return self.tool_registry.resolve(effective_tool_names)
 
+        default_reg = None
         resolved: List[Any] = []
         for t_name in effective_tool_names:
             if t_name in CLOSED_TOOL_DEFINITIONS:
@@ -292,6 +312,14 @@ class AgentExecutionNode(BaseNode):
                 t_obj = self.tool_registry.get(t_name)
                 if t_obj is not None:
                     resolved.append(t_obj)
+            else:
+                if default_reg is None:
+                    from carefold.engine.tool_registry import create_default_registry
+
+                    default_reg = create_default_registry()
+                spec = default_reg.get(t_name)
+                if spec is not None:
+                    resolved.append(spec.to_tool_definition())
         return resolved
 
     async def execute(self, state: Dict[str, Any]) -> Dict[str, Any]:
@@ -386,30 +414,44 @@ class AgentExecutionNode(BaseNode):
                 for t in self.default_tools
             ]
         else:
-            effective_tool_names = [
-                t.name if hasattr(t, "name") else (t.get("name") if isinstance(t, dict) else str(t))
-                for t in tools
-            ]
+            effective_tool_names = []
+
+        for t in tools:
+            t_name = t.name if hasattr(t, "name") else (t.get("name") if isinstance(t, dict) else str(t))
+            if t_name and t_name not in effective_tool_names:
+                effective_tool_names.append(t_name)
 
         # 3. Build messages list
         raw_messages = list(state.get("messages", []))
-        lc_messages: List[BaseMessage] = []
+        parsed_messages: List[BaseMessage] = []
         for m in raw_messages:
             if isinstance(m, BaseMessage):
-                lc_messages.append(m)
+                parsed_messages.append(m)
             elif isinstance(m, dict):
                 role = m.get("role", "")
                 content = str(m.get("content", ""))
                 if role == "system":
-                    lc_messages.append(SystemMessage(content=content))
+                    parsed_messages.append(SystemMessage(content=content))
                 elif role in ("assistant", "ai"):
-                    lc_messages.append(AIMessage(content=content, tool_calls=m.get("tool_calls", [])))
+                    parsed_messages.append(AIMessage(content=content, tool_calls=m.get("tool_calls", [])))
                 elif role == "tool":
-                    lc_messages.append(
+                    parsed_messages.append(
                         ToolMessage(content=content, tool_call_id=m.get("tool_call_id", "call_0"))
                     )
                 else:
-                    lc_messages.append(HumanMessage(content=content))
+                    parsed_messages.append(HumanMessage(content=content))
+
+        # Strip orphan AIMessage tool_calls that were never followed by a ToolMessage
+        lc_messages: List[BaseMessage] = []
+        for idx, msg in enumerate(parsed_messages):
+            if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", None):
+                next_is_tool = (idx + 1 < len(parsed_messages)) and isinstance(parsed_messages[idx + 1], ToolMessage)
+                if not next_is_tool:
+                    txt = str(getattr(msg, "content", "") or "").strip()
+                    if txt:
+                        lc_messages.append(AIMessage(content=txt))
+                    continue
+            lc_messages.append(msg)
 
         # Prepend system prompt if not already present
         if system_prompt and not (lc_messages and isinstance(lc_messages[0], SystemMessage)):
@@ -434,8 +476,16 @@ class AgentExecutionNode(BaseNode):
         while hasattr(raw_model, "bound") and getattr(raw_model, "bound", None) is not None:
             raw_model = raw_model.bound
 
+        iteration_count = int(state.get("iteration_count", 0) or 0)
+        max_tool_iterations = int(state.get("max_tool_iterations", 3) or 3)
+
         bound_model = raw_model
-        if tools and hasattr(raw_model, "bind_tools") and callable(raw_model.bind_tools):
+        if (
+            tools
+            and iteration_count < max_tool_iterations
+            and hasattr(raw_model, "bind_tools")
+            and callable(raw_model.bind_tools)
+        ):
             try:
                 bound_model = raw_model.bind_tools(tools)
             except (NotImplementedError, Exception) as err:
@@ -498,6 +548,19 @@ class AgentExecutionNode(BaseNode):
             response = AIMessage(content=str(response))
 
         tool_calls = getattr(response, "tool_calls", []) or []
+        if tool_calls and iteration_count >= max_tool_iterations:
+            tool_calls = []
+            if not str(getattr(response, "content", "") or "").strip():
+                try:
+                    if hasattr(raw_model, "ainvoke"):
+                        response = await raw_model.ainvoke(lc_messages)
+                    else:
+                        response = raw_model.invoke(lc_messages)
+                    if not isinstance(response, BaseMessage):
+                        response = AIMessage(content=str(response))
+                except Exception as err:
+                    logger.debug("Final-turn unbound fallback failed: %s", err)
+
         next_step = "tools" if tool_calls else "output_guardrail"
 
         return {

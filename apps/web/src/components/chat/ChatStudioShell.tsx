@@ -54,7 +54,7 @@ import {
   getApiKeyForProvider,
   getEndpointForProvider
 } from '@/lib/settings';
-import { hasClinicalConsent } from '@/lib/clinicalConsent';
+import { hasClinicalConsent, grantClinicalConsent } from '@/lib/clinicalConsent';
 import {
   listSessions,
   deleteSession,
@@ -64,7 +64,7 @@ import {
 import { getScopedStorageKey, getStorageUserId } from '@/lib/storageNamespace';
 import { stripReferencePreamble, stripSuggestionLeakage } from '@/components/ChatMessageItem';
 import { detectProfileAmbiguity } from '@/lib/profileMentions';
-import { loadHouseholdProfiles, getHouseholdProfile } from '@/lib/familyProfiles';
+import { loadHouseholdProfiles, getHouseholdProfile, fetchHouseholdProfiles } from '@/lib/familyProfiles';
 import { profilePath } from '@/lib/routes';
 import type { AgentSummary, ChatMessage } from '@/lib/types';
 import type { CareProfile } from '@/app/p/[profileId]/HomeDashboardClient';
@@ -149,10 +149,17 @@ export function ChatStudioShell({
   const { user } = useAuth();
   const { t } = useI18n();
   const [hasMounted, setHasMounted] = useState(false);
+  const [profileSyncTick, setProfileSyncTick] = useState(0);
 
   useEffect(() => {
     setHasMounted(true);
-  }, []);
+    const existing = getHouseholdProfile(profileIdProp);
+    if (!existing || existing.id === 'me') {
+      fetchHouseholdProfiles()
+        .then(() => setProfileSyncTick((n) => n + 1))
+        .catch(() => {});
+    }
+  }, [profileIdProp]);
 
   // Active Profile Resolution
   const profile: CareProfile = useMemo(() => {
@@ -184,7 +191,7 @@ export function ChatStudioShell({
       colorSlot: 1,
       role: 'Personal care'
     };
-  }, [initialProfile, profileIdProp, user, hasMounted, t]);
+  }, [initialProfile, profileIdProp, user, hasMounted, profileSyncTick, t]);
 
   // Agent Selection Dropdown
   const [isAgentMenuOpen, setIsAgentMenuOpen] = useState<boolean>(false);
@@ -307,9 +314,22 @@ export function ChatStudioShell({
   // Threads State
   const [threadSearch, setThreadSearch] = useState('');
   const [activeThreadId, setActiveThreadId] = useState<string>(
-    initialThreadId || `thread-${profile.id}-1`
+    initialThreadId || (agentParam ? `thread-${profile.id}-${agentParam}` : `thread-${profile.id}-1`)
   );
   const [sessions, setSessions] = useState<ChatSessionMeta[]>([]);
+
+  useEffect(() => {
+    if (!initialThreadId && agentParam) {
+      const existingForAgent = listSessions().find(
+        (s) =>
+          s.agentId === agentParam &&
+          (((s as any).profileId && (s as any).profileId === profile.id) ||
+            s.id.includes(profile.id) ||
+            (profile.id === 'me' && !s.id.includes('rosa') && !s.id.includes('leo')))
+      );
+      setActiveThreadId(existingForAgent?.id || `thread-${profile.id}-${agentParam}`);
+    }
+  }, [agentParam, initialThreadId, profile.id]);
 
   useEffect(() => {
     setSuggestedQuestions([]);
@@ -345,6 +365,7 @@ export function ChatStudioShell({
         return {
           id: s.id,
           title: s.title,
+          agentId: s.agentId,
           agentTitle: s.agentTitle || 'Visit Steward',
           timeStr,
           group
@@ -459,10 +480,21 @@ export function ChatStudioShell({
 
   // Composer Input & Ambiguity State
   const promptParam = searchParams.get('prompt') || initialPrompt || '';
+  const attachParam = searchParams.get('attach');
   const [inputText, setInputText] = useState(promptParam);
+  const [attachedFiles, setAttachedFiles] = useState<string[]>(() =>
+    attachParam && attachParam.trim() ? [attachParam.trim()] : []
+  );
   const [isStreaming, setIsStreaming] = useState(false);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (attachParam && attachParam.trim()) {
+      const cleanName = attachParam.trim();
+      setAttachedFiles((prev) => (prev.includes(cleanName) ? prev : [...prev, cleanName]));
+    }
+  }, [attachParam]);
 
   // Client-side ambiguity hold state
   const [heldAmbiguity, setHeldAmbiguity] = useState<{
@@ -512,6 +544,10 @@ export function ChatStudioShell({
     if (!text.trim() || isStreaming) return;
     setSuggestedQuestions([]);
 
+    const currentAttachments = attachedFiles.map((f) =>
+      f.startsWith('attachments/') ? f : `attachments/${f}`
+    );
+
     let updatedMessages: ChatMessage[];
     if (baseMessages && baseMessages.length > 0) {
       updatedMessages = baseMessages;
@@ -519,13 +555,15 @@ export function ChatStudioShell({
       const userMsg: ChatMessage = {
         id: `u-${Date.now()}`,
         role: 'user',
-        content: text
+        content: text,
+        ...(currentAttachments.length > 0 ? { attachments: currentAttachments } : {})
       };
       updatedMessages = [...messages, userMsg];
     }
     setMessages(updatedMessages);
     persistMessages(updatedMessages);
     setInputText('');
+    setAttachedFiles([]);
     isAtBottomRef.current = true;
     scrollToBottom(true);
 
@@ -545,13 +583,22 @@ export function ChatStudioShell({
     const effectiveModel = getEffectiveModel(settings);
     const apiKey = getApiKeyForProvider(settings, settings.provider);
     const customEndpoint = getEndpointForProvider(settings, settings.provider);
-    const allowClinical = hasClinicalConsent(selectedAgent.id);
+    if (selectedAgent.risk_class === 'clinical_assist' && !hasClinicalConsent(selectedAgent.id)) {
+      grantClinicalConsent(selectedAgent.id);
+    }
+    const allowClinical =
+      selectedAgent.risk_class === 'clinical_assist' ? true : hasClinicalConsent(selectedAgent.id);
 
     let accumulatedAssistantText = '';
     let refusalMessage = '';
 
     try {
-      const resolvedProfileId = profile.id || profileIdProp || 'me';
+      const latestHousehold = getHouseholdProfile(profileIdProp);
+      const resolvedProfileId =
+        (profile.id && profile.id !== 'me' ? profile.id : undefined) ||
+        (latestHousehold?.id && latestHousehold.id !== 'me' ? latestHousehold.id : undefined) ||
+        profileIdProp ||
+        'me';
       const res = await fetch('/api/v1/chat', {
         method: 'POST',
         headers: {
@@ -566,6 +613,7 @@ export function ChatStudioShell({
           profileId: resolvedProfileId,
           profile_id: resolvedProfileId,
           prompt: text,
+          ...(currentAttachments.length > 0 ? { attachments: currentAttachments } : {}),
           allow_clinical: allowClinical,
           allowClinical,
           messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
@@ -687,6 +735,15 @@ export function ChatStudioShell({
                 );
               } else if (eventType === 'error') {
                 setSuggestedQuestions([]);
+                if (data.message) {
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === assistantMsgId && !msg.content
+                        ? { ...msg, content: data.message, isStreaming: false }
+                        : msg
+                    )
+                  );
+                }
               }
             } catch {
               // ignore partial chunk
@@ -877,7 +934,10 @@ export function ChatStudioShell({
                       >
                         <button
                           type="button"
-                          onClick={() => setActiveThreadId(t.id)}
+                          onClick={() => {
+                            setActiveThreadId(t.id);
+                            if (t.agentId) setSelectedAgentId(t.agentId);
+                          }}
                           className="flex-1 text-left p-2.5 min-w-0 min-h-[44px] cursor-pointer"
                         >
                           <div className="text-xs font-semibold text-[var(--cf-fg)] truncate">
@@ -930,7 +990,10 @@ export function ChatStudioShell({
                         >
                           <button
                             type="button"
-                            onClick={() => setActiveThreadId(t.id)}
+                            onClick={() => {
+                              setActiveThreadId(t.id);
+                              if (t.agentId) setSelectedAgentId(t.agentId);
+                            }}
                             className="flex-1 text-left p-2.5 min-w-0 min-h-[44px] cursor-pointer"
                           >
                             <div className="text-xs font-semibold text-[var(--cf-fg)] truncate">
@@ -1075,6 +1138,8 @@ export function ChatStudioShell({
                               data-testid={`select-agent-${a.id}`}
                               onClick={() => {
                                 setSelectedAgentId(a.id);
+                                const existingForAgent = profileThreads.find((pt) => pt.agentId === a.id);
+                                setActiveThreadId(existingForAgent?.id || `thread-${profile.id}-${a.id}`);
                                 setIsAgentMenuOpen(false);
                                 setAgentSearchQuery('');
                               }}
@@ -1337,6 +1402,28 @@ export function ChatStudioShell({
           <div className="p-3 sm:p-4 border-t border-[var(--cf-border)] bg-[var(--cf-surface)] shrink-0">
             <div className="max-w-[760px] mx-auto">
               <div className="rounded-2xl border border-[var(--cf-border-strong)] bg-[var(--cf-surface)] p-3 shadow-sm focus-within:ring-2 focus-within:ring-[var(--cf-focus)] transition-all">
+                {attachedFiles.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                    {attachedFiles.map((file) => (
+                      <span
+                        key={file}
+                        data-testid={`attached-file-chip-${file}`}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                      >
+                        <Paperclip className="w-3 h-3 shrink-0" />
+                        <span className="truncate max-w-[200px]">{file}</span>
+                        <button
+                          type="button"
+                          aria-label={`Remove ${file}`}
+                          onClick={() => setAttachedFiles((prev) => prev.filter((f) => f !== file))}
+                          className="ml-0.5 hover:opacity-75 transition"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <textarea
                   aria-label={`Message ${selectedAgent.title}`}
                   placeholder={t('chat.composer_placeholder', { agent: selectedAgent.title, name: profile.name })}
