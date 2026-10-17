@@ -618,6 +618,8 @@ export function ChatClient({ initialAgents }: { initialAgents: AgentSummary[] })
         body: JSON.stringify({
           agentId: selectedAgentId,
           agent_id: selectedAgentId,
+          profileId: 'me',
+          profile_id: 'me',
           prompt: promptText,
           attachments,
           allow_clinical: allowClinical,
@@ -637,7 +639,7 @@ export function ChatClient({ initialAgents }: { initialAgents: AgentSummary[] })
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error || `HTTP error ${res.status}`);
+        throw new Error(errJson.error || errJson.detail || `HTTP error ${res.status}`);
       }
 
       if (!res.body) throw new Error('Response body is null');

@@ -207,6 +207,8 @@ export interface ChatMessageInput {
 export interface ChatRequestBody {
   agentId?: string;
   agent_id?: string;
+  profileId?: string;
+  profile_id?: string;
   prompt: string;
   messages?: ChatMessageInput[];
   attachments?: string[];

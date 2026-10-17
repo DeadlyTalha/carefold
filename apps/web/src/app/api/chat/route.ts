@@ -35,6 +35,8 @@ export async function POST(req: Request | NextRequest): Promise<Response> {
 
   const {
     agentId,
+    profileId,
+    profile_id,
     prompt,
     attachments,
     allow_clinical,
@@ -77,10 +79,16 @@ export async function POST(req: Request | NextRequest): Promise<Response> {
   // 3. Proxy to FastAPI Python backend (port 8010)
   const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:8010';
   const resolvedThreadId = threadId || `thread_${agentId}_${Date.now()}`;
+  const resolvedProfileId =
+    (typeof profile_id === 'string' && profile_id.trim()) ||
+    (typeof profileId === 'string' && profileId.trim()) ||
+    'me';
 
   const payload = {
     agent_id: agentId,
     agentId,
+    profile_id: resolvedProfileId,
+    profileId: resolvedProfileId,
     prompt: prompt.trim(),
     attachments: Array.isArray(attachments) ? attachments : [],
     messages: Array.isArray(messages) ? messages : [],

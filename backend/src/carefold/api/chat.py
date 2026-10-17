@@ -25,7 +25,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from carefold.api.deps import get_current_user, resolve_owner_user_id
-from carefold.api.profiles import get_user_profile_access
+from carefold.api.profiles import auto_provision_primary_me_profile, get_user_profile_access
 from carefold.auth.ports import UserProfile
 from carefold.config import settings
 from carefold.db.models import ChatThread, Profile
@@ -89,11 +89,15 @@ async def chat_stream(
     if not profile_id:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="profile_id is required")
 
-    p_stmt = select(Profile).where(Profile.id == profile_id)
-    p_res = await db.execute(p_stmt)
-    profile_record = p_res.scalar_one_or_none()
-    if profile_record is None:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"Profile '{profile_id}' not found.")
+    if profile_id.lower() == "me":
+        profile_record = await auto_provision_primary_me_profile(user, db)
+        profile_id = profile_record.id
+    else:
+        p_stmt = select(Profile).where(Profile.id == profile_id)
+        p_res = await db.execute(p_stmt)
+        profile_record = p_res.scalar_one_or_none()
+        if profile_record is None:
+            raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"Profile '{profile_id}' not found.")
     access = await get_user_profile_access(profile_record, user, db)
     if access is None:
         raise HTTPException(status_code=403, detail=f"Access denied to profile '{profile_id}'.")

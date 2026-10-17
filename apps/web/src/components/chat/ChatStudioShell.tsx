@@ -551,6 +551,7 @@ export function ChatStudioShell({
     let refusalMessage = '';
 
     try {
+      const resolvedProfileId = profile.id || profileIdProp || 'me';
       const res = await fetch('/api/v1/chat', {
         method: 'POST',
         headers: {
@@ -562,6 +563,8 @@ export function ChatStudioShell({
         body: JSON.stringify({
           agentId: selectedAgent.id,
           agent_id: selectedAgent.id,
+          profileId: resolvedProfileId,
+          profile_id: resolvedProfileId,
           prompt: text,
           allow_clinical: allowClinical,
           allowClinical,
@@ -580,7 +583,7 @@ export function ChatStudioShell({
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error || `HTTP error ${res.status}`);
+        throw new Error(errJson.error || errJson.detail || `HTTP error ${res.status}`);
       }
 
       if (!res.body) {
