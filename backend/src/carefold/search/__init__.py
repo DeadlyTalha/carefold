@@ -16,7 +16,13 @@ from __future__ import annotations
 from carefold.search.adapters.spector import SpectorSearchIndex
 from carefold.search.adapters.sqlite import SqliteSearchIndex
 from carefold.search.base import SearchIndex, SearchResult
-from carefold.search.chunker import ClinicalChunk, ClinicalChunker
+from carefold.search.chunker import (
+    Chunker,
+    ClinicalChunk,
+    ClinicalChunker,
+    DocumentChunk,
+    StructuralChunker,
+)
 from carefold.search.factory import (
     SEARCH_BACKEND_SPECTOR,
     SEARCH_BACKEND_SQLITE,
@@ -30,8 +36,10 @@ from carefold.search.factory import (
 )
 
 __all__ = [
+    "Chunker",
     "ClinicalChunk",
     "ClinicalChunker",
+    "DocumentChunk",
     "SEARCH_BACKEND_SPECTOR",
     "SEARCH_BACKEND_SQLITE",
     "SUPPORTED_SEARCH_BACKENDS",
@@ -39,6 +47,7 @@ __all__ = [
     "SearchResult",
     "SpectorSearchIndex",
     "SqliteSearchIndex",
+    "StructuralChunker",
     "create_search_index",
     "get_search_index",
     "is_spector_reachable",

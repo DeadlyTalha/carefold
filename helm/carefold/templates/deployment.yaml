@@ -29,6 +29,8 @@ spec:
             - name: http
               containerPort: 8080
           env:
+            - name: CAREFOLD_HOST
+              value: {{ .Values.config.host | default "0.0.0.0" | quote }}
             - name: CAREFOLD_DATA
               value: /data
             - name: CAREFOLD_MODEL_BASE_URL

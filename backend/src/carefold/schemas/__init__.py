@@ -69,6 +69,7 @@ from carefold.schemas.notes import (
     NoteSummary,
     NoteDetailResponse,
 )
+from carefold.schemas.routing import RoutingHints
 
 __all__ = [
     "RiskClass",
@@ -114,5 +115,7 @@ __all__ = [
     "WorkspaceNoteDetail",
     "NoteSummary",
     "NoteDetailResponse",
+    "RoutingHints",
 ]
+
 

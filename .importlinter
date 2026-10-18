@@ -1,0 +1,76 @@
+[importlinter]
+root_package = carefold
+
+[importlinter:contract:core_forbidden_packs]
+name = Core runtime modules must not import domain packs
+type = forbidden
+source_modules =
+    carefold.audit
+    carefold.auth
+    carefold.config
+    carefold.constants
+    carefold.db
+    carefold.engine
+    carefold.i18n
+    carefold.loaders
+    carefold.logging
+    carefold.memory
+    carefold.middleware
+    carefold.model
+    carefold.resources
+    carefold.schemas
+    carefold.search
+    carefold.settings
+    carefold.storage
+    carefold.templates
+    carefold.tools
+    carefold.vault
+    carefold.workflows
+forbidden_modules =
+    carefold.clinical
+    carefold.importers
+    carefold.companion
+    carefold.safety
+ignore_imports =
+    carefold.audit.logger -> carefold.main
+    carefold.engine.builder -> carefold.safety.template
+    carefold.engine.builder -> carefold.safety.classifier
+    carefold.engine.graph -> carefold.safety.classifier
+    carefold.engine.graph -> carefold.safety.template
+    carefold.engine.prompt_builder -> carefold.safety.prompt
+    carefold.engine.service -> carefold.safety.classifier
+    carefold.engine.service -> carefold.safety.template
+    carefold.workflows.nodes.input_guardrail_node -> carefold.safety.classifier
+    carefold.workflows.nodes.input_guardrail_node -> carefold.safety.emergency
+    carefold.workflows.nodes.output_guardrail_node -> carefold.safety.classifier
+    carefold.engine.job_runner -> carefold.clinical.reminders
+    carefold.engine.job_runner -> carefold.clinical.routines
+    carefold.engine.tool_registry -> carefold.clinical.email_drafts
+    carefold.engine.tool_registry -> carefold.importers.smart_health_card
+    carefold.engine.tool_registry -> carefold.tools.imports
+    carefold.tools.imports -> carefold.importers.service
+    carefold.tools.record_vitals -> carefold.safety.vitals
+    carefold.tools.mcp_db_toolbox -> carefold.safety.vitals
+    carefold.tools.appointments -> carefold.clinical.appointments
+    carefold.tools.notes -> carefold.clinical.notes
+    carefold.tools.prep_pack -> carefold.clinical.prep_pack
+    carefold.tools.preventive -> carefold.clinical.preventive
+    carefold.tools.record_vitals -> carefold.clinical.bmi
+    carefold.tools.record_vitals -> carefold.clinical.vitals
+    carefold.tools.school_forms -> carefold.clinical.school_forms
+
+[importlinter:contract:packs_forbidden_app]
+name = Domain packs must not import application shell
+type = forbidden
+source_modules =
+    carefold.clinical
+    carefold.importers
+    carefold.companion
+    carefold.safety
+forbidden_modules =
+    carefold.api
+    carefold.main
+ignore_imports =
+    carefold.audit.logger -> carefold.main
+    carefold.audit.logger -> carefold.api.deps
+    carefold.engine.tool_exec -> carefold.api.approvals

@@ -24,7 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from carefold.api.connections import require_profile_access
 from carefold.api.deps import get_current_user, get_db, resolve_owner_user_id
 from carefold.auth.ports import UserProfile
-from carefold.clinical.routines import (
+from carefold.platform.routines import (
     create_standing_routine,
     execute_standing_routine,
     set_connection_autonomy,

@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Sequence
-from carefold.safety.prompt import build_safety_preamble
+from carefold.engine.safety_policy import SafetyPolicy, get_default_safety_policy
 from carefold.schemas.manifest import AgentManifest, SkillManifest
 from carefold.templates.engine import render_template
 
@@ -25,13 +25,15 @@ def build_system_prompt(
     effective_tools: Sequence[str] = (),
     template_name: Optional[str] = None,
     progressive: bool = False,
+    safety_policy: Optional[SafetyPolicy] = None,
 ) -> str:
     """Builds the comprehensive system prompt using dynamic Handlebars templates.
 
     When progressive=True, skills are formatted as Tier 1 catalog summaries rather
     than inlining full instruction bodies, reducing baseline system prompt tokens.
     """
-    safety_preamble = build_safety_preamble(agent, skills)
+    policy = safety_policy or get_default_safety_policy()
+    safety_preamble = policy.get_preamble(agent, skills)
 
     # Persona text resolution
     if isinstance(agent.persona, str):

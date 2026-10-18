@@ -40,7 +40,7 @@ from carefold.clinical.prep_pack import (
     generate_and_persist_prep_pack,
     synthesize_doctor_questions,
 )
-from carefold.clinical.reminders import (
+from carefold.platform.reminders import (
     SNOOZE_DELTAS,
     advance_rrule_occurrence,
     apply_reminder_snooze,

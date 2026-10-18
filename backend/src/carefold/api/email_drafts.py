@@ -25,7 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from carefold.api.deps import get_current_user, get_db, resolve_owner_user_id
 from carefold.api.profiles import get_user_profile_access
 from carefold.auth.ports import UserProfile
-from carefold.clinical.email_drafts import (
+from carefold.platform.email_drafts import (
     NO_AUTO_SEND_NOTICE,
     build_mailto_uri,
     create_email_draft,

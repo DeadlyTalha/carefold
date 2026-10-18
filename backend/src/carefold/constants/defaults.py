@@ -86,7 +86,7 @@ SQLITE_JOURNAL_MODE: str = "WAL"
 # 6. Server & Network Defaults
 # ============================================================================
 
-DEFAULT_HOST: str = "0.0.0.0"
+DEFAULT_HOST: str = "127.0.0.1"
 DEFAULT_PORT: int = 8010
 DEFAULT_VERSION: str = "0.1.0"
 APP_TITLE: str = "Carefold Local-First AI Runtime"

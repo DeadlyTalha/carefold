@@ -19,23 +19,118 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class RiskClass(str, Enum):
-    WELLNESS = "wellness"
-    ADMIN = "admin"
-    EDUCATION = "education"
-    CLINICAL_ASSIST = "clinical_assist"
+class RegistryMeta(type):
+    """Metaclass allowing iteration and membership checking over registered values."""
+
+    def __iter__(cls):
+        return iter(cls._registry.values())
+
+    def __contains__(cls, item: Any) -> bool:
+        if isinstance(item, cls):
+            return item.value in cls._registry
+        if isinstance(item, str):
+            return item.lower() in cls._registry or item in cls._registry
+        return False
+
+    def __getitem__(cls, name: str) -> Any:
+        key = name.lower()
+        if key in cls._registry:
+            return cls._registry[key]
+        attr_val = getattr(cls, name, None)
+        if attr_val is not None and isinstance(attr_val, cls):
+            return attr_val
+        raise KeyError(f"'{name}' is not a registered value in {cls.__name__}")
+
+    def __len__(cls) -> int:
+        return len(cls._registry)
 
 
-class AgentDomain(str, Enum):
-    WELLNESS = "wellness"
-    CLINICAL = "clinical"
-    THERAPY = "therapy"
-    NAVIGATION = "navigation"
-    EDUCATION = "education"
-    FINANCE = "finance"
-    RETAIL = "retail"
-    OPERATIONS = "operations"
-    GENERAL = "general"
+class ExtensibleStrEnum(str, metaclass=RegistryMeta):
+    """Base class for string enums that allow runtime extension by packs."""
+
+    _registry: Dict[str, Any] = {}
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+        cls._registry = {}
+
+    def __new__(cls, value: Union[str, ExtensibleStrEnum]) -> ExtensibleStrEnum:
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, bool):
+            raise ValueError(f"Boolean is not a valid {cls.__name__}")
+        val_str = str(value.value if hasattr(value, "value") else value)
+        if val_str in cls._registry:
+            return cls._registry[val_str]
+        raise ValueError(f"'{value}' is not a valid {cls.__name__}")
+
+    @property
+    def value(self) -> str:
+        return str(self)
+
+    @classmethod
+    def register(cls, value: str) -> ExtensibleStrEnum:
+        val_str = str(value)
+        if val_str in cls._registry:
+            return cls._registry[val_str]
+        instance = super().__new__(cls, val_str)
+        cls._registry[val_str] = instance
+        return instance
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type: Any, handler: Any) -> Any:
+        from pydantic_core import core_schema
+
+        def validate(v: Any) -> ExtensibleStrEnum:
+            if isinstance(v, bool):
+                raise ValueError(f"Boolean is not a valid {cls.__name__}")
+            return cls(v)
+
+        return core_schema.no_info_after_validator_function(
+            validate,
+            core_schema.str_schema(),
+            ref=cls.__name__,
+        )
+
+    @classmethod
+    def __get_pydantic_json_schema__(cls, core_schema: Any, handler: Any) -> Dict[str, Any]:
+        # Emits identical JSON schema enum array to preserve Gate G4 openapi.json
+        json_schema = handler(core_schema)
+        json_schema = handler.resolve_ref_schema(json_schema)
+        json_schema.update({
+            "title": cls.__name__,
+            "type": "string",
+            "enum": [item.value for item in cls],
+        })
+        return json_schema
+
+
+class RiskClass(ExtensibleStrEnum):
+    """Risk classification for specialist agents."""
+    pass
+
+
+
+RiskClass.WELLNESS = RiskClass.register("wellness")
+RiskClass.ADMIN = RiskClass.register("admin")
+RiskClass.EDUCATION = RiskClass.register("education")
+RiskClass.CLINICAL_ASSIST = RiskClass.register("clinical_assist")
+
+
+class AgentDomain(ExtensibleStrEnum):
+    """Domain classification for specialist agents."""
+    pass
+
+
+AgentDomain.WELLNESS = AgentDomain.register("wellness")
+AgentDomain.CLINICAL = AgentDomain.register("clinical")
+AgentDomain.THERAPY = AgentDomain.register("therapy")
+AgentDomain.NAVIGATION = AgentDomain.register("navigation")
+AgentDomain.EDUCATION = AgentDomain.register("education")
+AgentDomain.FINANCE = AgentDomain.register("finance")
+AgentDomain.RETAIL = AgentDomain.register("retail")
+AgentDomain.OPERATIONS = AgentDomain.register("operations")
+AgentDomain.GENERAL = AgentDomain.register("general")
 
 
 class AgentMaturity(str, Enum):
@@ -57,6 +152,7 @@ PHASE_0_REGISTRY = frozenset({
     "validate_grounding",
 })
 SLUG_REGEX = re.compile(r"^[a-zA-Z0-9_\-]+$")
+
 
 
 class AgentModelConfig(BaseModel):

@@ -16,7 +16,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 import logging
 import os
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -41,8 +41,33 @@ configure_logging()
 logger = get_logger("carefold.main")
 
 
+def check_host_binding_security(host: str, auth_provider: Optional[str] = None) -> None:
+    """Warns if server is bound to a non-loopback host without authentication."""
+    clean_host = (host or DEFAULT_HOST).strip().lower()
+    clean_auth = (auth_provider or getattr(settings, "auth_provider", "local") or "local").strip().lower()
+    loopback_hosts = ("127.0.0.1", "localhost", "::1")
+    if clean_host not in loopback_hosts and clean_auth == "disabled":
+        logger.warning(
+            "security_warning_non_loopback_unauthenticated",
+            host=clean_host,
+            auth_provider=clean_auth,
+            message=(
+                "Carefold backend is bound to a non-loopback interface with authentication disabled! "
+                "Protected health data and administrative endpoints may be exposed on the local network. "
+                "Set CAREFOLD_AUTH_PROVIDER=local or bind to 127.0.0.1."
+            ),
+        )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    active_host = (
+        os.getenv("CAREFOLD_HOST")
+        or os.getenv("CAREFOLD_BACKEND_HOST")
+        or os.getenv("HOST")
+        or DEFAULT_HOST
+    )
+    check_host_binding_security(active_host, getattr(settings, "auth_provider", None))
     logger.info("starting_carefold_backend", version=__version__, log_level=settings.log_level)
     logger.info(
         "workspace_configuration",
@@ -125,6 +150,7 @@ def run() -> None:
         or os.getenv("HOST")
         or DEFAULT_HOST
     )
+    check_host_binding_security(host, getattr(settings, "auth_provider", None))
     uvicorn.run(
         "carefold.main:app",
         host=host,

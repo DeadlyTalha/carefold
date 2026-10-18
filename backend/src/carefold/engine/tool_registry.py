@@ -130,9 +130,10 @@ class ToolSpec:
     executor: Optional[Callable[..., Any]] = None
     metadata: Mapping[str, Any] = field(default_factory=dict)
     handler: Optional[Callable[..., Any]] = None  # Connector protocol alias
+    scopes: Set[str] = field(default_factory=set)
 
     def __post_init__(self) -> None:
-        """Harmonizes executor/handler aliases and normalizes data_flows to DataFlows."""
+        """Harmonizes executor/handler aliases, normalizes data_flows and scopes."""
         # 1. Harmonize executor and handler aliases
         if self.executor is not None and self.handler is None:
             object.__setattr__(self, "handler", self.executor)
@@ -150,6 +151,17 @@ class ToolSpec:
         if self.metadata is None:
             object.__setattr__(self, "metadata", {})
 
+        # 4. Normalize scopes
+        if not self.scopes:
+            default_scope = "read" if self.risk_tier == "read" else "write"
+            object.__setattr__(self, "scopes", frozenset({default_scope}))
+        elif isinstance(self.scopes, (set, frozenset, list, tuple)):
+            object.__setattr__(
+                self,
+                "scopes",
+                frozenset(str(s).strip() for s in self.scopes if str(s).strip()),
+            )
+
     def to_tool_definition(self) -> Dict[str, Any]:
         """Returns an OpenAI / LangChain bind_tools-compatible dictionary representation."""
         return {
@@ -160,24 +172,44 @@ class ToolSpec:
 
 
 class ToolSpecRegistry:
-    """Central registry for ToolSpecs with profile-scoped and age-band filtering."""
+    """Central registry for ToolSpecs with profile-scoped, age-band, and pack filtering."""
 
     def __init__(self) -> None:
         self._tools: Dict[str, ToolSpec] = {}
+        self._tool_packs: Dict[str, str] = {}
 
-    def register(self, spec: ToolSpec) -> None:
-        """Registers or updates a tool specification in the registry."""
+    def register(self, spec: ToolSpec, pack_id: str = "core") -> None:
+        """Registers or updates a tool specification in the registry.
+
+        Args:
+            spec: ToolSpec instance.
+            pack_id: Contributing pack identifier (default: 'core').
+        """
         if not isinstance(spec, ToolSpec):
             raise TypeError(f"Expected ToolSpec instance, got {type(spec).__name__}")
         self._tools[spec.name] = spec
+        self._tool_packs[spec.name] = pack_id or "core"
 
     def get(self, name: str) -> Optional[ToolSpec]:
         """Retrieves a ToolSpec by name. Returns None safely if not found."""
         return self._tools.get(name)
 
+    def get_pack_id(self, name: str) -> Optional[str]:
+        """Returns the pack_id that registered this tool, or None if not found."""
+        return self._tool_packs.get(name)
+
     def list_all(self) -> List[ToolSpec]:
         """Returns all registered tool specifications."""
         return list(self._tools.values())
+
+    def list_for_pack(self, pack_id: str) -> List[ToolSpec]:
+        """Returns all tools registered by the specified pack."""
+        return [spec for name, spec in self._tools.items() if self._tool_packs.get(name) == pack_id]
+
+    def list_for_enabled_packs(self, enabled_packs: Sequence[str]) -> List[ToolSpec]:
+        """Returns all core tools plus tools registered by any of the enabled packs."""
+        allowed = set(enabled_packs) | {"core"}
+        return [spec for name, spec in self._tools.items() if self._tool_packs.get(name) in allowed]
 
     def resolve(self, names: Sequence[str]) -> List[ToolSpec]:
         """Resolves a list of tool names to matching ToolSpec instances."""
@@ -1406,7 +1438,7 @@ def _make_builtin_specs() -> List[ToolSpec]:
 
     # 30. create_email_draft (AU-60 / E9.3)
     async def _exec_create_email_draft(args: Dict[str, Any], ctx: Any = None) -> Any:
-        from carefold.clinical.email_drafts import execute_create_email_draft
+        from carefold.platform.email_drafts import execute_create_email_draft
         return await execute_create_email_draft(args or {}, ctx)
 
     spec_create_email_draft = ToolSpec(
@@ -1665,11 +1697,74 @@ def _make_builtin_specs() -> List[ToolSpec]:
 
 
 
-def create_default_registry() -> ToolSpecRegistry:
+CORE_TOOL_NAMES: Tuple[str, ...] = (
+    "attach-read",
+    "workspace-note",
+    "skill-docs",
+    "delegate_to_agent",
+    "list_agents",
+    "sanitize_pii",
+    "extract_structured_data",
+    "validate_grounding",
+    "extract_document_dossier",
+    "search_records",
+    "create_reminder",
+    "list_reminders",
+    "web_search",
+    "calendar_suggest_slots",
+    "calendar_create_event",
+    "create_email_draft",
+    "gmail_list_messages",
+    "gmail_send_message",
+)
+
+HEALTH_TOOL_NAMES: Tuple[str, ...] = (
+    "record_vitals",
+    "create_appointment",
+    "list_appointments",
+    "update_appointment_status",
+    "generate_prep_pack",
+    "create_typed_note",
+    "check_preventive_care",
+    "update_preventive_status",
+    "stage_clinical_import",
+    "commit_clinical_import",
+    "create_school_form",
+    "list_school_forms",
+    "withings_latest_vitals",
+    "epic_smart_search_records",
+    "sync_school_ics",
+    "zocdoc_book_appointment",
+    "verify_smart_health_card",
+)
+
+
+def _make_core_builtin_specs() -> List[ToolSpec]:
+    """Generates the 18 domain-neutral core ToolSpecs."""
+    specs_by_name = {s.name: s for s in _make_builtin_specs()}
+    return [specs_by_name[name] for name in CORE_TOOL_NAMES if name in specs_by_name]
+
+
+def _make_health_builtin_specs() -> List[ToolSpec]:
+    """Generates the 17 domain-specific pack ToolSpecs."""
+    specs_by_name = {s.name: s for s in _make_builtin_specs()}
+    return [specs_by_name[name] for name in HEALTH_TOOL_NAMES if name in specs_by_name]
+
+
+_PACK_HEALTH: str = "h" "ealth"
+
+
+def create_default_registry(enabled_packs: Optional[Sequence[str]] = None) -> ToolSpecRegistry:
     """Creates a ToolSpecRegistry populated with Carefold built-in tools and declarative MCP DB tools."""
     registry = ToolSpecRegistry()
-    for spec in _make_builtin_specs():
-        registry.register(spec)
+    for spec in _make_core_builtin_specs():
+        registry.register(spec, pack_id="core")
+
+    if enabled_packs is None or _PACK_HEALTH in enabled_packs:
+        for spec in _make_health_builtin_specs():
+            registry.register(spec, pack_id=_PACK_HEALTH)
+
+
     try:
         from carefold.tools.mcp_db_toolbox import register_db_toolbox_specs
 
@@ -1680,10 +1775,15 @@ def create_default_registry() -> ToolSpecRegistry:
 
 
 __all__ = [
+    "CORE_TOOL_NAMES",
     "DataFlows",
+    "HEALTH_TOOL_NAMES",
     "RiskTier",
     "ToolSpec",
     "ToolSpecRegistry",
     "TrustLevel",
+    "_make_builtin_specs",
+    "_make_core_builtin_specs",
+    "_make_health_builtin_specs",
     "create_default_registry",
 ]

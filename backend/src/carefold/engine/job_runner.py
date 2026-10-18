@@ -224,7 +224,7 @@ class JobRunner:
 
     async def _default_reminder_handler(self, job: Any) -> None:
         """Default reminder handler bound to JobRunner instance."""
-        from carefold.clinical.reminders import handle_reminder_job
+        from carefold.platform.reminders import handle_reminder_job
         await handle_reminder_job(job=job, session_factory=self.session_factory)
 
     async def _default_sync_handler(self, job: Any) -> None:
@@ -253,7 +253,7 @@ class JobRunner:
                 routine_id = None
         if not routine_id or self.session_factory is None:
             return
-        from carefold.clinical.routines import execute_standing_routine
+        from carefold.platform.routines import execute_standing_routine
         async with self.session_factory() as session:
             await execute_standing_routine(session=session, routine_id=str(routine_id))
 

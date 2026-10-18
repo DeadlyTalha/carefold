@@ -71,6 +71,22 @@ class ClinicalSafetyMiddleware(AgentMiddleware):
     name: str = "clinical_safety"
     state_schema: Any = SkillsState
 
+    def __init__(self, registry: Optional[Any] = None) -> None:
+        self._registry = registry
+
+    def _is_tool_allowed(self, tool_name: str) -> bool:
+        if self._registry is not None:
+            if hasattr(self._registry, "get"):
+                return self._registry.get(tool_name) is not None
+            if hasattr(self._registry, "__contains__"):
+                return tool_name in self._registry
+        return tool_name in PHASE_0_REGISTRY
+
+    def _allowed_tools_display(self) -> List[str]:
+        if self._registry is not None and hasattr(self._registry, "list_all"):
+            return sorted([spec.name for spec in self._registry.list_all()])
+        return sorted(list(PHASE_0_REGISTRY))
+
     def before_agent(
         self,
         state: Dict[str, Any],
@@ -89,10 +105,10 @@ class ClinicalSafetyMiddleware(AgentMiddleware):
         agent_tools.extend(_parse_declared_tools(state.get("tools")))
         agent_tools.extend(_parse_declared_tools(state.get("declared_tools")))
         for tool in agent_tools:
-            if tool not in PHASE_0_REGISTRY:
+            if not self._is_tool_allowed(tool):
                 raise ToolValidationError(
                     f"Agent declares unauthorized tool: '{tool}'. "
-                    f"Allowed tools: {sorted(list(PHASE_0_REGISTRY))}"
+                    f"Allowed tools: {self._allowed_tools_display()}"
                 )
 
         # 2. Inspect skill metadata and validate tools per skill
@@ -114,10 +130,10 @@ class ClinicalSafetyMiddleware(AgentMiddleware):
             declared_tools.extend(_parse_declared_tools(skill.get("allowed-tools")))
 
             for tool in declared_tools:
-                if tool not in PHASE_0_REGISTRY:
+                if not self._is_tool_allowed(tool):
                     raise ToolValidationError(
                         f"Skill '{skill_name}' declares unauthorized tool: '{tool}'. "
-                        f"Allowed tools: {sorted(list(PHASE_0_REGISTRY))}"
+                        f"Allowed tools: {self._allowed_tools_display()}"
                     )
 
         # 3. Dynamic elevation to clinical_assist
@@ -137,7 +153,7 @@ class ClinicalSafetyMiddleware(AgentMiddleware):
         runtime: Any = None,
     ) -> None:
         """Validates tool execution at invocation time against PHASE_0_REGISTRY."""
-        if tool_name not in PHASE_0_REGISTRY:
+        if not self._is_tool_allowed(tool_name):
             raise ToolValidationError(
                 f"Tool invocation denied: '{tool_name}' is not in Phase 0 closed registry."
             )
@@ -149,7 +165,7 @@ class ClinicalSafetyMiddleware(AgentMiddleware):
             or getattr(request, "name", None)
             or (request.get("name") if isinstance(request, dict) else None)
         )
-        if not tool_name or tool_name not in PHASE_0_REGISTRY:
+        if not tool_name or not self._is_tool_allowed(tool_name):
             raise ToolValidationError(
                 f"Tool invocation denied: '{tool_name}' is not in Phase 0 closed registry."
             )

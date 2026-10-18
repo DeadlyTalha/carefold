@@ -30,6 +30,7 @@ import os
 from pathlib import Path
 import time
 from typing import (
+    TYPE_CHECKING,
     Annotated,
     Any,
     AsyncIterator,
@@ -82,19 +83,19 @@ from carefold.constants.paths import (
     LOGS_DIR,
 )
 from carefold.resources.loader import get_resource_loader
-from carefold.safety.classifier import check_safety_refusal
-from carefold.safety.template import SAFE_REFUSAL_TEMPLATE
+from carefold.engine.safety_policy import get_default_safety_policy
 from carefold.schemas.audit import AuditEvent
 from carefold.tools.registry import CLOSED_TOOL_DEFINITIONS, execute_tool
-from carefold.workflows.nodes import (
-    AgentNode,
-    AuditNode,
-    InputGuardrailNode,
-    OutputGuardrailNode,
-    SuggestionNode,
-    ToolNode,
-    ToolValidatorNode,
-)
+if TYPE_CHECKING:
+    from carefold.workflows.nodes import (
+        AgentNode,
+        AuditNode,
+        InputGuardrailNode,
+        OutputGuardrailNode,
+        SuggestionNode,
+        ToolNode,
+        ToolValidatorNode,
+    )
 from carefold.workflows.state import AgentState
 
 logger = logging.getLogger(__name__)
@@ -132,6 +133,8 @@ async def safety_guard_node(
 
     Delegates to InputGuardrailNode while maintaining SSE dispatch and legacy keys.
     """
+    from carefold.workflows.nodes.input_guardrail_node import InputGuardrailNode
+
     node = InputGuardrailNode()
     sig = inspect.signature(node.execute)
     if "store" in sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()):
@@ -149,6 +152,7 @@ async def safety_guard_node(
             "duration_ms": 0,
         }
 
+        refusal_msg = get_default_safety_policy().get_refusal_template(reason)
         # Dispatch real-time SSE refusal notification
         try:
             await adispatch_custom_event(
@@ -156,18 +160,18 @@ async def safety_guard_node(
                 {
                     "type": SSE_EVENT_REFUSAL,
                     "reason": reason,
-                    "message": SAFE_REFUSAL_TEMPLATE,
+                    "message": refusal_msg,
                 },
             )
         except Exception:
             pass
 
         return {
-            "messages": [AIMessage(content=SAFE_REFUSAL_TEMPLATE)],
+            "messages": [AIMessage(content=refusal_msg)],
             "refused": True,
             "is_refusal": True,
             "refusal_reason": reason,
-            "refusal_message": SAFE_REFUSAL_TEMPLATE,
+            "refusal_message": refusal_msg,
             "audit_events": [refuse_event],
             "next_step": "refusal",
         }
@@ -177,6 +181,8 @@ async def safety_guard_node(
 
 def create_agent_node(bound_model: BaseChatModel) -> Callable[[AgentState], Any]:
     """Creates the agent_node callable with the model bound to tool definitions."""
+    from carefold.workflows.nodes.agent_node import AgentNode
+
     agent_node_instance = AgentNode(model=bound_model)
 
     async def agent_node(state: AgentState) -> Dict[str, Any]:
@@ -227,6 +233,8 @@ async def post_safety_node(
 
     Delegates to OutputGuardrailNode while maintaining SSE dispatch and legacy keys.
     """
+    from carefold.workflows.nodes.output_guardrail_node import OutputGuardrailNode
+
     node = OutputGuardrailNode()
     res = await node.execute(state)  # type: ignore[arg-type]
 
@@ -240,13 +248,14 @@ async def post_safety_node(
             "duration_ms": 0,
         }
 
+        refusal_msg = get_default_safety_policy().get_refusal_template(reason)
         try:
             await adispatch_custom_event(
                 SSE_EVENT_REFUSAL,
                 {
                     "type": SSE_EVENT_REFUSAL,
                     "reason": reason,
-                    "message": SAFE_REFUSAL_TEMPLATE,
+                    "message": refusal_msg,
                 },
             )
         except Exception:
@@ -255,7 +264,7 @@ async def post_safety_node(
         messages = state.get("messages", [])
         last_ai = next((m for m in reversed(messages) if isinstance(m, AIMessage)), None)
         safe_ai = AIMessage(
-            content=SAFE_REFUSAL_TEMPLATE,
+            content=refusal_msg,
             id=getattr(last_ai, "id", None) if last_ai else None,
             tool_calls=[],
         )
@@ -264,7 +273,7 @@ async def post_safety_node(
             "refused": True,
             "is_refusal": True,
             "refusal_reason": reason,
-            "refusal_message": SAFE_REFUSAL_TEMPLATE,
+            "refusal_message": refusal_msg,
             "audit_events": [refuse_event],
             "next_step": "refusal",
         }
@@ -280,6 +289,8 @@ async def post_safety_node(
 
 async def tools_node(state: AgentState) -> Dict[str, Any]:
     """Closed tool sandbox execution compatibility helper delegating to ToolNode and execute_tool_call."""
+    from carefold.workflows.nodes.tool_node import ToolNode
+
     effective_tools = state.get("effective_tools", [])
     node = ToolNode(allowed_tools=effective_tools)
     res = await node.execute(state)
@@ -303,6 +314,8 @@ async def tools_node(state: AgentState) -> Dict[str, Any]:
 def create_suggestion_node(model: Optional[BaseChatModel] = None):
     """Factory creating suggestion_node with optional bound chat model for dynamic chips."""
     async def _suggestion_node(state: AgentState) -> Dict[str, Any]:
+        from carefold.workflows.nodes.suggestion_node import SuggestionNode
+
         node = SuggestionNode(model=model)
         res = await node.execute(state)  # type: ignore[arg-type]
         suggestions = res.get("follow_up_suggestions", [])

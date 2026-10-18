@@ -30,7 +30,7 @@ from carefold.api.deps import get_current_user, get_db
 from carefold.api.profiles import get_user_profile_access
 from carefold.audit.logger import record_audit
 from carefold.auth.ports import UserProfile
-from carefold.clinical.reminders import (
+from carefold.platform.reminders import (
     SNOOZE_DELTAS,
     advance_rrule_occurrence,
     apply_reminder_snooze,

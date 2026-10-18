@@ -47,6 +47,7 @@ dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
     "licenseheaders>=0.8.8",
+    "import-linter>=2.0",
 ]
 ocr = [
     "pillow>=10.0.0",

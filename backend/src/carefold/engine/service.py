@@ -79,8 +79,7 @@ from carefold.engine.graph import (
 from carefold.engine.prompt_builder import build_system_prompt
 from carefold.loaders.agent_loader import find_agent_dir, load_agent
 from carefold.model.factory import create_chat_model
-from carefold.safety.classifier import check_safety_refusal, is_hard_refusal_reason
-from carefold.safety.template import SAFE_REFUSAL_TEMPLATE
+from carefold.engine.safety_policy import SafetyPolicy, get_default_safety_policy
 from carefold.schemas.audit import AuditEvent
 from carefold.schemas.chat import ChatMessage, ChatRequestBody
 from carefold.schemas.manifest import AgentManifest, AgentPersonaObject, RiskClass, SkillManifest, SLUG_REGEX
@@ -313,6 +312,7 @@ class AgentExecutionService:
         db_path: Optional[Union[str, Path]] = None,
         workspace_root: Optional[Union[str, Path]] = None,
         store_bodies: Optional[bool] = None,
+        safety_policy: Optional[SafetyPolicy] = None,
         **kwargs: Any,
     ) -> None:
         """Initialize the execution service with model, graph, checkpointer, and memory settings."""
@@ -321,6 +321,7 @@ class AgentExecutionService:
         self.graph_builder = graph_builder
         self.checkpointer = checkpointer
         self.store = store if store is not None else kwargs.get("store")
+        self.safety_policy = safety_policy or get_default_safety_policy()
         self.memory_adapter = memory_adapter if memory_adapter is not None else kwargs.get("memory_adapter")
         if self.memory_adapter is None and self.store is None:
             try:
@@ -370,10 +371,12 @@ class AgentExecutionService:
     @staticmethod
     def format_refusal_event(
         reason: str,
-        message: str = SAFE_REFUSAL_TEMPLATE,
+        message: Optional[str] = None,
         category: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Formats a clinical safety refusal event."""
+        if message is None:
+            message = get_default_safety_policy().get_refusal_template(reason)
         payload: Dict[str, Any] = {"type": SSE_EVENT_REFUSAL, "reason": reason, "message": message}
         if category:
             payload["category"] = category
@@ -884,10 +887,10 @@ class AgentExecutionService:
         accumulated_text = strip_reference_doc_preamble(strip_internal_suggestion_leakage(accumulated_text))
 
         # Verify output against safety boundaries if not already flagged
-        output_safety = check_safety_refusal(accumulated_text)
+        output_safety = self.safety_policy.check_output(accumulated_text)
         is_refusal_candidate = refusal_triggered or output_safety.refused
         reason = refusal_reason or (output_safety.reason if output_safety.refused else None) or "forbidden_intent:medical_prohibited"
-        is_hard = refusal_triggered or (output_safety.refused and is_hard_refusal_reason(reason))
+        is_hard = refusal_triggered or (output_safety.refused and self.safety_policy.is_hard_refusal_reason(reason))
 
         if is_refusal_candidate and is_hard:
             logger.warning(
@@ -914,11 +917,12 @@ class AgentExecutionService:
             except Exception as audit_err:
                 logger.warning("Failed to record refuse audit event: %s", audit_err)
 
+            refusal_template = self.safety_policy.get_refusal_template(reason)
             if not refusal_triggered:
-                yield self.format_refusal_event(reason=reason, message=SAFE_REFUSAL_TEMPLATE)
+                yield self.format_refusal_event(reason=reason, message=refusal_template)
 
             yield self.format_done_event(
-                full_text=SAFE_REFUSAL_TEMPLATE,
+                full_text=refusal_template,
                 thread_id=thread_id,
                 audit_event_id=getattr(refuse_event, "ts", None),
                 refused=True,

@@ -11,6 +11,8 @@
 
 """Master API Router mounting all Carefold endpoints."""
 
+from dataclasses import dataclass
+from typing import Any, List, Optional, Sequence, Union
 from fastapi import APIRouter
 
 from carefold.api.activity import router as activity_router
@@ -43,44 +45,90 @@ from carefold.api.search import router as search_router
 from carefold.api.skills import router as skills_router
 from carefold.api.vitals import router as vitals_router
 
-api_router = APIRouter()
-api_router.include_router(health_router)
-api_router.include_router(i18n_router)
-api_router.include_router(vitals_router)
-api_router.include_router(appointments_router)
-api_router.include_router(reminders_router)
-api_router.include_router(activity_router)
-api_router.include_router(preventive_router)
-api_router.include_router(imports_router)
-api_router.include_router(school_forms_router)
-api_router.include_router(connections_router)
-api_router.include_router(routines_router)
-api_router.include_router(email_drafts_router)
-api_router.include_router(companion_router)
-api_router.include_router(handover_router)
-api_router.include_router(coordinated_router)
 
-api_router.include_router(agents_router)
-api_router.include_router(skills_router)
-api_router.include_router(audit_router)
-api_router.include_router(approvals_router, prefix="/approvals", tags=["approvals"])
-api_router.include_router(
-    approvals_router,
-    prefix="/profiles/{profile_id}/approvals",
-    tags=["approvals"],
-    include_in_schema=False,
-)
-api_router.include_router(chat_router)
-api_router.include_router(models_router)
-api_router.include_router(attachments_router)
-api_router.include_router(notes_router)
-api_router.include_router(prep_pack_router)
-api_router.include_router(profiles_router, prefix="/profiles", tags=["profiles"])
-api_router.include_router(search_router)
-api_router.include_router(search_router, prefix="/profiles", tags=["search"], include_in_schema=False)
-api_router.include_router(memory_router, prefix="/memory", tags=["memory"])
-api_router.include_router(memory_router, prefix="/memories", tags=["memory"], include_in_schema=False)
-api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
-api_router.include_router(admin_router, prefix="/admin", tags=["admin"])
+@dataclass
+class RouterContribution:
+    """Metadata describing an API router contribution from core or a domain pack."""
 
-__all__ = ["api_router"]
+    router: APIRouter
+    prefix: str = ""
+    tags: Optional[List[Union[str, Any]]] = None
+    dependencies: Optional[Sequence[Any]] = None
+    include_in_schema: bool = True
+    pack_id: Optional[str] = None
+    scope: Optional[str] = None
+    level: Optional[str] = None
+
+
+def get_default_router_contributions() -> List[RouterContribution]:
+    """Returns the ordered list of 32 router contributions matching baseline openapi.json."""
+    return [
+        RouterContribution(health_router, pack_id="core"),
+        RouterContribution(i18n_router, pack_id="core"),
+        RouterContribution(vitals_router, pack_id="health", scope="health.clinical", level="read"),
+        RouterContribution(appointments_router, pack_id="health", scope="health.clinical", level="read"),
+        RouterContribution(reminders_router, pack_id="core"),
+        RouterContribution(activity_router, pack_id="core"),
+        RouterContribution(preventive_router, pack_id="health", scope="health.clinical", level="read"),
+        RouterContribution(imports_router, pack_id="health", scope="health.clinical", level="write"),
+        RouterContribution(school_forms_router, pack_id="health", scope="health.clinical", level="read"),
+        RouterContribution(connections_router, pack_id="core"),
+        RouterContribution(routines_router, pack_id="core"),
+        RouterContribution(email_drafts_router, pack_id="core"),
+        RouterContribution(companion_router, pack_id="health", scope="health.clinical", level="read"),
+        RouterContribution(handover_router, pack_id="health", scope="health.clinical", level="read"),
+        RouterContribution(coordinated_router, pack_id="health", scope="health.clinical", level="read"),
+        RouterContribution(agents_router, pack_id="core"),
+        RouterContribution(skills_router, pack_id="core"),
+        RouterContribution(audit_router, pack_id="core"),
+        RouterContribution(approvals_router, prefix="/approvals", tags=["approvals"], pack_id="core"),
+        RouterContribution(
+            approvals_router,
+            prefix="/profiles/{profile_id}/approvals",
+            tags=["approvals"],
+            include_in_schema=False,
+            pack_id="core",
+        ),
+        RouterContribution(chat_router, pack_id="core"),
+        RouterContribution(models_router, pack_id="core"),
+        RouterContribution(attachments_router, pack_id="core"),
+        RouterContribution(notes_router, pack_id="core"),
+        RouterContribution(prep_pack_router, pack_id="health", scope="health.clinical", level="read"),
+        RouterContribution(profiles_router, prefix="/profiles", tags=["profiles"], pack_id="core"),
+        RouterContribution(search_router, pack_id="core"),
+        RouterContribution(
+            search_router, prefix="/profiles", tags=["search"], include_in_schema=False, pack_id="core"
+        ),
+        RouterContribution(memory_router, prefix="/memory", tags=["memory"], pack_id="core"),
+        RouterContribution(
+            memory_router, prefix="/memories", tags=["memory"], include_in_schema=False, pack_id="core"
+        ),
+        RouterContribution(auth_router, prefix="/auth", tags=["auth"], pack_id="core"),
+        RouterContribution(admin_router, prefix="/admin", tags=["admin"], pack_id="core"),
+    ]
+
+
+def create_api_router(
+    contributions: Optional[Sequence[RouterContribution]] = None,
+) -> APIRouter:
+    """Builds and returns the composite APIRouter from an ordered list of RouterContributions."""
+    router = APIRouter()
+    items = contributions if contributions is not None else get_default_router_contributions()
+    for contrib in items:
+        kwargs: dict[str, Any] = {}
+        if contrib.prefix:
+            kwargs["prefix"] = contrib.prefix
+        if contrib.tags:
+            kwargs["tags"] = contrib.tags
+        if contrib.dependencies:
+            kwargs["dependencies"] = contrib.dependencies
+        if not contrib.include_in_schema:
+            kwargs["include_in_schema"] = False
+        router.include_router(contrib.router, **kwargs)
+    return router
+
+
+api_router: APIRouter = create_api_router()
+
+__all__ = ["api_router", "create_api_router", "RouterContribution", "get_default_router_contributions"]
+

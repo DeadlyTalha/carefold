@@ -1,0 +1,1408 @@
+[
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Read a text or PDF file located in the workspace attachments directory.",
+    "name": "attach-read",
+    "parameters": {
+      "properties": {
+        "path": {
+          "description": "Filename or path of attachment (e.g. \"blood_work.txt\", \"benefits.pdf\").",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [
+        "www.googleapis.com",
+        "caldav.icloud.com",
+        "caldav.fastmail.com",
+        "localhost"
+      ],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "pii"
+    },
+    "description": "Create an external calendar event on Google Calendar or CalDAV. Always requires human approval in A0/A1 autonomy modes and strips PHI from titles by default.",
+    "name": "calendar_create_event",
+    "parameters": {
+      "properties": {
+        "end_time": {
+          "description": "ISO-8601 end timestamp.",
+          "type": "string"
+        },
+        "location": {
+          "description": "Optional clinic address.",
+          "type": "string"
+        },
+        "start_time": {
+          "description": "ISO-8601 start timestamp.",
+          "type": "string"
+        },
+        "strip_phi": {
+          "default": true,
+          "type": "boolean"
+        },
+        "title": {
+          "description": "Event title (PHI stripped by default).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "start_time",
+        "end_time"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_external",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [
+        "www.googleapis.com",
+        "caldav.icloud.com",
+        "caldav.fastmail.com",
+        "localhost"
+      ],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "pii"
+    },
+    "description": "Query connected Google Calendar or CalDAV free/busy windows and suggest conflict-free candidate appointment times without booking anything.",
+    "name": "calendar_suggest_slots",
+    "parameters": {
+      "properties": {
+        "duration_minutes": {
+          "default": 30,
+          "type": "integer"
+        },
+        "window_end": {
+          "description": "ISO-8601 window end.",
+          "type": "string"
+        },
+        "window_start": {
+          "description": "ISO-8601 window start.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Evaluate preventive care screenings and immunisations for a patient profile against cited USPSTF Grade A/B and AAP/CDC pediatric schedules.",
+    "name": "check_preventive_care",
+    "parameters": {
+      "properties": {
+        "category": {
+          "description": "Optional category filter.",
+          "enum": [
+            "screening",
+            "immunisation",
+            "well_visit"
+          ],
+          "type": "string"
+        },
+        "schedule_source": {
+          "description": "Optional pediatric immunisation schedule source ('aap_2026' or 'cdc').",
+          "enum": [
+            "aap_2026",
+            "cdc"
+          ],
+          "type": "string"
+        },
+        "sex": {
+          "description": "Optional biological sex filter for adult screening rules.",
+          "enum": [
+            "any",
+            "female",
+            "male"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Commit a user-reviewed staged ImportBatch into profile health_resources with provenance attribution, idempotency, and search indexing.",
+    "name": "commit_clinical_import",
+    "parameters": {
+      "properties": {
+        "batch_id": {
+          "description": "UUID of the staged ImportBatch to commit.",
+          "type": "string"
+        },
+        "selected_indices": {
+          "description": "Optional 0-based indices of staged records to commit; commits all if omitted.",
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "batch_id"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Schedule and record a clinical or administrative healthcare appointment for a patient profile with validated start/end timestamps, provider specialty, clinic location, and pre-visit preparation notes.",
+    "name": "create_appointment",
+    "parameters": {
+      "properties": {
+        "clinic_phone": {
+          "description": "Clinic or scheduling office phone number (e.g. '555-0144').",
+          "type": "string"
+        },
+        "end_time": {
+          "description": "Scheduled end timestamp in ISO-8601 format (must be strictly after start_time).",
+          "type": "string"
+        },
+        "location": {
+          "description": "Physical clinic address, room/suite number, or telehealth URL.",
+          "type": "string"
+        },
+        "preparation_notes": {
+          "description": "Pre-visit instructions (e.g. fasting requirement, records to bring).",
+          "type": "string"
+        },
+        "provider_name": {
+          "description": "Optional name of clinician, physician, or practice (e.g. 'Dr. Sarah Connor').",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Chief complaint or primary purpose of appointment.",
+          "type": "string"
+        },
+        "specialty": {
+          "description": "Medical specialty (e.g. 'Cardiology', 'Dermatology', 'Endocrinology').",
+          "type": "string"
+        },
+        "start_time": {
+          "description": "Scheduled start timestamp in ISO-8601 format (UTC or with timezone offset).",
+          "type": "string"
+        },
+        "status": {
+          "default": "scheduled",
+          "description": "Initial appointment status (default: 'scheduled').",
+          "enum": [
+            "requested",
+            "scheduled",
+            "confirmed"
+          ],
+          "type": "string"
+        },
+        "timezone": {
+          "default": "UTC",
+          "description": "Local appointment IANA timezone identifier (default: 'UTC').",
+          "type": "string"
+        },
+        "title": {
+          "description": "Appointment title or encounter description (e.g. 'Cardiology Consultation').",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "start_time",
+        "end_time"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Create a local email draft (RFC 5322 .eml / mailto:) for user review and sending from their own email client. Carefold never sends emails directly.",
+    "name": "create_email_draft",
+    "parameters": {
+      "properties": {
+        "body_markdown": {
+          "description": "Draft body content.",
+          "type": "string"
+        },
+        "context_type": {
+          "default": "general",
+          "enum": [
+            "visit_request",
+            "records_request",
+            "school_form",
+            "appeal",
+            "general"
+          ],
+          "type": "string"
+        },
+        "recipient_email": {
+          "description": "Optional recipient email address.",
+          "type": "string"
+        },
+        "recipient_name": {
+          "description": "Optional recipient display name.",
+          "type": "string"
+        },
+        "subject": {
+          "description": "Email subject line.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "subject",
+        "body_markdown"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Create a scheduled clinical or administrative reminder with optional RFC 5545 recurrence and enqueue corresponding wall-clock Job execution.",
+    "name": "create_reminder",
+    "parameters": {
+      "properties": {
+        "category": {
+          "default": "general",
+          "description": "Reminder category (default: 'general').",
+          "enum": [
+            "medication",
+            "vitals",
+            "appointment",
+            "prep",
+            "general"
+          ],
+          "type": "string"
+        },
+        "description": {
+          "description": "Detailed clinical context, instructions, or medication guidelines.",
+          "type": "string"
+        },
+        "next_due_at": {
+          "description": "Scheduled ISO-8601 due timestamp.",
+          "type": "string"
+        },
+        "rrule": {
+          "description": "Optional RFC 5545 recurrence rule string (e.g. 'FREQ=DAILY;INTERVAL=1').",
+          "type": "string"
+        },
+        "timezone": {
+          "default": "UTC",
+          "description": "Local profile IANA timezone identifier (default: 'UTC').",
+          "type": "string"
+        },
+        "title": {
+          "description": "Reminder prompt or directive title.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "next_due_at"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Create a pediatric school or camp health form with compiled draft prefill from profile immunisations, allergies, medications, and vitals, plus automatic 30-day renewal reminder scheduling when expires_at is set.",
+    "name": "create_school_form",
+    "parameters": {
+      "properties": {
+        "attachment_id": {
+          "description": "Optional linked CAS attachment ID.",
+          "type": "string"
+        },
+        "expires_at": {
+          "description": "Optional ISO-8601 expiration or renewal date.",
+          "type": "string"
+        },
+        "form_type": {
+          "default": "general",
+          "enum": [
+            "physical",
+            "immunization",
+            "medication_authorization",
+            "sports_clearance",
+            "general"
+          ],
+          "type": "string"
+        },
+        "school_or_camp_name": {
+          "description": "Name of school, daycare, or camp institution.",
+          "type": "string"
+        },
+        "title": {
+          "description": "Form title (e.g. 'Annual School Physical & Immunisation Form').",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Create and persist a typed clinical or navigation note across 7 canonical categories ('visit', 'symptom', 'question', 'after_visit', 'school', 'scratchpad', 'general') with optional appointment linking, tag categorization, search indexing, and audit logging.",
+    "name": "create_typed_note",
+    "parameters": {
+      "properties": {
+        "content": {
+          "description": "Markdown formatted note body content.",
+          "type": "string"
+        },
+        "linked_appointment_id": {
+          "description": "Optional UUID of an appointment to associate with this note.",
+          "type": "string"
+        },
+        "tags": {
+          "description": "Optional list of tag strings for categorization.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "title": {
+          "description": "Human-readable title for the note (min 1, max 255 chars).",
+          "type": "string"
+        },
+        "type": {
+          "default": "general",
+          "description": "Standardized note classification type.",
+          "enum": [
+            "visit",
+            "symptom",
+            "question",
+            "after_visit",
+            "school",
+            "scratchpad",
+            "general"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "content"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "internal"
+    },
+    "description": "Delegate the user's request to a specialist agent by ID, providing instructions.",
+    "name": "delegate_to_agent",
+    "parameters": {
+      "properties": {
+        "agent_id": {
+          "description": "Target specialist agent ID.",
+          "type": "string"
+        },
+        "instructions": {
+          "description": "Instructions for specialist agent.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "agent_id"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [
+        "fhir.epic.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Search read-only USCDI FHIR R4 clinical records synchronized from Epic MyChart (SMART on FHIR). Results carry provenance attribution and untrusted taint.",
+    "name": "epic_smart_search_records",
+    "parameters": {
+      "properties": {
+        "query": {
+          "type": "string"
+        },
+        "resource_type": {
+          "enum": [
+            "Condition",
+            "MedicationRequest",
+            "AllergyIntolerance",
+            "Immunization",
+            "Observation",
+            "Encounter",
+            "DocumentReference"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "untrusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Composite pipeline: ingestion, PII sanitization, schema extraction, and grounding.",
+    "name": "extract_document_dossier",
+    "parameters": {
+      "properties": {
+        "document_text": {
+          "description": "Raw document text if loaded.",
+          "type": "string"
+        },
+        "dossier_type": {
+          "description": "'insurance', 'clinical', or 'generic'.",
+          "type": "string"
+        },
+        "file_path": {
+          "description": "Relative path in attachments/.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Extract structured data from text into a typed Pydantic schema.",
+    "name": "extract_structured_data",
+    "parameters": {
+      "properties": {
+        "schema_type": {
+          "description": "'insurance', 'clinical', or 'generic'.",
+          "type": "string"
+        },
+        "text": {
+          "description": "Sanitized document text.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Compile a comprehensive clinical visit preparation pack for an upcoming or planned consultation, synthesizing chief visit reasons, recent symptoms timeline, 30/90-day vitals trends, active medications, allergies, and prior clinical records into a structured Markdown dossier and persisted clinical note.",
+    "name": "generate_prep_pack",
+    "parameters": {
+      "properties": {
+        "appointment_id": {
+          "description": "Optional UUID of the linked clinical appointment.",
+          "type": "string"
+        },
+        "doctor_questions": {
+          "description": "Optional prioritized list of clinical questions to include (max 5).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "specialty": {
+          "description": "Medical specialty of the encounter (e.g. 'Cardiology', 'Endocrinology').",
+          "type": "string"
+        },
+        "visit_reason": {
+          "description": "Primary complaint or purpose of visit (e.g. 'Hypertension follow-up').",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [
+        "workspace-mcp.spectrayan.com",
+        "gmail.googleapis.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "List read-only Gmail messages filtered by consented label ('appointments', 'school-summaries', 'healthcare') via the curated Google Workspace remote MCP bridge.",
+    "name": "gmail_list_messages",
+    "parameters": {
+      "properties": {
+        "label": {
+          "default": "appointments",
+          "enum": [
+            "appointments",
+            "school-summaries",
+            "healthcare",
+            "INBOX"
+          ],
+          "type": "string"
+        },
+        "max_results": {
+          "default": 20,
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "query": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "untrusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [
+        "workspace-mcp.spectrayan.com",
+        "gmail.googleapis.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Send an email draft via the curated Google Workspace MCP server. Classified as 'irreversible' and unconditionally requires single-use human approval.",
+    "name": "gmail_send_message",
+    "parameters": {
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "draft_id": {
+          "type": "string"
+        },
+        "recipient": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "draft_id",
+        "recipient",
+        "subject",
+        "body"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "irreversible",
+    "trust": "untrusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "public"
+    },
+    "description": "List all available specialist agents and their capabilities from the catalog.",
+    "name": "list_agents",
+    "parameters": {
+      "properties": {},
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "List upcoming or historical healthcare appointments for a patient profile with optional filtering by status, start date range, and pagination.",
+    "name": "list_appointments",
+    "parameters": {
+      "properties": {
+        "limit": {
+          "default": 20,
+          "description": "Maximum number of appointments to return (default: 20).",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "offset": {
+          "default": 0,
+          "description": "Number of records to skip for pagination (default: 0).",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "start_after": {
+          "description": "Filter appointments starting on or after this ISO-8601 timestamp.",
+          "type": "string"
+        },
+        "start_before": {
+          "description": "Filter appointments starting on or before this ISO-8601 timestamp.",
+          "type": "string"
+        },
+        "status": {
+          "description": "Filter by appointment lifecycle status.",
+          "enum": [
+            "requested",
+            "scheduled",
+            "confirmed",
+            "completed",
+            "cancelled"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "List active or filtered clinical reminders for a patient profile with optional status, category, and due date filters.",
+    "name": "list_reminders",
+    "parameters": {
+      "properties": {
+        "category": {
+          "description": "Optional category filter.",
+          "enum": [
+            "medication",
+            "vitals",
+            "appointment",
+            "prep",
+            "general"
+          ],
+          "type": "string"
+        },
+        "due_before": {
+          "description": "Filter reminders due on or before this ISO-8601 timestamp.",
+          "type": "string"
+        },
+        "limit": {
+          "default": 50,
+          "description": "Maximum number of reminders to retrieve (default: 50).",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "offset": {
+          "default": 0,
+          "description": "Pagination offset.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "status": {
+          "description": "Optional status filter.",
+          "enum": [
+            "pending",
+            "snoozed",
+            "completed",
+            "missed",
+            "cancelled"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "List tracked pediatric school and camp health forms and their draft prefill data.",
+    "name": "list_school_forms",
+    "parameters": {
+      "properties": {
+        "status": {
+          "description": "Optional status filter.",
+          "enum": [
+            "draft",
+            "active",
+            "expired",
+            "archived"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Record vital signs observations (blood pressure, heart rate, blood glucose, SpO2, weight, height) for a patient profile with automated red-flag safety screening, adult BMI computation, and CDC pediatric percentiles.",
+    "name": "record_vitals",
+    "parameters": {
+      "properties": {
+        "recorded_at": {
+          "description": "Optional ISO-8601 observation timestamp.",
+          "type": "string"
+        },
+        "reported_symptoms": {
+          "description": "Optional list of patient-reported concurrent acute or neurological symptoms.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "source_id": {
+          "type": "string"
+        },
+        "source_ref": {
+          "type": "string"
+        },
+        "source_type": {
+          "default": "manual",
+          "enum": [
+            "manual",
+            "device",
+            "note_extracted"
+          ],
+          "type": "string"
+        },
+        "vitals_data": {
+          "description": "Key-value dictionary containing vital sign measurements.",
+          "type": "object"
+        }
+      },
+      "required": [
+        "vitals_data"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "pii"
+    },
+    "description": "Mask direct PII (SSN, MRN, phone, address, email) in text before processing.",
+    "name": "sanitize_pii",
+    "parameters": {
+      "properties": {
+        "mask_type": {
+          "description": "'tag' or 'redacted'.",
+          "type": "string"
+        },
+        "text": {
+          "description": "Source text to mask.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Search patient medical records, attachments, and clinical notes.",
+    "name": "search_records",
+    "parameters": {
+      "properties": {
+        "limit": {
+          "default": 5,
+          "description": "Maximum number of search results to retrieve (default: 5).",
+          "type": "integer"
+        },
+        "mode": {
+          "default": "hybrid",
+          "description": "Search mode: 'hybrid', 'lexical', or 'semantic' (default: 'hybrid').",
+          "type": "string"
+        },
+        "query": {
+          "description": "Natural language query or keywords to search across health records.",
+          "type": "string"
+        },
+        "source": {
+          "default": null,
+          "description": "Optional filter by record source ('clinical_note', 'upload', 'note', 'connector', 'external').",
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "public"
+    },
+    "description": "Read documentation or reference files from an installed skill references directory.",
+    "name": "skill-docs",
+    "parameters": {
+      "properties": {
+        "doc": {
+          "description": "Filename of reference doc (e.g. \"checklist.md\").",
+          "type": "string"
+        },
+        "skill_id": {
+          "description": "ID of the skill owning reference doc.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "skill_id",
+        "doc"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Parse and stage a clinical or wearable export file (FHIR R4 Bundle JSON, C-CDA XML, or Apple Health export.xml with daily summary aggregation) into an ImportBatch for Review-Before-Save.",
+    "name": "stage_clinical_import",
+    "parameters": {
+      "properties": {
+        "content": {
+          "description": "Raw JSON or XML content to parse and stage.",
+          "type": "string"
+        },
+        "filename": {
+          "description": "Uploaded file name (e.g. 'bundle.json', 'ccda.xml', 'export.xml').",
+          "type": "string"
+        },
+        "format": {
+          "description": "Optional explicit file format override.",
+          "enum": [
+            "fhir_r4",
+            "ccda",
+            "apple_health"
+          ],
+          "type": "string"
+        },
+        "source_name": {
+          "description": "Human-readable provenance origin (e.g. 'Epic MyChart', 'Apple Health').",
+          "type": "string"
+        }
+      },
+      "required": [
+        "filename",
+        "content"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "untrusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "pii"
+    },
+    "description": "Synchronize a child school RFC 5545 .ics calendar feed into local profile appointments.",
+    "name": "sync_school_ics",
+    "parameters": {
+      "properties": {
+        "feed_id": {
+          "description": "School ICS feed UUID.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "feed_id"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "untrusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Update the status of an existing patient appointment (e.g. from 'requested' to 'confirmed', or mark 'completed' or 'cancelled') with audit event tracking.",
+    "name": "update_appointment_status",
+    "parameters": {
+      "properties": {
+        "appointment_id": {
+          "description": "Unique UUID of the appointment to update.",
+          "type": "string"
+        },
+        "cancellation_reason": {
+          "description": "Optional explanation if cancelling the appointment.",
+          "type": "string"
+        },
+        "status": {
+          "description": "Target status transition.",
+          "enum": [
+            "requested",
+            "scheduled",
+            "confirmed",
+            "completed",
+            "cancelled"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "appointment_id",
+        "status"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Update the status of a preventive care screening or immunisation item ('due', 'completed', 'not_applicable', 'declined') for the active profile.",
+    "name": "update_preventive_status",
+    "parameters": {
+      "properties": {
+        "completed_at": {
+          "description": "Optional ISO-8601 completion timestamp.",
+          "type": "string"
+        },
+        "notes": {
+          "description": "Optional clinical or patient notes.",
+          "type": "string"
+        },
+        "rule_id": {
+          "description": "Preventive rule ID from the cited YAML rule pack.",
+          "type": "string"
+        },
+        "status": {
+          "description": "Updated preventive item status.",
+          "enum": [
+            "due",
+            "completed",
+            "not_applicable",
+            "declined"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_id",
+        "status"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Validate that extracted numerical values match source document text.",
+    "name": "validate_grounding",
+    "parameters": {
+      "properties": {
+        "dossier": {
+          "description": "Extracted dossier dictionary or model."
+        },
+        "source_text": {
+          "description": "Raw un-sanitized source text.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dossier",
+        "source_text"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Verify a W3C/HL7 SMART Health Card (.smart-health-card JSON or shc:/ QR URI) using ES256 JWS signature checks and stage FHIR R4 Immunizations and Observations.",
+    "name": "verify_smart_health_card",
+    "parameters": {
+      "properties": {
+        "content": {
+          "description": "Raw .smart-health-card JSON or shc:/ URI.",
+          "type": "string"
+        },
+        "source_name": {
+          "default": "SMART Health Card",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "untrusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [
+        "api.search.brave.com",
+        "localhost",
+        "127.0.0.1",
+        "searx.be"
+      ],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "public"
+    },
+    "description": "Execute a privacy-preserving, PHI-sanitised web search via allowlisted SearXNG or Brave Search endpoints. Automatically strips patient names, DOB, SSN, MRN, phone, email, and address before any outbound request and marks results untrusted.",
+    "name": "web_search",
+    "parameters": {
+      "properties": {
+        "limit": {
+          "default": 5,
+          "description": "Maximum number of search results to return.",
+          "maximum": 10,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "preview_only": {
+          "default": false,
+          "description": "If true, returns only the sanitised query preview without network I/O.",
+          "type": "boolean"
+        },
+        "provider": {
+          "default": "searxng",
+          "description": "Search provider ('searxng' or 'brave').",
+          "enum": [
+            "searxng",
+            "brave"
+          ],
+          "type": "string"
+        },
+        "query": {
+          "description": "Search query string (will be sanitised of PHI/PII before sending).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "untrusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [
+        "wbsapi.withings.net",
+        "account.withings.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Retrieve latest synchronized Withings blood pressure, heart rate, SpO2, and weight observations for the active profile.",
+    "name": "withings_latest_vitals",
+    "parameters": {
+      "properties": {
+        "limit": {
+          "default": 10,
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "risk_tier": "read",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "internal"
+    },
+    "description": "Save a new markdown note into the workspace notes directory.",
+    "name": "workspace-note",
+    "parameters": {
+      "properties": {
+        "content": {
+          "description": "Markdown formatted note content.",
+          "type": "string"
+        },
+        "title": {
+          "description": "Short title for the note.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "content"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "write_local",
+    "trust": "trusted"
+  },
+  {
+    "data_flows": {
+      "allowed_hosts": [
+        "api.zocdoc.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "data_sensitivity": "phi"
+    },
+    "description": "Book an external clinical appointment on Zocdoc. Classified as 'irreversible' and unconditionally requires per-booking human approval even in A2 autonomy.",
+    "name": "zocdoc_book_appointment",
+    "parameters": {
+      "properties": {
+        "insurance_carrier": {
+          "type": "string"
+        },
+        "provider_id": {
+          "type": "string"
+        },
+        "provider_name": {
+          "type": "string"
+        },
+        "slot_id": {
+          "type": "string"
+        },
+        "specialty": {
+          "type": "string"
+        },
+        "start_time": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_id",
+        "slot_id",
+        "start_time"
+      ],
+      "type": "object"
+    },
+    "risk_tier": "irreversible",
+    "trust": "untrusted"
+  }
+]

@@ -18,19 +18,20 @@ Appends compliance disclaimers to valid responses.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from langchain_core.messages import AIMessage
 
+from carefold.engine.safety_policy import SafetyPolicy, get_default_safety_policy
 from carefold.resources.loader import get_resource_loader
-from carefold.safety.classifier import check_safety_refusal, is_hard_refusal_reason
 from carefold.workflows.nodes.base import BaseNode
 
 
 class OutputGuardrailNode(BaseNode):
     """Verifies output safety and appends compliance disclaimers."""
 
-    def __init__(self, name: str = "output_guardrail") -> None:
+    def __init__(self, name: str = "output_guardrail", safety_policy: Optional[SafetyPolicy] = None) -> None:
         super().__init__(name=name)
+        self.safety_policy = safety_policy or get_default_safety_policy()
 
     async def execute(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """Checks output text against clinical refusal boundaries."""
@@ -48,12 +49,12 @@ class OutputGuardrailNode(BaseNode):
                     output_text = str(m.get("content", ""))
                     break
 
-        safety_check = check_safety_refusal(output_text)
+        safety_check = self.safety_policy.check_output(output_text)
 
         # Safety refusal gate
         if safety_check.refused:
             reason = safety_check.reason or "forbidden_intent:medical_prohibited"
-            is_hard = is_hard_refusal_reason(reason)
+            is_hard = self.safety_policy.is_hard_refusal_reason(reason)
             return {
                 "is_refusal": True,
                 "refused": True,
@@ -87,7 +88,7 @@ class OutputGuardrailNode(BaseNode):
         if header_text and header_text.lower() not in output_text.lower():
             final_output = f"{output_text}{disclaimer_clause}"
 
-        boundary_warning = bool(safety_check.refused and not is_hard_refusal_reason(safety_check.reason))
+        boundary_warning = bool(safety_check.refused and not self.safety_policy.is_hard_refusal_reason(safety_check.reason))
         boundary_reason = safety_check.reason if boundary_warning else None
 
         return {

@@ -35,6 +35,7 @@ from carefold.memory.ports.catalog_port import CatalogPort
 from carefold.resources.loader import get_resource_loader
 from carefold.schemas.manifest import AgentManifest
 from carefold.schemas.plan import AgentTask, ExecutionMode, ExecutionPlan
+from carefold.schemas.routing import RoutingHints
 from carefold.templates.engine import render_template
 from carefold.workflows.nodes.base import BaseNode
 from carefold.workflows.state import AgentState, extract_text_content
@@ -59,27 +60,85 @@ class DomainClassification(BaseModel):
     )
 
 
-TIER1_DOMAIN_CLASSIFIER_PROMPT = (
-    "You are the Carefold Tier-1 Intent and Domain Classifier.\n"
-    "Your objective is to analyze the user inquiry and conversation context, then classify it into "
-    "exactly one primary healthcare domain and an appropriate dot-notated subcategory.\n\n"
-    "## Healthcare Domains:\n"
-    "1. 'clinical': Medical evaluation, symptom assessment, diagnostic triage, treatments, prescriptions, lab results, and physician guidance.\n"
-    "   Example categories: clinical.triage, clinical.cardiology, clinical.pulmonology, clinical.neurology, clinical.gastroenterology, clinical.nephrology, clinical.endocrinology, clinical.oncology, clinical.orthopedics, clinical.dermatology\n\n"
-    "2. 'therapy': Mental health support, counseling, emotional well-being, distress tolerance, stress management, and psychological coping.\n"
-    "   Example categories: therapy.cbt, therapy.anxiety, therapy.depression, therapy.mindfulness\n\n"
-    "3. 'wellness': Preventative lifestyle guidance, daily healthy habits, hydration, sleep improvement, fitness, and nutrition coaching.\n"
-    "   Example categories: wellness.habits, wellness.nutrition, wellness.sleep, wellness.fitness\n\n"
-    "4. 'navigation': Healthcare logistics, insurance benefits, claims, deductible/copay, prior auth, appointments, and medical paperwork.\n"
-    "   Example categories: navigation.insurance, navigation.prior_auth, navigation.claims, navigation.appointments, navigation.records, navigation.formulary\n\n"
-    "5. 'education': Medical literacy, physiological explanations, disease definitions, procedure overviews, and health education.\n"
-    "   Example categories: education.conditions, education.procedures, education.anatomy\n\n"
-    "## Output Instructions:\n"
-    "- Set 'domain' to one of: 'clinical', 'therapy', 'wellness', 'navigation', 'education'.\n"
-    "- Set 'category' to a dot-notated category matching the user's inquiry (e.g., 'navigation.insurance', 'wellness.habits').\n"
-    "- Set 'reasoning' to a concise rationale explaining why the query belongs in this domain and category.\n"
-    "Never attempt to answer clinical questions directly; classify strictly for downstream specialist routing."
-)
+DEFAULT_HEALTH_ROUTING_HINTS = [
+    RoutingHints(
+        domain="clinical",
+        description="Medical evaluation, symptom assessment, diagnostic triage, treatments, prescriptions, lab results, and physician guidance.",
+        default_agent="visit-steward",
+        domains_info={
+            "example_categories": "clinical.triage, clinical.cardiology, clinical.pulmonology, clinical.neurology, clinical.gastroenterology, clinical.nephrology, clinical.endocrinology, clinical.oncology, clinical.orthopedics, clinical.dermatology",
+        },
+    ),
+    RoutingHints(
+        domain="therapy",
+        description="Mental health support, counseling, emotional well-being, distress tolerance, stress management, and psychological coping.",
+        default_agent="habit-companion",
+        domains_info={
+            "example_categories": "therapy.cbt, therapy.anxiety, therapy.depression, therapy.mindfulness",
+        },
+    ),
+    RoutingHints(
+        domain="wellness",
+        description="Preventative lifestyle guidance, daily healthy habits, hydration, sleep improvement, fitness, and nutrition coaching.",
+        default_agent="habit-companion",
+        domains_info={
+            "example_categories": "wellness.habits, wellness.nutrition, wellness.sleep, wellness.fitness",
+        },
+    ),
+    RoutingHints(
+        domain="navigation",
+        description="Healthcare logistics, insurance benefits, claims, deductible/copay, prior auth, appointments, and medical paperwork.",
+        default_agent="benefits-guide",
+        domains_info={
+            "example_categories": "navigation.insurance, navigation.prior_auth, navigation.claims, navigation.appointments, navigation.records, navigation.formulary",
+        },
+    ),
+    RoutingHints(
+        domain="education",
+        description="Medical literacy, physiological explanations, disease definitions, procedure overviews, and health education.",
+        default_agent="visit-steward",
+        domains_info={
+            "example_categories": "education.conditions, education.procedures, education.anatomy",
+        },
+    ),
+]
+
+
+def compose_tier1_classifier_prompt(
+    hints: Optional[Sequence[RoutingHints]] = None,
+    product_name: str = "Carefold",
+) -> str:
+    """Composes the Tier-1 Domain Classifier prompt dynamically from RoutingHints."""
+    active_hints = list(hints) if hints is not None else DEFAULT_HEALTH_ROUTING_HINTS
+    domains = [h.domain for h in active_hints]
+    domains_quoted = ", ".join(f"'{d}'" for d in domains)
+
+    domain_blocks = []
+    for idx, h in enumerate(active_hints, 1):
+        example_cats = h.domains_info.get("example_categories", "")
+        block = f"{idx}. '{h.domain}': {h.description}"
+        if example_cats:
+            block += f"\n   Example categories: {example_cats}"
+        domain_blocks.append(block)
+
+    domains_text = "\n\n".join(domain_blocks)
+
+    return (
+        f"You are the {product_name} Tier-1 Intent and Domain Classifier.\n"
+        "Your objective is to analyze the user inquiry and conversation context, then classify it into "
+        "exactly one primary healthcare domain and an appropriate dot-notated subcategory.\n\n"
+        "## Healthcare Domains:\n"
+        f"{domains_text}\n\n"
+        "## Output Instructions:\n"
+        f"- Set 'domain' to one of: {domains_quoted}.\n"
+        "- Set 'category' to a dot-notated category matching the user's inquiry (e.g., 'navigation.insurance', 'wellness.habits').\n"
+        "- Set 'reasoning' to a concise rationale explaining why the query belongs in this domain and category.\n"
+        "Never attempt to answer clinical questions directly; classify strictly for downstream specialist routing."
+    )
+
+
+TIER1_DOMAIN_CLASSIFIER_PROMPT = compose_tier1_classifier_prompt()
+
 
 
 class OrchestratorDecision(BaseModel):
@@ -120,6 +179,7 @@ class OrchestratorNode(BaseNode):
         registry: Optional[AgentRegistry] = None,
         catalog: Optional[CatalogPort] = None,
         skill_generator: Optional[Any] = None,
+        routing_hints: Optional[Sequence[RoutingHints]] = None,
         name: str = "orchestrator",
     ) -> None:
         super().__init__(name=name)
@@ -127,6 +187,12 @@ class OrchestratorNode(BaseNode):
         self._registry = registry
         self.catalog = catalog
         self._skill_generator = skill_generator
+        self.routing_hints = routing_hints
+        if routing_hints is not None:
+            prod_name = getattr(settings, "product_name", "Carefold")
+            self.tier1_prompt = compose_tier1_classifier_prompt(routing_hints, product_name=prod_name)
+        else:
+            self.tier1_prompt = TIER1_DOMAIN_CLASSIFIER_PROMPT
 
     @property
     def skill_generator(self) -> Any:
@@ -326,7 +392,7 @@ class OrchestratorNode(BaseNode):
     ) -> Tuple[OrchestratorDecision, List[AgentManifest]]:
         """Executes Tier-1 Domain Classification followed by Tier-2 Specialist Picking via CatalogPort."""
         # 1. Tier-1 Domain Classifier invokes model.with_structured_output(DomainClassification)
-        tier1_messages: List[BaseMessage] = [SystemMessage(content=TIER1_DOMAIN_CLASSIFIER_PROMPT)]
+        tier1_messages: List[BaseMessage] = [SystemMessage(content=self.tier1_prompt)]
         for m in raw_messages:
             if isinstance(m, BaseMessage):
                 tier1_messages.append(m)
@@ -1083,4 +1149,7 @@ __all__ = [
     "OrchestratorDecision",
     "OrchestratorNode",
     "TIER1_DOMAIN_CLASSIFIER_PROMPT",
+    "compose_tier1_classifier_prompt",
+    "DEFAULT_HEALTH_ROUTING_HINTS",
 ]
+

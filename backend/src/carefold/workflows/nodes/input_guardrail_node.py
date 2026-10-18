@@ -23,16 +23,16 @@ from typing import Any, Dict, List, Optional
 from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.store.base import BaseStore
 
-from carefold.safety.classifier import check_safety_refusal
-from carefold.safety.emergency import check_emergency_red_flags
+from carefold.engine.safety_policy import SafetyPolicy, get_default_safety_policy
 from carefold.workflows.nodes.base import BaseNode
 
 
 class InputGuardrailNode(BaseNode):
     """Pre-execution guardrail evaluating clinical safety and recalling memory context."""
 
-    def __init__(self, name: str = "input_guardrail") -> None:
+    def __init__(self, name: str = "input_guardrail", safety_policy: Optional[SafetyPolicy] = None) -> None:
         super().__init__(name=name)
+        self.safety_policy = safety_policy or get_default_safety_policy()
 
     async def __call__(
         self, state: Dict[str, Any], *, store: Optional[BaseStore] = None, **kwargs: Any
@@ -64,7 +64,7 @@ class InputGuardrailNode(BaseNode):
             prompt_text = str(state.get("prompt"))
 
         # 1. Acute Emergency Red-Flag Gating (Immediate 911 / ER diversion)
-        emergency_flag = check_emergency_red_flags(prompt_text)
+        emergency_flag = self.safety_policy.check_emergency(prompt_text)
         if emergency_flag is not None:
             referral_msg = emergency_flag.referral_message or (
                 "EMERGENCY WARNING: Acute symptoms detected. Please call 911 or visit the nearest emergency room immediately."
@@ -72,7 +72,7 @@ class InputGuardrailNode(BaseNode):
             flag_dict = emergency_flag.to_dict() if hasattr(emergency_flag, "to_dict") else dict(emergency_flag)
 
             # Check if prompt also explicitly attempts forbidden emergency diversion / triage
-            safety_check = check_safety_refusal(prompt_text)
+            safety_check = self.safety_policy.check_input(prompt_text)
             if safety_check.refused and safety_check.reason and "replace_emergency_care" in safety_check.reason:
                 refusal_reason = "emergency_red_flag:replace_emergency_care"
             else:
@@ -119,7 +119,7 @@ class InputGuardrailNode(BaseNode):
             }
 
         # 3. Standard Clinical Safety Refusal (34 patterns in refusal_patterns.yaml)
-        safety_check = check_safety_refusal(prompt_text)
+        safety_check = self.safety_policy.check_input(prompt_text)
 
         if safety_check.refused:
             reason = safety_check.reason or "forbidden_intent:medical_prohibited"

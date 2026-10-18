@@ -31,6 +31,7 @@ import logging
 from pathlib import Path
 import time
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Coroutine,
@@ -82,29 +83,29 @@ from carefold.constants.paths import (
     ENV_DB_PATH,
     LOGS_DIR,
 )
-from carefold.safety.template import SAFE_REFUSAL_TEMPLATE
+from carefold.engine.safety_policy import SafetyPolicy, get_default_safety_policy
 from carefold.schemas.audit import AuditEvent
 from carefold.tools.registry import CLOSED_TOOL_DEFINITIONS
 from carefold.agents.registry import AgentRegistry
-from carefold.workflows.dispatcher import ExecutionDispatcher
-from carefold.workflows.nodes import (
-    AgentExecutionNode,
-    AgentNode,
-    AuditNode,
-    BaseNode,
-    ErrorNode,
-    InputGuardrailNode,
-    OrchestratorDecision,
-    OrchestratorNode,
-    OutputGuardrailNode,
-    ReflectionNode,
-    RefusalNode,
-    ResponseSynthesizerNode,
-    SuggestionNode,
-    SupervisorNode,
-    ToolNode,
-    ToolValidatorNode,
-)
+if TYPE_CHECKING:
+    from carefold.workflows.nodes import (
+        AgentExecutionNode,
+        AgentNode,
+        AuditNode,
+        BaseNode,
+        ErrorNode,
+        InputGuardrailNode,
+        OrchestratorDecision,
+        OrchestratorNode,
+        OutputGuardrailNode,
+        ReflectionNode,
+        RefusalNode,
+        ResponseSynthesizerNode,
+        SuggestionNode,
+        SupervisorNode,
+        ToolNode,
+        ToolValidatorNode,
+    )
 from carefold.workflows.state import AgentState
 
 logger = logging.getLogger(__name__)
@@ -137,12 +138,14 @@ class GraphBuilder:
         tool_registry: Optional[Any] = None,
         use_dynamic_orchestrator: bool = True,
         store: Optional[BaseStore] = None,
+        safety_policy: Optional[SafetyPolicy] = None,
         **kwargs: Any,
     ) -> None:
         """Initialize GraphBuilder configuration."""
         self.model = model
         self.checkpointer = checkpointer
         self.store = store
+        self.safety_policy = safety_policy or get_default_safety_policy()
         self.tools = list(tools) if tools is not None else None
         self.subgraphs: Dict[str, Union[StateGraph, CompiledStateGraph]] = dict(subgraphs or {})
         self.system_prompt = system_prompt
@@ -170,6 +173,11 @@ class GraphBuilder:
     def with_response_synthesizer(self, enabled: bool = True) -> GraphBuilder:
         """Enable or disable response synthesizer node."""
         self.include_synthesizer = enabled
+        return self
+
+    def with_safety_policy(self, safety_policy: SafetyPolicy) -> GraphBuilder:
+        """Attach a SafetyPolicy instance for input/output guardrail enforcement."""
+        self.safety_policy = safety_policy
         return self
 
     # ========================================================================
@@ -276,7 +284,25 @@ class GraphBuilder:
                 bound_model = self.model
 
         # 2. Instantiate discrete workflow nodes
-        input_guard_node = self._custom_nodes.get("input_guardrail") or InputGuardrailNode()
+        from carefold.workflows.nodes import (
+            AgentExecutionNode,
+            AgentNode,
+            AuditNode,
+            ErrorNode,
+            InputGuardrailNode,
+            OrchestratorDecision,
+            OrchestratorNode,
+            OutputGuardrailNode,
+            ReflectionNode,
+            RefusalNode,
+            ResponseSynthesizerNode,
+            SuggestionNode,
+            SupervisorNode,
+            ToolNode,
+            ToolValidatorNode,
+        )
+
+        input_guard_node = self._custom_nodes.get("input_guardrail") or InputGuardrailNode(safety_policy=self.safety_policy)
         supervisor_node = self._custom_nodes.get("supervisor") or self._custom_nodes.get("orchestrator")
         if supervisor_node is None:
             if self.use_dynamic_orchestrator:
@@ -316,7 +342,7 @@ class GraphBuilder:
             tools=self.tools,
         )
         tool_validator_node = self._custom_nodes.get("tool_validator") or ToolValidatorNode()
-        output_guard_node = self._custom_nodes.get("output_guardrail") or OutputGuardrailNode()
+        output_guard_node = self._custom_nodes.get("output_guardrail") or OutputGuardrailNode(safety_policy=self.safety_policy)
         reflection_node = self._custom_nodes.get("reflection") or ReflectionNode(max_reflections=self.max_reflections)
         refusal_node = self._custom_nodes.get("refusal") or RefusalNode()
         suggestion_model = getattr(self, "suggestion_model", None)
@@ -329,6 +355,8 @@ class GraphBuilder:
         error_node = self._custom_nodes.get("error") or ErrorNode()
         dispatcher_node = self._custom_nodes.get("dispatcher") or self._custom_nodes.get("execution_dispatcher")
         if dispatcher_node is None and self.include_dispatcher:
+            from carefold.workflows.dispatcher import ExecutionDispatcher
+
             dispatcher_node = ExecutionDispatcher(
                 model=bound_model or self.model,
                 registry=self.registry,
@@ -393,7 +421,7 @@ class GraphBuilder:
                 payload: Dict[str, Any] = {
                     "type": SSE_EVENT_REFUSAL,
                     "reason": reason,
-                    "message": SAFE_REFUSAL_TEMPLATE,
+                    "message": self.safety_policy.get_refusal_template(reason),
                 }
                 if category:
                     payload["category"] = category
@@ -550,15 +578,14 @@ class GraphBuilder:
             res = await (output_guard_node(state) if callable(output_guard_node) else output_guard_node.execute(state))
             if res.get("is_refusal") or res.get("refused"):
                 reason = res.get("refusal_reason") or state.get("default_refusal_reason") or "forbidden_intent:policy_prohibited"
-                from carefold.safety.classifier import is_hard_refusal_reason
-                if is_hard_refusal_reason(reason):
+                if self.safety_policy.is_hard_refusal_reason(reason):
                     try:
                         await adispatch_custom_event(
                             SSE_EVENT_REFUSAL,
                             {
                                 "type": SSE_EVENT_REFUSAL,
                                 "reason": reason,
-                                "message": SAFE_REFUSAL_TEMPLATE,
+                                "message": self.safety_policy.get_refusal_template(reason),
                             },
                         )
                     except Exception:

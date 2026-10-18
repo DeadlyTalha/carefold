@@ -16,8 +16,20 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import List, Optional
-from pydantic import Field, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class BrandConfig(BaseModel):
+    """Branding and namespace configuration for product runtime."""
+
+    product_name: str = "Carefold"
+    env_prefix: str = "CAREFOLD_"
+    home_dir_name: str = ".carefold"
+    db_filename: str = "carefold.db"
+    oauth_scheme: str = "carefold"
+    cookie_prefix: str = "carefold_"
+    default_agent: str = "visit-steward"
 
 from carefold.constants.defaults import DEFAULT_CORS_ORIGINS
 from carefold.constants.models import (
@@ -118,6 +130,41 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
+    # Product Brand Customization
+    _brand_config: BrandConfig = PrivateAttr(default_factory=BrandConfig)
+
+    @property
+    def brand_config(self) -> BrandConfig:
+        return self._brand_config
+
+    @property
+    def product_name(self) -> str:
+        return self._brand_config.product_name
+
+    @property
+    def env_prefix(self) -> str:
+        return self._brand_config.env_prefix
+
+    @property
+    def home_dir_name(self) -> str:
+        return self._brand_config.home_dir_name
+
+    @property
+    def db_filename(self) -> str:
+        return self._brand_config.db_filename
+
+    @property
+    def oauth_scheme(self) -> str:
+        return self._brand_config.oauth_scheme
+
+    @property
+    def cookie_prefix(self) -> str:
+        return self._brand_config.cookie_prefix
+
+    @property
+    def default_agent(self) -> str:
+        return self._brand_config.default_agent
+
     workspace_root: Path = get_default_workspace_root()
     home_dir: Path = Field(default_factory=resolve_carefold_home)
 
@@ -172,7 +219,7 @@ class Settings(BaseSettings):
                 if env_db and env_db.strip():
                     self.database_url = env_db.strip()
                 else:
-                    self.database_url = f"sqlite+aiosqlite:///{self.home_dir}/{SQL_DB_FILENAME}"
+                    self.database_url = f"sqlite+aiosqlite:///{self.home_dir}/{self.db_filename}"
         return self
 
     def get_home_dir(self) -> Path:
@@ -196,10 +243,11 @@ class Settings(BaseSettings):
         if (
             self.database_url
             and not self.database_url.endswith("/workspace/carefold.db")
-            and not (self.database_url.startswith("sqlite+aiosqlite:///") and self.database_url.endswith(f"/{SQL_DB_FILENAME}"))
+            and not self.database_url.endswith(f"/workspace/{self.db_filename}")
+            and not (self.database_url.startswith("sqlite+aiosqlite:///") and (self.database_url.endswith(f"/{SQL_DB_FILENAME}") or self.database_url.endswith(f"/{self.db_filename}")))
         ):
             return self.database_url
-        return f"sqlite+aiosqlite:///{self.home_dir}/{SQL_DB_FILENAME}"
+        return f"sqlite+aiosqlite:///{self.home_dir}/{self.db_filename}"
 
     def get_catalog_db_path(self) -> Path:
         """Resolves catalog database path, defaulting to home_dir / DEFAULT_CATALOG_DB."""
