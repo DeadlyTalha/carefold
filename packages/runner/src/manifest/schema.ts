@@ -94,3 +94,38 @@ export const CarefoldConfigSchema = z.object({
   allow_clinical: z.boolean().default(false),
   telemetry: z.boolean().default(false)
 }).default({});
+
+export const ScopeDefinitionSchema = z.object({
+  id: z.string().min(1),
+  description: z.string().optional(),
+  consent: z.string().optional(),
+  sensitivity: z.string().optional(),
+}).passthrough();
+
+export const PackManifestSchema = z.object({
+  pack_api: z.number().int().default(1),
+  id: z.string().regex(/^[a-z0-9-]+$/),
+  name: z.string().min(1),
+  version: z.string().min(1),
+  domain: z.string().min(1),
+  requires_core: z.string().min(1),
+  requires_packs: z.array(z.any()).default([]),
+  license: z.string().optional(),
+  maintainers: z.array(z.string()).default([]),
+  risk_tier_max: z.enum(['T1', 'T2', 'T3', 'T4']).default('T2'),
+  scopes: z.array(ScopeDefinitionSchema).default([]),
+  owned_scopes: z.array(z.string()).default([]),
+  reads: z.array(z.any()).default([]),
+  declared_reads: z.array(z.any()).default([]),
+  provides: z.any().optional(),
+  migrations: z.any().optional(),
+  compat: z.any().optional(),
+  evals: z.any().optional(),
+  tools: z.array(z.any()).default([]),
+  routers: z.array(z.any()).default([]),
+  safety_policy: z.string().optional(),
+  migration_branch: z.string().optional(),
+}).passthrough();
+
+export type PackManifest = z.infer<typeof PackManifestSchema>;
+

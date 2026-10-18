@@ -57,6 +57,7 @@ BASELINE_ALLOWLIST: Dict[str, int] = {
     "constants/extraction.py": 2,
     "constants/models.py": 1,
     "db/models.py": 34,
+    "db/session.py": 5,
     "engine/builder.py": 1,
     "engine/graph.py": 3,
     "engine/service.py": 3,

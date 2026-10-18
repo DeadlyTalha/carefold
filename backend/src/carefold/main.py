@@ -93,6 +93,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             error=str(migration_err),
             exc_info=True,
         )
+    try:
+        from yarvelle_core.pack.loader import discover_and_load_packs
+        discover_and_load_packs(enabled_pack_ids=["health"])
+        logger.info("packs_loaded_successfully", packs=["health"])
+    except Exception as pack_err:
+        logger.warning("packs_discovery_warning", error=str(pack_err))
 
     await init_db()
     try:

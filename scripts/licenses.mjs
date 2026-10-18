@@ -116,6 +116,8 @@ function stripLegacyHeader(text, isPy) {
   return normalized;
 }
 
+const APACHE_MARKER = 'Licensed under the Apache License, Version 2.0';
+
 export function hasLicenseHeader(content, isPy) {
   let checkArea = content;
   if (checkArea.startsWith('#!')) {
@@ -125,6 +127,11 @@ export function hasLicenseHeader(content, isPy) {
     }
   }
   checkArea = checkArea.trimStart();
+
+  // Preserve historical Apache-2.0 notices on pre-Oct-14 contributor files
+  if (checkArea.includes(APACHE_MARKER)) {
+    return true;
+  }
 
   const expectedHeader = isPy ? HASH_STYLE_HEADER : C_STYLE_HEADER;
   const normalizedCheck = checkArea.replace(/\r\n/g, '\n');

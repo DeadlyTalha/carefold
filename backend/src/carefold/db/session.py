@@ -581,9 +581,106 @@ def run_alembic_migrations(connection: Connection) -> None:
         alembic.command.upgrade(cfg, "head")
 
 
+def get_pack_alembic_config(
+    migrations_dir: Path | str,
+    version_table: str = "alembic_version_health",
+    connection: Optional[Connection] = None,
+) -> Config:
+    """Builds Alembic Config for an isolated pack migration branch."""
+    cfg = Config()
+    cfg.set_main_option("script_location", str(migrations_dir))
+    cfg.set_main_option("version_table", version_table)
+    if connection is not None:
+        cfg.attributes["connection"] = connection
+    cfg.attributes["version_table"] = version_table
+    cfg.attributes["configure_logger"] = False
+    return cfg
+
+
+def run_pack_migrations(
+    connection: Connection,
+    migrations_dir: Path | str,
+    version_table: str = "alembic_version_health",
+    target: str = "head",
+    depends_on_core: Optional[str] = "0011_scopes",
+) -> None:
+    """Executes database schema migrations for an enabled pack with isolated version tracking."""
+    inspector = inspect(connection)
+    tables = set(inspector.get_table_names())
+
+    # Step 1: Core baseline precondition verification
+    if depends_on_core:
+        if "alembic_version" not in tables:
+            raise RuntimeError(
+                f"Cannot run pack migrations ({version_table}): core migration table 'alembic_version' does not exist."
+            )
+        core_revs = {
+            r[0] for r in connection.exec_driver_sql("SELECT version_num FROM alembic_version;").fetchall() if r and r[0]
+        }
+        if depends_on_core not in core_revs:
+            raise RuntimeError(
+                f"Pack migration ({version_table}) requires core revision '{depends_on_core}', "
+                f"but found core revisions: {sorted(core_revs)}."
+            )
+
+    cfg = get_pack_alembic_config(migrations_dir, version_table, connection)
+    script = alembic.script.ScriptDirectory.from_config(cfg)
+    heads = set(script.get_heads())
+
+    # Step 2: Check if pack already at head
+    if version_table in tables:
+        current_revs = {
+            r[0] for r in connection.exec_driver_sql(f"SELECT version_num FROM {version_table};").fetchall() if r and r[0]
+        }
+        if heads and heads.issubset(current_revs):
+            logger.info("pack_migration_already_at_head", version_table=version_table, revisions=list(current_revs))
+            return
+
+    # Step 3: Upgrade pack migrations to target (head)
+    logger.info("running_pack_migrations", version_table=version_table, target=target)
+    alembic.command.upgrade(cfg, target)
+
+
+def resolve_health_migrations_dir() -> Path:
+    """Resolves health pack migration directory across packaging modes."""
+    try:
+        import carefold_health.db.migrations as ch_mig
+        return Path(ch_mig.__file__).resolve().parent
+    except ImportError:
+        repo_root = Path(__file__).resolve().parents[4]
+        candidate = repo_root / "packs" / "health" / "src" / "carefold_health" / "db" / "migrations"
+        if candidate.is_dir():
+            return candidate
+        return repo_root / "backend" / "src" / "carefold" / "db" / "migrations"
+
+
+def run_all_migrations(connection: Connection, enabled_packs: Optional[list[str]] = None) -> None:
+    """Executes core baseline migrations followed by all enabled pack migrations."""
+    # 1. Run Core Baseline Migrations (alembic_version -> 0011_scopes)
+    run_alembic_migrations(connection)
+
+    # 2. Discover Enabled Packs (e.g. ['health'] in Carefold)
+    packs_to_run = enabled_packs or ["health"]
+
+    for pack_id in packs_to_run:
+        if pack_id == "health":
+            health_mig_dir = resolve_health_migrations_dir()
+            if health_mig_dir.is_dir():
+                run_pack_migrations(
+                    connection=connection,
+                    migrations_dir=health_mig_dir,
+                    version_table="alembic_version_health",
+                    depends_on_core="0011_scopes",
+                )
+
+
 async def init_db(engine: Optional[AsyncEngine] = None) -> None:
     """Initializes database tables via Base.metadata.create_all and automated migrations."""
     import carefold.db.models  # noqa: F401
+    try:
+        import carefold_health.db.models  # noqa: F401
+    except ImportError:
+        pass
     target_engine = engine or get_engine()
     _ensure_sqlite_dir(str(target_engine.url))
     db_path = _get_sqlite_db_path(target_engine)
@@ -591,7 +688,7 @@ async def init_db(engine: Optional[AsyncEngine] = None) -> None:
     async with _get_init_db_lock():
         async with _sqlite_file_lock(db_path):
             async with target_engine.begin() as conn:
-                await conn.run_sync(run_alembic_migrations)
+                await conn.run_sync(run_all_migrations)
                 await conn.run_sync(Base.metadata.create_all)
 
     logger.info(

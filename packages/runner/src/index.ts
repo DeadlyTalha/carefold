@@ -79,8 +79,10 @@ export {
   AgentManifestSchema,
   CarefoldYamlSchema,
   SkillFrontmatterSchema,
-  CarefoldConfigSchema
+  CarefoldConfigSchema,
+  PackManifestSchema
 } from './manifest/schema.js';
+export type { PackManifest } from './manifest/schema.js';
 export { parseFrontmatter, checkMandatoryIntendedUse } from './manifest/frontmatter.js';
 
 // Tools & Sandboxing
