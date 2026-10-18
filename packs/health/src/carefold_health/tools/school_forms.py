@@ -18,15 +18,16 @@ from typing import Any, Dict, Iterator
 
 from sqlalchemy import select
 
-from carefold.clinical.school_forms import (
+from carefold_health.clinical.school_forms import (
     create_school_form,
     serialize_school_form,
 )
-from carefold.db.models import SchoolForm
-from carefold.db.session import get_session_factory
-from carefold.schemas.tool import ToolResult
+from carefold_health.models import SchoolForm
+from yarvelle_core.db.session import get_session_factory
+from yarvelle_core.engine.tool_registry import DataFlows, ToolSpec
+from yarvelle_core.schemas.tool import ToolResult
 
-logger = logging.getLogger("carefold.tools.school_forms")
+logger = logging.getLogger("carefold_health.tools.school_forms")
 
 
 class SchoolFormToolResult(ToolResult):
@@ -168,7 +169,88 @@ async def execute_list_school_forms(args: Dict[str, Any], ctx: Any = None) -> Sc
 
 
 __all__ = [
+    "SPEC_CREATE",
+    "SPEC_LIST",
     "SchoolFormToolResult",
     "execute_create_school_form",
     "execute_list_school_forms",
 ]
+
+
+SPEC_CREATE = ToolSpec(
+    name="create_school_form",
+    description=(
+        "Create a pediatric school or camp health form with compiled draft prefill from profile immunisations, "
+        "allergies, medications, and vitals, plus automatic 30-day renewal reminder scheduling when expires_at is set."
+    ),
+    parameters={
+        "type": "object",
+        "properties": {
+            "title": {
+                "type": "string",
+                "description": "Form title (e.g. 'Annual School Physical & Immunisation Form').",
+            },
+            "school_or_camp_name": {
+                "type": "string",
+                "description": "Name of school, daycare, or camp institution.",
+            },
+            "form_type": {
+                "type": "string",
+                "enum": [
+                    "physical",
+                    "immunization",
+                    "medication_authorization",
+                    "sports_clearance",
+                    "general",
+                ],
+                "default": "general",
+            },
+            "expires_at": {
+                "type": "string",
+                "description": "Optional ISO-8601 expiration or renewal date.",
+            },
+            "attachment_id": {
+                "type": "string",
+                "description": "Optional linked CAS attachment ID.",
+            },
+        },
+        "required": ["title"],
+    },
+    risk_tier="write_local",
+    trust="trusted",
+    data_flows=DataFlows(allowed_hosts=(), data_sensitivity="phi"),
+    executor=execute_create_school_form,
+    metadata={
+        "action": "create_school_form",
+        "entity": "school_form",
+        "undoable": True,
+        "risk": "write_local",
+    },
+    scopes={"health.clinical"},
+)
+
+
+SPEC_LIST = ToolSpec(
+    name="list_school_forms",
+    description="List tracked pediatric school and camp health forms and their draft prefill data.",
+    parameters={
+        "type": "object",
+        "properties": {
+            "status": {
+                "type": "string",
+                "enum": ["draft", "active", "expired", "archived"],
+                "description": "Optional status filter.",
+            },
+        },
+    },
+    risk_tier="read",
+    trust="trusted",
+    data_flows=DataFlows(allowed_hosts=(), data_sensitivity="phi"),
+    executor=execute_list_school_forms,
+    metadata={
+        "action": "list_school_forms",
+        "entity": "school_form",
+        "risk": "read",
+    },
+    scopes={"health.clinical"},
+)

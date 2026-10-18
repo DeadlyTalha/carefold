@@ -15,17 +15,17 @@ from __future__ import annotations
 
 from typing import Any, Optional, Sequence, Set
 
-from carefold.constants.defaults import DEFAULT_FORBIDDEN_INTENTS
-from carefold.engine.safety_policy import (
+from yarvelle_core.constants.defaults import DEFAULT_FORBIDDEN_INTENTS
+from yarvelle_core.engine.safety_policy import (
     EmergencyDirective,
     SafetyContext,
     SafetyPolicy,
     SafetyVerdict,
 )
-from carefold.safety.classifier import check_safety_refusal, is_hard_refusal_reason
-from carefold.safety.emergency import check_emergency_red_flags
-from carefold.safety.prompt import build_safety_preamble
-from carefold.safety.template import SAFE_REFUSAL_TEMPLATE
+from carefold_health.safety.classifier import check_safety_refusal, is_hard_refusal_reason
+from carefold_health.safety.emergency import check_emergency_red_flags
+from carefold_health.safety.prompt import build_safety_preamble
+from carefold_health.safety.template import SAFE_REFUSAL_TEMPLATE
 
 
 class HealthSafetyPolicy:

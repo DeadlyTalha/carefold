@@ -25,14 +25,15 @@ import logging
 from typing import Any, Dict, List, Optional
 import uuid
 
-from carefold.clinical.bmi import calculate_adult_bmi, calculate_pediatric_bmi_percentile
-from carefold.clinical.vitals import normalize_fhir_vitals
-from carefold.db.models import HealthResource
-from carefold.db.session import get_session_factory
-from carefold.safety.vitals import check_vitals_red_flags
-from carefold.schemas.tool import ToolResult
+from carefold_health.clinical.bmi import calculate_adult_bmi, calculate_pediatric_bmi_percentile
+from carefold_health.clinical.vitals import normalize_fhir_vitals
+from carefold_health.models import HealthResource
+from yarvelle_core.db.session import get_session_factory
+from yarvelle_core.engine.tool_registry import DataFlows, ToolSpec
+from carefold_health.safety.vitals import check_vitals_red_flags
+from yarvelle_core.schemas.tool import ToolResult
 
-logger = logging.getLogger("carefold.tools.record_vitals")
+logger = logging.getLogger("carefold_health.tools.record_vitals")
 
 RECOGNIZED_VITALS_KEYS = frozenset({
     "systolic",
@@ -171,7 +172,7 @@ async def execute_record_vitals(args: Dict[str, Any], ctx: Any = None) -> ToolRe
 
     # 7. Audit Logging for Undoability
     try:
-        from carefold.audit.logger import record_audit
+        from yarvelle_core.audit.logger import record_audit
         actor_id = getattr(ctx, "user_id", "user") or "user"
         await record_audit(
             {
@@ -214,4 +215,51 @@ async def execute_record_vitals(args: Dict[str, Any], ctx: Any = None) -> ToolRe
     )
 
 
-__all__ = ["execute_record_vitals"]
+SPEC = ToolSpec(
+    name="record_vitals",
+    description=(
+        "Record vital signs observations (blood pressure, heart rate, blood glucose, "
+        "SpO2, weight, height) for a patient profile with automated red-flag safety screening, "
+        "adult BMI computation, and CDC pediatric percentiles."
+    ),
+    parameters={
+        "type": "object",
+        "properties": {
+            "vitals_data": {
+                "type": "object",
+                "description": "Key-value dictionary containing vital sign measurements.",
+            },
+            "reported_symptoms": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Optional list of patient-reported concurrent acute or neurological symptoms.",
+            },
+            "recorded_at": {
+                "type": "string",
+                "description": "Optional ISO-8601 observation timestamp.",
+            },
+            "source_type": {
+                "type": "string",
+                "enum": ["manual", "device", "note_extracted"],
+                "default": "manual",
+            },
+            "source_ref": {"type": "string"},
+            "source_id": {"type": "string"},
+        },
+        "required": ["vitals_data"],
+    },
+    risk_tier="write_local",
+    trust="trusted",
+    data_flows=DataFlows(allowed_hosts=(), data_sensitivity="phi"),
+    executor=execute_record_vitals,
+    metadata={
+        "action": "record_vitals",
+        "entity": "health_resource",
+        "undoable": True,
+        "risk": "write_local",
+    },
+    scopes={"health.clinical"},
+)
+
+
+__all__ = ["SPEC", "execute_record_vitals"]

@@ -15,10 +15,7 @@ from __future__ import annotations
 
 from typing import List
 
-try:
-    from yarvelle_core.pack.spec import RouterContribution
-except ImportError:
-    from carefold.api.router import RouterContribution
+from yarvelle_core.pack.spec import RouterContribution
 
 from carefold_health.routers.appointments import router as appointments_router
 from carefold_health.routers.companion import router as companion_router

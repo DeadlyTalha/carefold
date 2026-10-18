@@ -16,16 +16,17 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Iterator
 
-from carefold.clinical.preventive import (
+from carefold_health.clinical.preventive import (
     VALID_PREVENTIVE_STATUSES,
     VALID_SCHEDULE_SOURCES,
     evaluate_preventive_care,
     update_preventive_record,
 )
-from carefold.db.session import get_session_factory
-from carefold.schemas.tool import ToolResult
+from yarvelle_core.db.session import get_session_factory
+from yarvelle_core.engine.tool_registry import DataFlows, ToolSpec
+from yarvelle_core.schemas.tool import ToolResult
 
-logger = logging.getLogger("carefold.tools.preventive")
+logger = logging.getLogger("carefold_health.tools.preventive")
 
 
 class PreventiveToolResult(ToolResult):
@@ -193,6 +194,90 @@ async def execute_update_preventive_status(args: Dict[str, Any], ctx: Any = None
 
 __all__ = [
     "PreventiveToolResult",
+    "SPEC_CHECK",
+    "SPEC_UPDATE",
     "execute_check_preventive_care",
     "execute_update_preventive_status",
 ]
+
+
+SPEC_CHECK = ToolSpec(
+    name="check_preventive_care",
+    description=(
+        "Evaluate preventive care screenings and immunisations for a patient profile against "
+        "cited USPSTF Grade A/B and AAP/CDC pediatric schedules."
+    ),
+    parameters={
+        "type": "object",
+        "properties": {
+            "schedule_source": {
+                "type": "string",
+                "enum": ["aap_2026", "cdc"],
+                "description": "Optional pediatric immunisation schedule source ('aap_2026' or 'cdc').",
+            },
+            "sex": {
+                "type": "string",
+                "enum": ["any", "female", "male"],
+                "description": "Optional biological sex filter for adult screening rules.",
+            },
+            "category": {
+                "type": "string",
+                "enum": ["screening", "immunisation", "well_visit"],
+                "description": "Optional category filter.",
+            },
+        },
+    },
+    risk_tier="read",
+    trust="trusted",
+    data_flows=DataFlows(allowed_hosts=(), data_sensitivity="phi"),
+    executor=execute_check_preventive_care,
+    metadata={
+        "action": "check_preventive_care",
+        "entity": "preventive_record",
+        "risk": "read",
+    },
+    scopes={"health.clinical"},
+)
+
+
+SPEC_UPDATE = ToolSpec(
+    name="update_preventive_status",
+    description=(
+        "Update the status of a preventive care screening or immunisation item "
+        "('due', 'completed', 'not_applicable', 'declined') for the active profile."
+    ),
+    parameters={
+        "type": "object",
+        "properties": {
+            "rule_id": {
+                "type": "string",
+                "description": "Preventive rule ID from the cited YAML rule pack.",
+            },
+            "status": {
+                "type": "string",
+                "enum": ["due", "completed", "not_applicable", "declined"],
+                "description": "Updated preventive item status.",
+            },
+            "notes": {
+                "type": "string",
+                "description": "Optional clinical or patient notes.",
+            },
+            "completed_at": {
+                "type": "string",
+                "description": "Optional ISO-8601 completion timestamp.",
+            },
+        },
+        "required": ["rule_id", "status"],
+    },
+    risk_tier="write_local",
+    trust="trusted",
+    data_flows=DataFlows(allowed_hosts=(), data_sensitivity="phi"),
+    executor=execute_update_preventive_status,
+    metadata={
+        "action": "update_preventive_status",
+        "entity": "preventive_record",
+        "undoable": True,
+        "risk": "write_local",
+    },
+    scopes={"health.clinical"},
+)

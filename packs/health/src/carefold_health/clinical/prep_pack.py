@@ -33,11 +33,12 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.clinical.vitals import calculate_diurnal_bp_trends
-from carefold.db.models import Appointment, HealthResource, Job, Note
-from carefold.schemas.plan import AgentTask, ExecutionMode, ExecutionPlan
+from carefold_health.clinical.vitals import calculate_diurnal_bp_trends
+from carefold_health.models import Appointment, HealthResource
+from yarvelle_core.db.models import Job, Note
+from yarvelle_core.schemas.plan import AgentTask, ExecutionMode, ExecutionPlan
 
-logger = logging.getLogger("carefold.clinical.prep_pack")
+logger = logging.getLogger("carefold_health.clinical.prep_pack")
 
 NON_CLINICAL_DISCLAIMER: str = (
     "*Disclaimer: Prepared with Carefold for patient empowerment. "
@@ -486,7 +487,7 @@ async def generate_and_persist_prep_pack(
     try:
         idx = search_index
         if idx is None:
-            from carefold.search.factory import get_search_index
+            from yarvelle_core.search.factory import get_search_index
             idx = get_search_index()
         if idx is not None:
             query_str = f"{final_reason} {final_specialty or ''}".strip()
@@ -577,7 +578,7 @@ async def generate_and_persist_prep_pack(
 
     # 10. Record Audit Event for Undoability
     try:
-        from carefold.audit.logger import record_audit
+        from yarvelle_core.audit.logger import record_audit
         await record_audit(
             {
                 "profile_id": clean_profile_id,

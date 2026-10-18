@@ -9,12 +9,22 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Backward-compatibility re-export shim for carefold.platform.routines."""
+"""Backward-compatibility re-export shim for yarvelle_core.platform.routines."""
 
-from carefold.platform.routines import *  # noqa: F401, F403
-from carefold.platform.routines import (
-    create_standing_routine,
-    execute_standing_routine,
-    set_connection_autonomy,
-    update_standing_routine_status,
-)
+from __future__ import annotations
+
+import sys
+from typing import Any
+
+from yarvelle_core.platform.routines import *  # noqa: F401, F403
+import yarvelle_core.platform.routines as _target_module
+
+sys.modules[__name__] = _target_module
+
+
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

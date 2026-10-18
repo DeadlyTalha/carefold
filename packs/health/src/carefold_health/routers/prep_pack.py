@@ -21,14 +21,15 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.api.deps import get_current_user, resolve_owner_user_id
-from carefold.api.profiles import get_user_profile_access
-from carefold.auth.ports import UserProfile
-from carefold.clinical.prep_pack import generate_and_persist_prep_pack
-from carefold.db.models import Appointment, Note, Profile
-from carefold.db.session import get_db
+from yarvelle_core.api.deps import get_current_user, resolve_owner_user_id
+from yarvelle_core.api.profiles import get_user_profile_access
+from yarvelle_core.auth.ports import UserProfile
+from carefold_health.clinical.prep_pack import generate_and_persist_prep_pack
+from carefold_health.models import Appointment
+from yarvelle_core.db.models import Note, Profile
+from yarvelle_core.db.session import get_db
 
-logger = logging.getLogger("carefold.api.prep_pack")
+logger = logging.getLogger("carefold_health.api.prep_pack")
 
 router = APIRouter(tags=["PrepPack"])
 

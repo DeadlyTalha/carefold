@@ -39,12 +39,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-try:
-    from yarvelle_core.db.base import Base
-    from yarvelle_core.scope.mixin import ScopedMixin
-except ImportError:
-    from carefold.db.base import Base
-    from carefold.scope.mixin import ScopedMixin
+from yarvelle_core.db.base import Base
+from yarvelle_core.scope.mixin import ScopedMixin
 
 
 def utc_now() -> datetime:

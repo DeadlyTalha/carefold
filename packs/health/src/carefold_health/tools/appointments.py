@@ -21,17 +21,18 @@ from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
 
-from carefold.audit.logger import record_audit
-from carefold.clinical.appointments import (
+from yarvelle_core.audit.logger import record_audit
+from carefold_health.clinical.appointments import (
     AppointmentStatus,
     InvalidStatusTransitionError,
     validate_status_transition,
 )
-from carefold.db.models import Appointment
-from carefold.db.session import get_session_factory
-from carefold.schemas.tool import ToolResult
+from carefold_health.models import Appointment
+from yarvelle_core.db.session import get_session_factory
+from yarvelle_core.engine.tool_registry import DataFlows, ToolSpec
+from yarvelle_core.schemas.tool import ToolResult
 
-logger = logging.getLogger("carefold.tools.appointments")
+logger = logging.getLogger("carefold_health.tools.appointments")
 
 
 async def execute_create_appointment(args: Dict[str, Any], ctx: Any = None) -> ToolResult:
@@ -358,7 +359,173 @@ async def execute_update_appointment_status(args: Dict[str, Any], ctx: Any = Non
 
 
 __all__ = [
+    "SPEC_CREATE",
+    "SPEC_LIST",
+    "SPEC_UPDATE_STATUS",
     "execute_create_appointment",
     "execute_list_appointments",
     "execute_update_appointment_status",
 ]
+
+
+SPEC_CREATE = ToolSpec(
+    name="create_appointment",
+    description=(
+        "Schedule and record a clinical or administrative healthcare appointment for a patient "
+        "profile with validated start/end timestamps, provider specialty, clinic location, "
+        "and pre-visit preparation notes."
+    ),
+    parameters={
+        "type": "object",
+        "properties": {
+            "title": {
+                "type": "string",
+                "description": "Appointment title or encounter description (e.g. 'Cardiology Consultation').",
+            },
+            "start_time": {
+                "type": "string",
+                "description": "Scheduled start timestamp in ISO-8601 format (UTC or with timezone offset).",
+            },
+            "end_time": {
+                "type": "string",
+                "description": "Scheduled end timestamp in ISO-8601 format (must be strictly after start_time).",
+            },
+            "provider_name": {
+                "type": "string",
+                "description": "Optional name of clinician, physician, or practice (e.g. 'Dr. Sarah Connor').",
+            },
+            "specialty": {
+                "type": "string",
+                "description": "Medical specialty (e.g. 'Cardiology', 'Dermatology', 'Endocrinology').",
+            },
+            "location": {
+                "type": "string",
+                "description": "Physical clinic address, room/suite number, or telehealth URL.",
+            },
+            "clinic_phone": {
+                "type": "string",
+                "description": "Clinic or scheduling office phone number (e.g. '555-0144').",
+            },
+            "timezone": {
+                "type": "string",
+                "description": "Local appointment IANA timezone identifier (default: 'UTC').",
+                "default": "UTC",
+            },
+            "status": {
+                "type": "string",
+                "enum": ["requested", "scheduled", "confirmed"],
+                "default": "scheduled",
+                "description": "Initial appointment status (default: 'scheduled').",
+            },
+            "reason": {
+                "type": "string",
+                "description": "Chief complaint or primary purpose of appointment.",
+            },
+            "preparation_notes": {
+                "type": "string",
+                "description": "Pre-visit instructions (e.g. fasting requirement, records to bring).",
+            },
+        },
+        "required": ["title", "start_time", "end_time"],
+    },
+    risk_tier="write_local",
+    trust="trusted",
+    data_flows=DataFlows(allowed_hosts=(), data_sensitivity="phi"),
+    executor=execute_create_appointment,
+    metadata={
+        "action": "create_appointment",
+        "entity": "appointment",
+        "undoable": True,
+        "risk": "write_local",
+    },
+    scopes={"health.clinical"},
+)
+
+
+SPEC_LIST = ToolSpec(
+    name="list_appointments",
+    description=(
+        "List upcoming or historical healthcare appointments for a patient profile with optional "
+        "filtering by status, start date range, and pagination."
+    ),
+    parameters={
+        "type": "object",
+        "properties": {
+            "status": {
+                "type": "string",
+                "enum": ["requested", "scheduled", "confirmed", "completed", "cancelled"],
+                "description": "Filter by appointment lifecycle status.",
+            },
+            "start_after": {
+                "type": "string",
+                "description": "Filter appointments starting on or after this ISO-8601 timestamp.",
+            },
+            "start_before": {
+                "type": "string",
+                "description": "Filter appointments starting on or before this ISO-8601 timestamp.",
+            },
+            "limit": {
+                "type": "integer",
+                "default": 20,
+                "minimum": 1,
+                "maximum": 100,
+                "description": "Maximum number of appointments to return (default: 20).",
+            },
+            "offset": {
+                "type": "integer",
+                "default": 0,
+                "minimum": 0,
+                "description": "Number of records to skip for pagination (default: 0).",
+            },
+        },
+    },
+    risk_tier="read",
+    trust="trusted",
+    data_flows=DataFlows(allowed_hosts=(), data_sensitivity="phi"),
+    executor=execute_list_appointments,
+    metadata={
+        "action": "list_appointments",
+        "entity": "appointment",
+        "risk": "read",
+    },
+    scopes={"health.clinical"},
+)
+
+
+SPEC_UPDATE_STATUS = ToolSpec(
+    name="update_appointment_status",
+    description=(
+        "Update the status of an existing patient appointment (e.g. from 'requested' to 'confirmed', "
+        "or mark 'completed' or 'cancelled') with audit event tracking."
+    ),
+    parameters={
+        "type": "object",
+        "properties": {
+            "appointment_id": {
+                "type": "string",
+                "description": "Unique UUID of the appointment to update.",
+            },
+            "status": {
+                "type": "string",
+                "enum": ["requested", "scheduled", "confirmed", "completed", "cancelled"],
+                "description": "Target status transition.",
+            },
+            "cancellation_reason": {
+                "type": "string",
+                "description": "Optional explanation if cancelling the appointment.",
+            },
+        },
+        "required": ["appointment_id", "status"],
+    },
+    risk_tier="write_local",
+    trust="trusted",
+    data_flows=DataFlows(allowed_hosts=(), data_sensitivity="phi"),
+    executor=execute_update_appointment_status,
+    metadata={
+        "action": "update_appointment_status",
+        "entity": "appointment",
+        "undoable": True,
+        "risk": "write_local",
+    },
+    scopes={"health.clinical"},
+)

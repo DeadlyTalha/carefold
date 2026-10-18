@@ -19,9 +19,9 @@ Zero hardcoded preamble text or negative constraint strings in Python code.
 from __future__ import annotations
 
 from typing import Sequence
-from carefold.constants.defaults import DEFAULT_FORBIDDEN_INTENTS
-from carefold.resources.loader import get_resource_loader
-from carefold.schemas.manifest import AgentManifest, SkillManifest
+from yarvelle_core.constants.defaults import DEFAULT_FORBIDDEN_INTENTS
+from yarvelle_core.resources.loader import get_resource_loader
+from yarvelle_core.schemas.manifest import AgentManifest, SkillManifest
 
 
 def build_safety_preamble(

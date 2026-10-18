@@ -20,11 +20,12 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
 
-from carefold.clinical.prep_pack import generate_and_persist_prep_pack
-from carefold.db.session import get_session_factory
-from carefold.schemas.tool import ToolResult
+from carefold_health.clinical.prep_pack import generate_and_persist_prep_pack
+from yarvelle_core.db.session import get_session_factory
+from yarvelle_core.engine.tool_registry import DataFlows, ToolSpec
+from yarvelle_core.schemas.tool import ToolResult
 
-logger = logging.getLogger("carefold.tools.prep_pack")
+logger = logging.getLogger("carefold_health.tools.prep_pack")
 
 
 async def execute_generate_prep_pack(args: Dict[str, Any], ctx: Any = None) -> ToolResult:
@@ -85,4 +86,47 @@ async def execute_generate_prep_pack(args: Dict[str, Any], ctx: Any = None) -> T
         )
 
 
-__all__ = ["execute_generate_prep_pack"]
+SPEC = ToolSpec(
+    name="generate_prep_pack",
+    description=(
+        "Compile a comprehensive clinical visit preparation pack for an upcoming or planned consultation, "
+        "synthesizing chief visit reasons, recent symptoms timeline, 30/90-day vitals trends, active medications, "
+        "allergies, and prior clinical records into a structured Markdown dossier and persisted clinical note."
+    ),
+    parameters={
+        "type": "object",
+        "properties": {
+            "appointment_id": {
+                "type": "string",
+                "description": "Optional UUID of the linked clinical appointment.",
+            },
+            "specialty": {
+                "type": "string",
+                "description": "Medical specialty of the encounter (e.g. 'Cardiology', 'Endocrinology').",
+            },
+            "visit_reason": {
+                "type": "string",
+                "description": "Primary complaint or purpose of visit (e.g. 'Hypertension follow-up').",
+            },
+            "doctor_questions": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Optional prioritized list of clinical questions to include (max 5).",
+            },
+        },
+    },
+    risk_tier="write_local",
+    trust="trusted",
+    data_flows=DataFlows(allowed_hosts=(), data_sensitivity="phi"),
+    executor=execute_generate_prep_pack,
+    metadata={
+        "action": "generate_prep_pack",
+        "entity": "note",
+        "undoable": True,
+        "risk": "write_local",
+    },
+    scopes={"health.clinical"},
+)
+
+
+__all__ = ["SPEC", "execute_generate_prep_pack"]

@@ -34,8 +34,8 @@ from fhir.resources.R4B.observation import Observation as FhirObservation
 from fhir.resources.R4B.patient import Patient as FhirPatient
 import httpx
 
-from carefold.importers.ccda import parse_ccda_xml
-from carefold.importers.fhir_bundle import parse_fhir_bundle
+from carefold_health.importers.ccda import parse_ccda_xml
+from carefold_health.importers.fhir_bundle import parse_fhir_bundle
 
 ALLOWED_SIDECAR_HOSTS = frozenset({"127.0.0.1", "localhost", "::1", "fhir-converter"})
 

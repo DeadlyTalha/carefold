@@ -24,20 +24,21 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.api.deps import get_current_user, get_db
-from carefold.api.profiles import get_user_profile_access
-from carefold.audit.logger import record_audit
-from carefold.auth.ports import UserProfile
-from carefold.clinical.appointments import (
+from yarvelle_core.api.deps import get_current_user, get_db
+from yarvelle_core.api.profiles import get_user_profile_access
+from yarvelle_core.audit.logger import record_audit
+from yarvelle_core.auth.ports import UserProfile
+from carefold_health.clinical.appointments import (
     AppointmentStatus,
     InvalidStatusTransitionError,
     generate_how_to_book_drafts,
     sweep_post_visit_transitions,
     validate_status_transition,
 )
-from carefold.db.models import Appointment, Profile
+from carefold_health.models import Appointment
+from yarvelle_core.db.models import Profile
 
-logger = logging.getLogger("carefold.api.appointments")
+logger = logging.getLogger("carefold_health.api.appointments")
 
 router = APIRouter(tags=["appointments"])
 

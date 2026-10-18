@@ -33,9 +33,9 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.connectors.lifecycle import revoke_connection
-from carefold.connectors.oauth import resolve_oauth_kek
-from carefold.db.models import (
+from yarvelle_core.connectors.lifecycle import revoke_connection
+from yarvelle_core.connectors.oauth import resolve_oauth_kek
+from yarvelle_core.db.models import (
     AuditEventRecord,
     Connection,
     ConsentGrant,
@@ -46,7 +46,7 @@ from carefold.db.models import (
     ProfileKey,
     utc_now,
 )
-from carefold.vault import (
+from yarvelle_core.vault import (
     compute_dek_wrapping_aad,
     decrypt_credential,
     encrypt,

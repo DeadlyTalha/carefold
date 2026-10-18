@@ -11,7 +11,7 @@
 
 """Clinical domain logic, vitals normalization, BMI calculation, and trend analysis."""
 
-from carefold.clinical.appointments import (
+from carefold_health.clinical.appointments import (
     AppointmentStatus,
     InvalidStatusTransitionError,
     VALID_STATUS_TRANSITIONS,
@@ -20,12 +20,12 @@ from carefold.clinical.appointments import (
     sweep_post_visit_transitions,
     validate_status_transition,
 )
-from carefold.clinical.bmi import (
+from carefold_health.clinical.bmi import (
     calculate_adult_bmi,
     calculate_adult_bmi_imperial,
     calculate_pediatric_bmi_percentile,
 )
-from carefold.clinical.notes import (
+from carefold_health.clinical.notes import (
     AfterVisitSummary,
     ExtractedClinicalItem,
     NON_CLINICAL_DISCLAIMER,
@@ -34,13 +34,13 @@ from carefold.clinical.notes import (
     extract_after_visit_summary,
     validate_note_type,
 )
-from carefold.clinical.prep_pack import (
+from carefold_health.clinical.prep_pack import (
     compile_clinical_prep_pack,
     compile_execution_plan,
     generate_and_persist_prep_pack,
     synthesize_doctor_questions,
 )
-from carefold.platform.reminders import (
+from yarvelle_core.platform.reminders import (
     SNOOZE_DELTAS,
     advance_rrule_occurrence,
     apply_reminder_snooze,
@@ -48,13 +48,13 @@ from carefold.platform.reminders import (
     generate_ics_calendar,
     handle_reminder_job,
 )
-from carefold.clinical.activity import (
+from carefold_health.clinical.activity import (
     compute_is_undoable,
     format_audit_event_as_activity_item,
     get_profile_activity_timeline,
     synthesize_activity_summary,
 )
-from carefold.clinical.undo import (
+from carefold_health.clinical.undo import (
     ActionNotUndoableError,
     AlreadyUndoneError,
     EntityNotFoundError,
@@ -64,7 +64,7 @@ from carefold.clinical.undo import (
     execute_single_click_undo,
     execute_single_click_undo_async,
 )
-from carefold.clinical.vitals import (
+from carefold_health.clinical.vitals import (
     LOINC_CODES,
     classify_blood_pressure,
     calculate_diurnal_bp_trends,

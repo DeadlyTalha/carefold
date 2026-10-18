@@ -20,16 +20,16 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.api.deps import get_current_user, get_db, resolve_owner_user_id
-from carefold.api.profiles import get_user_profile_access
-from carefold.auth.ports import UserProfile
-from carefold.clinical.handover import (
+from yarvelle_core.api.deps import get_current_user, get_db, resolve_owner_user_id
+from yarvelle_core.api.profiles import get_user_profile_access
+from yarvelle_core.auth.ports import UserProfile
+from carefold_health.clinical.handover import (
     VALID_VIEWER_SECTIONS,
     check_profile_section_access,
     execute_teen_handover,
     update_viewer_sections,
 )
-from carefold.db.models import Profile, ProfileAccess
+from yarvelle_core.db.models import Profile, ProfileAccess
 
 router = APIRouter(tags=["handover"])
 

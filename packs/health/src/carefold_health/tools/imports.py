@@ -24,10 +24,11 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
-from carefold.db.session import get_session_factory
-from carefold.importers.service import commit_import_batch, stage_import
+from yarvelle_core.db.session import get_session_factory
+from yarvelle_core.engine.tool_registry import DataFlows, ToolSpec
+from carefold_health.importers.service import commit_import_batch, stage_import
 
-logger = logging.getLogger("carefold.tools.imports")
+logger = logging.getLogger("carefold_health.tools.imports")
 
 
 def _require_profile_context(ctx: Any, tool_name: str) -> str:
@@ -155,6 +156,85 @@ async def execute_commit_clinical_import(args: Dict[str, Any], ctx: Any = None) 
 
 
 __all__ = [
+    "SPEC_COMMIT",
+    "SPEC_STAGE",
     "execute_commit_clinical_import",
     "execute_stage_clinical_import",
 ]
+
+
+SPEC_STAGE = ToolSpec(
+    name="stage_clinical_import",
+    description=(
+        "Parse and stage a clinical or wearable export file (FHIR R4 Bundle JSON, C-CDA XML, "
+        "or Apple Health export.xml with daily summary aggregation) into an ImportBatch for Review-Before-Save."
+    ),
+    parameters={
+        "type": "object",
+        "properties": {
+            "filename": {
+                "type": "string",
+                "description": "Uploaded file name (e.g. 'bundle.json', 'ccda.xml', 'export.xml').",
+            },
+            "content": {
+                "type": "string",
+                "description": "Raw JSON or XML content to parse and stage.",
+            },
+            "format": {
+                "type": "string",
+                "enum": ["fhir_r4", "ccda", "apple_health"],
+                "description": "Optional explicit file format override.",
+            },
+            "source_name": {
+                "type": "string",
+                "description": "Human-readable provenance origin (e.g. 'Epic MyChart', 'Apple Health').",
+            },
+        },
+        "required": ["filename", "content"],
+    },
+    risk_tier="write_local",
+    trust="untrusted",
+    data_flows=DataFlows(allowed_hosts=(), data_sensitivity="phi"),
+    executor=execute_stage_clinical_import,
+    metadata={
+        "action": "stage_clinical_import",
+        "entity": "import_batch",
+        "risk": "write_local",
+    },
+    scopes={"health.clinical"},
+)
+
+
+SPEC_COMMIT = ToolSpec(
+    name="commit_clinical_import",
+    description=(
+        "Commit a user-reviewed staged ImportBatch into profile health_resources with provenance attribution, "
+        "idempotency, and search indexing."
+    ),
+    parameters={
+        "type": "object",
+        "properties": {
+            "batch_id": {
+                "type": "string",
+                "description": "UUID of the staged ImportBatch to commit.",
+            },
+            "selected_indices": {
+                "type": "array",
+                "items": {"type": "integer"},
+                "description": "Optional 0-based indices of staged records to commit; commits all if omitted.",
+            },
+        },
+        "required": ["batch_id"],
+    },
+    risk_tier="write_local",
+    trust="trusted",
+    data_flows=DataFlows(allowed_hosts=(), data_sensitivity="phi"),
+    executor=execute_commit_clinical_import,
+    metadata={
+        "action": "commit_clinical_import",
+        "entity": "import_batch",
+        "undoable": True,
+        "risk": "write_local",
+    },
+    scopes={"health.clinical"},
+)

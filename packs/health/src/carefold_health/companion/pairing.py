@@ -31,9 +31,9 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.db.models import (
+from carefold_health.models import CompanionDevice
+from yarvelle_core.db.models import (
     AuditEventRecord,
-    CompanionDevice,
     ConsentGrant,
     utc_now,
 )

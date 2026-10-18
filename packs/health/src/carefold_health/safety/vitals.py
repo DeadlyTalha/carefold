@@ -32,7 +32,7 @@ import re
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 import yaml
 
-from carefold.safety.emergency import EmergencyFlag
+from carefold_health.safety.emergency import EmergencyFlag
 
 logger = logging.getLogger(__name__)
 
@@ -205,7 +205,7 @@ def _load_vitals_thresholds_yaml() -> Dict[str, Any]:
     """Loads vitals thresholds YAML from resources directory with robust fallbacks."""
     # 1. Try via cached ResourceLoader
     try:
-        from carefold.resources.loader import get_resource_loader
+        from yarvelle_core.resources.loader import get_resource_loader
         loader = get_resource_loader()
         data = loader.load_yaml("vitals_thresholds.yaml")
         if data:
@@ -215,6 +215,7 @@ def _load_vitals_thresholds_yaml() -> Dict[str, Any]:
 
     # 2. Try relative file system locations
     candidates = [
+        Path(__file__).resolve().parents[3] / "resources" / "vitals_thresholds.yaml",
         Path(__file__).resolve().parent.parent / "resources" / "vitals_thresholds.yaml",
         Path.cwd() / "backend" / "src" / "carefold" / "resources" / "vitals_thresholds.yaml",
         Path.cwd() / "resources" / "vitals_thresholds.yaml",

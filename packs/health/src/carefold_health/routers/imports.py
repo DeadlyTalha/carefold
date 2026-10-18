@@ -21,20 +21,21 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.api.deps import get_current_user, get_db, resolve_owner_user_id
-from carefold.api.profiles import get_user_profile_access
-from carefold.auth.ports import UserProfile
-from carefold.db.models import ImportBatch, Profile
-from carefold.importers.service import (
+from yarvelle_core.api.deps import get_current_user, get_db, resolve_owner_user_id
+from yarvelle_core.api.profiles import get_user_profile_access
+from yarvelle_core.auth.ports import UserProfile
+from carefold_health.models import ImportBatch
+from yarvelle_core.db.models import Profile
+from carefold_health.importers.service import (
     commit_import_batch,
     discard_import_batch,
     get_import_batch,
     list_import_batches,
     stage_import,
 )
-from carefold.logging import get_logger
+from yarvelle_core.logging import get_logger
 
-logger = get_logger("carefold.api.imports")
+logger = get_logger("carefold_health.api.imports")
 
 router = APIRouter(tags=["imports"])
 

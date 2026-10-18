@@ -33,22 +33,24 @@ import yaml
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.audit.logger import record_audit
-from carefold.config import settings
-from carefold.db.models import (
+from yarvelle_core.audit.logger import record_audit
+from yarvelle_core.config import settings
+from carefold_health.models import (
     Appointment,
-    AuditEventRecord,
     HealthResource,
+    PreventiveRecord,
+)
+from yarvelle_core.db.models import (
+    AuditEventRecord,
     Job,
     Note,
-    PreventiveRecord,
     Profile,
     Reminder,
     SystemSetting,
     User,
 )
 
-logger = logging.getLogger("carefold.clinical.preventive")
+logger = logging.getLogger("carefold_health.clinical.preventive")
 
 
 async def _resolve_actor_user_id(
@@ -118,7 +120,8 @@ def _resolve_default_yaml_paths(skills_dir: Optional[Union[Path, str]] = None) -
         candidates.append(Path(settings.get_skills_dir()))
     except Exception:
         pass
-    # Walk up from backend/src/carefold/clinical/preventive.py -> repo root / skills
+    # Walk up from backend/src/carefold/clinical/preventive.py or packs/health/src/carefold_health/clinical/preventive.py
+    candidates.append(Path(__file__).resolve().parents[3] / "skills")
     repo_root = Path(__file__).resolve().parents[4]
     candidates.append(repo_root / "skills")
     candidates.append(Path.cwd() / "skills")

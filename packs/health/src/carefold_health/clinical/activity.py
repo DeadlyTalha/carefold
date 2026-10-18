@@ -21,8 +21,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.db.models import AuditEventRecord
-from carefold.schemas.activity import (
+from yarvelle_core.db.models import AuditEventRecord
+from yarvelle_core.schemas.activity import (
     ActivityItemResponse,
     ActivityTimelineResponse,
     ActivityUndoResponse,

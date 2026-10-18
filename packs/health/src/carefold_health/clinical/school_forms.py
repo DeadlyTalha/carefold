@@ -32,17 +32,16 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.db.models import (
+from carefold_health.models import HealthResource, SchoolForm
+from yarvelle_core.db.models import (
     AuditEventRecord,
-    HealthResource,
     Job,
     Profile,
     Reminder,
-    SchoolForm,
     User,
 )
 
-logger = logging.getLogger("carefold.clinical.school_forms")
+logger = logging.getLogger("carefold_health.clinical.school_forms")
 
 
 async def _resolve_actor_user_id(

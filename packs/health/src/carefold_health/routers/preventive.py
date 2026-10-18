@@ -22,10 +22,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.api.deps import get_current_user, get_db, resolve_owner_user_id
-from carefold.api.profiles import get_user_profile_access
-from carefold.auth.ports import UserProfile
-from carefold.clinical.preventive import (
+from yarvelle_core.api.deps import get_current_user, get_db, resolve_owner_user_id
+from yarvelle_core.api.profiles import get_user_profile_access
+from yarvelle_core.auth.ports import UserProfile
+from carefold_health.clinical.preventive import (
     PreventiveActionLiteral,
     PreventiveStatusLiteral,
     ScheduleSourceLiteral,
@@ -34,9 +34,9 @@ from carefold.clinical.preventive import (
     set_profile_schedule_source,
     update_preventive_record,
 )
-from carefold.db.models import Profile
+from yarvelle_core.db.models import Profile
 
-logger = logging.getLogger("carefold.api.preventive")
+logger = logging.getLogger("carefold_health.api.preventive")
 
 router = APIRouter(tags=["preventive"])
 

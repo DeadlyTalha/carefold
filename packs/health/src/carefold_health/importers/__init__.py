@@ -11,25 +11,25 @@
 
 """Clinical and wearable file importers package (AU-38 / E10.1, E10.2, E10.7, E8.0)."""
 
-from carefold.importers.apple_health import (
+from carefold_health.importers.apple_health import (
     HIGH_FREQUENCY_HK_TYPES,
     LOW_FREQUENCY_CLINICAL_HK_TYPES,
     parse_apple_health_export,
 )
-from carefold.importers.ccda import parse_ccda_xml
-from carefold.importers.fhir_bundle import (
+from carefold_health.importers.ccda import parse_ccda_xml
+from carefold_health.importers.fhir_bundle import (
     SUPPORTED_FHIR_RESOURCE_TYPES,
     parse_fhir_bundle,
 )
-from carefold.importers.fhir_converter import (
+from carefold_health.importers.fhir_converter import (
     convert_clinical_payload_to_fhir,
     parse_hl7v2_to_fhir,
 )
-from carefold.importers.iis_pdf import (
+from carefold_health.importers.iis_pdf import (
     SUPPORTED_IIS_VACCINES,
     parse_iis_immunisation_text,
 )
-from carefold.importers.service import (
+from carefold_health.importers.service import (
     SUPPORTED_IMPORT_FORMATS,
     commit_import_batch,
     detect_import_format,
@@ -38,7 +38,7 @@ from carefold.importers.service import (
     list_import_batches,
     stage_import,
 )
-from carefold.importers.smart_health_card import (
+from carefold_health.importers.smart_health_card import (
     create_signed_shc_jws,
     decode_shc_qr_uri,
     encode_shc_qr_uri,

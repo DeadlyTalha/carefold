@@ -9,74 +9,22 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Health SafetyPolicy implementation wrapping Carefold clinical safety modules."""
+"""Backward-compatibility re-export shim for carefold_health.safety.policy."""
 
 from __future__ import annotations
 
-from typing import Any, Optional, Sequence, Set
+import sys
+from typing import Any
 
-from carefold.constants.defaults import DEFAULT_FORBIDDEN_INTENTS
-from carefold.engine.safety_policy import (
-    EmergencyDirective,
-    SafetyContext,
-    SafetyPolicy,
-    SafetyVerdict,
-)
-from carefold.safety.classifier import check_safety_refusal, is_hard_refusal_reason
-from carefold.safety.emergency import check_emergency_red_flags
-from carefold.safety.prompt import build_safety_preamble
-from carefold.safety.template import SAFE_REFUSAL_TEMPLATE
+from carefold_health.safety.policy import *  # noqa: F401, F403
+import carefold_health.safety.policy as _target_module
+
+sys.modules[__name__] = _target_module
 
 
-class HealthSafetyPolicy:
-    """Adapts Carefold clinical safety classifiers to the domain-neutral SafetyPolicy protocol."""
-
-    def check_input(
-        self, text: Optional[str], ctx: Optional[SafetyContext] = None
-    ) -> SafetyVerdict:
-        res = check_safety_refusal(text)
-        return SafetyVerdict(
-            refused=res.refused,
-            reason=res.reason,
-            safe_response=res.safe_response or SAFE_REFUSAL_TEMPLATE,
-            is_hard=is_hard_refusal_reason(res.reason) if res.refused else False,
-        )
-
-    def check_output(
-        self, text: Optional[str], ctx: Optional[SafetyContext] = None
-    ) -> SafetyVerdict:
-        res = check_safety_refusal(text)
-        return SafetyVerdict(
-            refused=res.refused,
-            reason=res.reason,
-            safe_response=res.safe_response or SAFE_REFUSAL_TEMPLATE,
-            is_hard=is_hard_refusal_reason(res.reason) if res.refused else False,
-        )
-
-    def check_emergency(self, text: Optional[str]) -> Optional[EmergencyDirective]:
-        flag = check_emergency_red_flags(text or "")
-        if flag is None:
-            return None
-        return EmergencyDirective(
-            detected=True,
-            category=flag.category,
-            trigger_phrase=flag.trigger_phrase,
-            referral_message=flag.referral_message,
-        )
-
-    def get_preamble(self, agent: Any, skills: Sequence[Any] = ()) -> str:
-        return build_safety_preamble(agent, skills)
-
-    def get_refusal_template(self, reason: Optional[str] = None) -> str:
-        return SAFE_REFUSAL_TEMPLATE
-
-    def is_hard_refusal_reason(self, reason: Optional[str]) -> bool:
-        return is_hard_refusal_reason(reason)
-
-    def get_forbidden_intents(self) -> Set[str]:
-        return set(DEFAULT_FORBIDDEN_INTENTS)
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
 
 
-__all__ = [
-    "HealthSafetyPolicy",
-]
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

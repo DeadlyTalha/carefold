@@ -1525,8 +1525,13 @@ def _make_core_builtin_specs() -> List[ToolSpec]:
 
 def _make_health_builtin_specs() -> List[ToolSpec]:
     """Generates the 17 domain-specific pack ToolSpecs."""
-    specs_by_name = {s.name: s for s in _make_builtin_specs()}
-    return [specs_by_name[name] for name in HEALTH_TOOL_NAMES if name in specs_by_name]
+    try:
+        from carefold_health.tools import get_health_tool_specs
+
+        return get_health_tool_specs()
+    except Exception:
+        specs_by_name = {s.name: s for s in _make_builtin_specs()}
+        return [specs_by_name[name] for name in HEALTH_TOOL_NAMES if name in specs_by_name]
 
 
 _PACK_HEALTH: str = "h" "ealth"

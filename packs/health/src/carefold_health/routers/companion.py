@@ -20,22 +20,23 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.api.deps import get_auth, get_current_user, get_db, resolve_owner_user_id
-from carefold.api.profiles import get_user_profile_access
-from carefold.auth.ports import AuthPort, UserProfile
-from carefold.companion.pairing import (
+from yarvelle_core.api.deps import get_auth, get_current_user, get_db, resolve_owner_user_id
+from yarvelle_core.api.profiles import get_user_profile_access
+from yarvelle_core.auth.ports import AuthPort, UserProfile
+from carefold_health.companion.pairing import (
     CompanionPairingError,
     authenticate_companion_device,
     complete_companion_pairing,
     initiate_companion_pairing,
     revoke_companion_device,
 )
-from carefold.companion.sync import (
+from carefold_health.companion.sync import (
     ingest_companion_sync,
     list_companion_reminders,
 )
-from carefold.config import settings
-from carefold.db.models import CompanionDevice, Profile
+from yarvelle_core.config import settings
+from carefold_health.models import CompanionDevice
+from yarvelle_core.db.models import Profile
 
 router = APIRouter(tags=["companion"])
 

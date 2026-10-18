@@ -9,15 +9,22 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Backward-compatibility re-export shim for carefold.platform.reminders."""
+"""Backward-compatibility re-export shim for yarvelle_core.platform.reminders."""
 
-from carefold.platform.reminders import *  # noqa: F401, F403
-from carefold.platform.reminders import (
-    SNOOZE_DELTAS,
-    WEEKDAY_MAP,
-    advance_rrule_occurrence,
-    apply_reminder_snooze,
-    coalesce_overdue_reminders,
-    generate_ics_calendar,
-    handle_reminder_job,
-)
+from __future__ import annotations
+
+import sys
+from typing import Any
+
+from yarvelle_core.platform.reminders import *  # noqa: F401, F403
+import yarvelle_core.platform.reminders as _target_module
+
+sys.modules[__name__] = _target_module
+
+
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

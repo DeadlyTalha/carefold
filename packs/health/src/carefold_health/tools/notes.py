@@ -27,12 +27,14 @@ import uuid
 
 from sqlalchemy import select
 
-from carefold.clinical.notes import VALID_NOTE_TYPES, validate_note_type
-from carefold.db.models import Appointment, Job, Note
-from carefold.db.session import get_session_factory
-from carefold.schemas.tool import ToolResult
+from carefold_health.clinical.notes import VALID_NOTE_TYPES, validate_note_type
+from carefold_health.models import Appointment
+from yarvelle_core.db.models import Job, Note
+from yarvelle_core.db.session import get_session_factory
+from yarvelle_core.engine.tool_registry import DataFlows, ToolSpec
+from yarvelle_core.schemas.tool import ToolResult
 
-logger = logging.getLogger("carefold.tools.notes")
+logger = logging.getLogger("carefold_health.tools.notes")
 
 
 def _slugify(text: str) -> str:
@@ -154,7 +156,7 @@ async def execute_create_typed_note(args: Dict[str, Any], ctx: Any = None) -> To
 
             # 6. Audit Logging for Undoability
             try:
-                from carefold.audit.logger import record_audit
+                from yarvelle_core.audit.logger import record_audit
                 await record_audit(
                     {
                         "profile_id": clean_profile_id,
@@ -207,4 +209,62 @@ async def execute_create_typed_note(args: Dict[str, Any], ctx: Any = None) -> To
         )
 
 
-__all__ = ["execute_create_typed_note"]
+SPEC = ToolSpec(
+    name="create_typed_note",
+    description=(
+        "Create and persist a typed clinical or navigation note across 7 canonical categories "
+        "('visit', 'symptom', 'question', 'after_visit', 'school', 'scratchpad', 'general') "
+        "with optional appointment linking, tag categorization, search indexing, and audit logging."
+    ),
+    parameters={
+        "type": "object",
+        "properties": {
+            "title": {
+                "type": "string",
+                "description": "Human-readable title for the note (min 1, max 255 chars).",
+            },
+            "content": {
+                "type": "string",
+                "description": "Markdown formatted note body content.",
+            },
+            "type": {
+                "type": "string",
+                "enum": [
+                    "visit",
+                    "symptom",
+                    "question",
+                    "after_visit",
+                    "school",
+                    "scratchpad",
+                    "general",
+                ],
+                "default": "general",
+                "description": "Standardized note classification type.",
+            },
+            "linked_appointment_id": {
+                "type": "string",
+                "description": "Optional UUID of an appointment to associate with this note.",
+            },
+            "tags": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Optional list of tag strings for categorization.",
+            },
+        },
+        "required": ["title", "content"],
+    },
+    risk_tier="write_local",
+    trust="trusted",
+    data_flows=DataFlows(allowed_hosts=(), data_sensitivity="phi"),
+    executor=execute_create_typed_note,
+    metadata={
+        "action": "create_typed_note",
+        "entity": "note",
+        "undoable": True,
+        "risk": "write_local",
+    },
+    scopes={"health.clinical"},
+)
+
+
+__all__ = ["SPEC", "execute_create_typed_note"]

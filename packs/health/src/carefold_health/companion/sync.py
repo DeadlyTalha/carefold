@@ -48,16 +48,15 @@ from fhir.resources.R4B.observation import Observation as FhirObservation
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.clinical.vitals import LBS_TO_KG, MMOL_TO_MGDL, normalize_fhir_vitals
-from carefold.companion.pairing import CompanionPairingError
-from carefold.db.models import (
+from carefold_health.clinical.vitals import LBS_TO_KG, MMOL_TO_MGDL, normalize_fhir_vitals
+from carefold_health.companion.pairing import CompanionPairingError
+from carefold_health.models import CompanionDevice, HealthResource
+from yarvelle_core.db.models import (
     AuditEventRecord,
-    CompanionDevice,
-    HealthResource,
     Reminder,
     utc_now,
 )
-from carefold.safety.vitals import VitalsEmergencyFlag, check_vitals_red_flags
+from carefold_health.safety.vitals import VitalsEmergencyFlag, check_vitals_red_flags
 
 _CLINICAL_RECORD_MODELS: Dict[str, Any] = {
     "Condition": FhirCondition,

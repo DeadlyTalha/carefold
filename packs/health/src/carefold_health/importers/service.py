@@ -35,24 +35,23 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.config import settings
-from carefold.db.models import (
+from yarvelle_core.config import settings
+from carefold_health.models import HealthResource, ImportBatch
+from yarvelle_core.db.models import (
     Attachment,
     AuditEventRecord,
-    HealthResource,
-    ImportBatch,
     Job,
     Profile,
     utc_now,
 )
-from carefold.importers.apple_health import parse_apple_health_export
-from carefold.importers.ccda import parse_ccda_xml
-from carefold.importers.fhir_bundle import parse_fhir_bundle
-from carefold.importers.iis_pdf import parse_iis_immunisation_text
-from carefold.importers.smart_health_card import verify_and_parse_smart_health_card
-from carefold.storage.cas import store_cas_file
+from carefold_health.importers.apple_health import parse_apple_health_export
+from carefold_health.importers.ccda import parse_ccda_xml
+from carefold_health.importers.fhir_bundle import parse_fhir_bundle
+from carefold_health.importers.iis_pdf import parse_iis_immunisation_text
+from carefold_health.importers.smart_health_card import verify_and_parse_smart_health_card
+from yarvelle_core.storage.cas import store_cas_file
 
-logger = logging.getLogger("carefold.importers.service")
+logger = logging.getLogger("carefold_health.importers.service")
 
 SUPPORTED_IMPORT_FORMATS = frozenset({
     "fhir_r4",

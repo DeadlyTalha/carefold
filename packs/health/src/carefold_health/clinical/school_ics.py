@@ -37,14 +37,13 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.db.models import (
-    Appointment,
+from carefold_health.models import Appointment, SchoolIcsFeed
+from yarvelle_core.db.models import (
     AuditEventRecord,
-    SchoolIcsFeed,
     utc_now,
 )
 
-logger = logging.getLogger("carefold.clinical.school_ics")
+logger = logging.getLogger("carefold_health.clinical.school_ics")
 
 
 class _IcsDtProp:

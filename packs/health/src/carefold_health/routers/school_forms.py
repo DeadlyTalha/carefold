@@ -24,10 +24,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.api.deps import get_current_user, get_db, resolve_owner_user_id
-from carefold.api.profiles import get_user_profile_access
-from carefold.auth.ports import UserProfile
-from carefold.clinical.school_forms import (
+from yarvelle_core.api.deps import get_current_user, get_db, resolve_owner_user_id
+from yarvelle_core.api.profiles import get_user_profile_access
+from yarvelle_core.auth.ports import UserProfile
+from carefold_health.clinical.school_forms import (
     SchoolFormStatusLiteral,
     SchoolFormTypeLiteral,
     VALID_SCHOOL_FORM_STATUSES,
@@ -37,9 +37,10 @@ from carefold.clinical.school_forms import (
     regenerate_school_form_prefill,
     serialize_school_form,
 )
-from carefold.db.models import AuditEventRecord, Job, Profile, Reminder, SchoolForm
+from carefold_health.models import SchoolForm
+from yarvelle_core.db.models import AuditEventRecord, Job, Profile, Reminder
 
-logger = logging.getLogger("carefold.api.school_forms")
+logger = logging.getLogger("carefold_health.api.school_forms")
 
 router = APIRouter(tags=["school-forms"])
 

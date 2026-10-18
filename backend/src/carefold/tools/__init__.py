@@ -11,50 +11,27 @@
 
 """Re-export tools package components."""
 
-from carefold.tools.sandbox import SandboxSecurityError, resolve_sandboxed_path
-from carefold.tools.attach_read import execute_attach_read, extract_text_from_pdf_bytes
-from carefold.tools.workspace_note import execute_workspace_note
-from carefold.tools.skill_docs import execute_skill_docs
-from carefold.tools.registry import (
-    CLOSED_TOOL_DEFINITIONS,
-    execute_tool,
-    get_all_tool_definitions,
-    get_closed_tool,
-)
-from carefold.tools.extraction_tools import (
-    ExtractStructuredDataInput,
-    ExtractStructuredDataTool,
-    SanitizePIIInput,
-    SanitizePIITool,
-    ValidateGroundingInput,
-    ValidateGroundingTool,
-)
-from carefold.tools.delegation_tools import (
-    DelegateToAgentInput,
-    DelegateToAgentTool,
-    ListAgentsInput,
-    ListAgentsTool,
-)
+from __future__ import annotations
 
-__all__ = [
-    "SandboxSecurityError",
-    "resolve_sandboxed_path",
-    "execute_attach_read",
-    "extract_text_from_pdf_bytes",
-    "execute_workspace_note",
-    "execute_skill_docs",
-    "CLOSED_TOOL_DEFINITIONS",
-    "execute_tool",
-    "get_all_tool_definitions",
-    "get_closed_tool",
-    "ExtractStructuredDataInput",
-    "ExtractStructuredDataTool",
-    "SanitizePIIInput",
-    "SanitizePIITool",
-    "ValidateGroundingInput",
-    "ValidateGroundingTool",
-    "DelegateToAgentInput",
-    "DelegateToAgentTool",
-    "ListAgentsInput",
-    "ListAgentsTool",
-]
+from typing import Any
+
+from yarvelle_core.tools import *  # noqa: F401, F403
+import yarvelle_core.tools as _core_tools
+
+try:
+    import carefold_health.tools as _health_tools
+except ImportError:
+    _health_tools = None
+
+
+def __getattr__(name: str) -> Any:
+    if _health_tools is not None and hasattr(_health_tools, name):
+        return getattr(_health_tools, name)
+    return getattr(_core_tools, name)
+
+
+def __dir__() -> list[str]:
+    attrs = set(globals().keys()) | set(dir(_core_tools))
+    if _health_tools is not None:
+        attrs |= set(dir(_health_tools))
+    return sorted(attrs)

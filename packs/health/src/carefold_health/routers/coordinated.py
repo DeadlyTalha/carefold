@@ -24,21 +24,22 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.api.deps import get_current_user, get_db, resolve_owner_user_id
-from carefold.api.profiles import get_user_profile_access
-from carefold.audit.hash_chain import verify_profile_audit_chain
-from carefold.auth.ports import UserProfile
-from carefold.clinical.smart_scheduling import discover_smart_scheduling_slots
-from carefold.connectors.gmail_mcp import (
+from yarvelle_core.api.deps import get_current_user, get_db, resolve_owner_user_id
+from yarvelle_core.api.profiles import get_user_profile_access
+from yarvelle_core.audit.hash_chain import verify_profile_audit_chain
+from yarvelle_core.auth.ports import UserProfile
+from carefold_health.clinical.smart_scheduling import discover_smart_scheduling_slots
+from carefold_health.connectors.gmail_mcp import (
     execute_gmail_send_message,
     prepare_gmail_send_approval_payload,
 )
-from carefold.db.models import Appointment, Approval, EmailDraft, Profile, utc_now
-from carefold.packaging.service import list_os_service_descriptors
+from carefold_health.models import Appointment
+from yarvelle_core.db.models import Approval, EmailDraft, Profile, utc_now
+from yarvelle_core.packaging.service import list_os_service_descriptors
 from connectors.manifest import ConnectorManifest
 from connectors.starters.zocdoc import prepare_zocdoc_booking_payload
 
-logger = logging.getLogger("carefold.api.coordinated")
+logger = logging.getLogger("carefold_health.api.coordinated")
 
 router = APIRouter(tags=["coordinated-v2"])
 

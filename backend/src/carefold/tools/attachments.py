@@ -9,27 +9,22 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Compatibility shim for carefold.tools.attach_read.
-
-Re-exports execute_attach_read and attach_read_tool.
-"""
+"""Backward-compatibility re-export shim for yarvelle_core.tools.attachments."""
 
 from __future__ import annotations
 
-from carefold.tools.attach_read import (
-    ALLOWED_ATTACHMENT_EXTENSIONS,
-    ALLOWED_TEXT_EXTS,
-    MAX_FILE_SIZE,
-    attach_read_tool,
-    execute_attach_read,
-    extract_text_from_pdf_bytes,
-)
+import sys
+from typing import Any
 
-__all__ = [
-    "ALLOWED_ATTACHMENT_EXTENSIONS",
-    "ALLOWED_TEXT_EXTS",
-    "MAX_FILE_SIZE",
-    "attach_read_tool",
-    "execute_attach_read",
-    "extract_text_from_pdf_bytes",
-]
+from yarvelle_core.tools.attachments import *  # noqa: F401, F403
+import yarvelle_core.tools.attachments as _target_module
+
+sys.modules[__name__] = _target_module
+
+
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

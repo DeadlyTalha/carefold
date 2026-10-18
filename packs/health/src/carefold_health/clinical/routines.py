@@ -9,10 +9,10 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Backward-compatibility re-export shim for carefold.platform.routines."""
+"""Backward-compatibility re-export shim for yarvelle_core.platform.routines."""
 
-from carefold.platform.routines import *  # noqa: F401, F403
-from carefold.platform.routines import (
+from yarvelle_core.platform.routines import *  # noqa: F401, F403
+from yarvelle_core.platform.routines import (
     create_standing_routine,
     execute_standing_routine,
     set_connection_autonomy,

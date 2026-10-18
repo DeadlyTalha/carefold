@@ -9,10 +9,10 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Backward-compatibility re-export shim for carefold.platform.reminders."""
+"""Backward-compatibility re-export shim for yarvelle_core.platform.reminders."""
 
-from carefold.platform.reminders import *  # noqa: F401, F403
-from carefold.platform.reminders import (
+from yarvelle_core.platform.reminders import *  # noqa: F401, F403
+from yarvelle_core.platform.reminders import (
     SNOOZE_DELTAS,
     WEEKDAY_MAP,
     advance_rrule_occurrence,

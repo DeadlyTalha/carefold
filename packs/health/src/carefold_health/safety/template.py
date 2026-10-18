@@ -17,8 +17,7 @@ Zero hardcoded disclaimer texts or string literals embedded in Python code.
 
 from __future__ import annotations
 
-from typing import Any
-from carefold.resources.loader import get_resource_loader
+from yarvelle_core.resources.loader import get_resource_loader
 
 
 def get_safe_refusal_template() -> str:

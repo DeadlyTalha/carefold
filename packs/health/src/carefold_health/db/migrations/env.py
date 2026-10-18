@@ -20,16 +20,13 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection, create_engine
 from sqlalchemy.engine.url import make_url
 
-try:
-    from yarvelle_core.db.base import Base
-except ImportError:
-    from carefold.db.base import Base
+from yarvelle_core.db.base import Base
 
 # Ensure all health pack models are registered on Base.metadata
 import carefold_health.db.models  # noqa: F401
 
 try:
-    from carefold.db.session import resolve_database_url
+    from yarvelle_core.db.session import resolve_database_url
 except ImportError:
     def resolve_database_url() -> str:
         return os.environ.get("CAREFOLD_DATABASE_URL", "sqlite+aiosqlite:///carefold.db")

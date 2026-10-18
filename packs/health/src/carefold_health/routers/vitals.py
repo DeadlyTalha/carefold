@@ -27,17 +27,18 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.api.deps import get_current_user, get_db, resolve_owner_user_id
-from carefold.api.profiles import get_user_profile_access
-from carefold.audit.logger import record_audit
-from carefold.auth.ports import UserProfile
-from carefold.clinical.bmi import calculate_adult_bmi, calculate_pediatric_bmi_percentile
-from carefold.clinical.vitals import calculate_diurnal_bp_trends, normalize_fhir_vitals
-from carefold.db.models import HealthResource, Profile
-from carefold.logging import get_logger
-from carefold.safety.vitals import check_vitals_red_flags
+from yarvelle_core.api.deps import get_current_user, get_db, resolve_owner_user_id
+from yarvelle_core.api.profiles import get_user_profile_access
+from yarvelle_core.audit.logger import record_audit
+from yarvelle_core.auth.ports import UserProfile
+from carefold_health.clinical.bmi import calculate_adult_bmi, calculate_pediatric_bmi_percentile
+from carefold_health.clinical.vitals import calculate_diurnal_bp_trends, normalize_fhir_vitals
+from carefold_health.models import HealthResource
+from yarvelle_core.db.models import Profile
+from yarvelle_core.logging import get_logger
+from carefold_health.safety.vitals import check_vitals_red_flags
 
-logger = get_logger("carefold.api.vitals")
+logger = get_logger("carefold_health.api.vitals")
 
 router = APIRouter(tags=["vitals"])
 

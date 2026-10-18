@@ -11,7 +11,7 @@
 
 """iOS Companion Pairing, Pinned TLS Verification, and HealthKit/ClinicalRecord Sync package (AU-62)."""
 
-from carefold.companion.pairing import (
+from carefold_health.companion.pairing import (
     DEFAULT_COMPANION_CATEGORIES,
     LOOPBACK_HOSTS,
     VALID_COMPANION_CATEGORIES,
@@ -23,7 +23,7 @@ from carefold.companion.pairing import (
     initiate_companion_pairing,
     revoke_companion_device,
 )
-from carefold.companion.sync import (
+from carefold_health.companion.sync import (
     SUPPORTED_CLINICAL_RECORD_TYPES,
     SUPPORTED_HEALTH_CONNECT_RECORD_TYPES,
     evaluate_vitals_red_flags,

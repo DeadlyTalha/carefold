@@ -11,12 +11,16 @@
 
 """Declarative base class for Carefold relational database models."""
 
-from __future__ import annotations
+import sys
 
-from sqlalchemy.orm import DeclarativeBase
+try:
+    from yarvelle_core.db.base import Base as _Base
 
+    Base = _Base
+except ImportError:
+    from sqlalchemy.orm import DeclarativeBase
 
-class Base(DeclarativeBase):
-    """Base class for all SQLAlchemy declarative models in Carefold."""
+    class Base(DeclarativeBase):
+        """Fallback declarative base."""
 
-    pass
+        pass

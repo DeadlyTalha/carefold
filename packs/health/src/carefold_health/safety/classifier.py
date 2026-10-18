@@ -26,9 +26,9 @@ from dataclasses import dataclass
 import re
 from typing import Any, Dict, List, Optional
 
-from carefold.constants.defaults import FORBIDDEN_INTENT_PREFIX
-from carefold.resources.loader import RefusalPattern, get_resource_loader
-from carefold.safety.template import SAFE_REFUSAL_TEMPLATE
+from yarvelle_core.constants.defaults import FORBIDDEN_INTENT_PREFIX
+from yarvelle_core.resources.loader import RefusalPattern, get_resource_loader
+from carefold_health.safety.template import SAFE_REFUSAL_TEMPLATE
 
 
 @dataclass(frozen=True)

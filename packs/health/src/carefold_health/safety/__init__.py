@@ -11,8 +11,8 @@
 
 """Re-export safety package components."""
 
-from carefold.safety.template import SAFE_REFUSAL_TEMPLATE
-from carefold.safety.classifier import (
+from carefold_health.safety.template import SAFE_REFUSAL_TEMPLATE
+from carefold_health.safety.classifier import (
     COMMON_CONDITIONS,
     DISCLAIMER_CLAUSES,
     HARD_REFUSAL_PREFIXES,
@@ -21,9 +21,9 @@ from carefold.safety.classifier import (
     check_safety_refusal,
     is_hard_refusal_reason,
 )
-from carefold.safety.prompt import build_safety_preamble
-from carefold.safety.emergency import EmergencyFlag, check_emergency_red_flags
-from carefold.safety.vitals import VitalsEmergencyFlag, check_vitals_red_flags
+from carefold_health.safety.prompt import build_safety_preamble
+from carefold_health.safety.emergency import EmergencyFlag, check_emergency_red_flags
+from carefold_health.safety.vitals import VitalsEmergencyFlag, check_vitals_red_flags
 from carefold_health.safety.policy import CarefoldHealthSafetyPolicy, HealthSafetyPolicy
 
 

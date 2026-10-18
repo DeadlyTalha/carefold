@@ -309,10 +309,9 @@ async def execute_single_click_undo_async(
     idempotent: bool = True,
 ) -> Dict[str, Any]:
     """Asynchronous entity rollback resolution using SQLAlchemy AsyncSession."""
-    from carefold.db.models import (
-        Appointment,
+    from carefold_health.models import Appointment, HealthResource
+    from yarvelle_core.db.models import (
         AuditEventRecord,
-        HealthResource,
         Job,
         Note,
         Reminder,
@@ -465,7 +464,7 @@ async def execute_single_click_undo_async(
         db.add(del_job)
 
     elif entity_type == "preventive_record":
-        from carefold.db.models import PreventiveRecord
+        from carefold_health.models import PreventiveRecord
 
         stmt_prev = (
             update(PreventiveRecord)
@@ -475,7 +474,7 @@ async def execute_single_click_undo_async(
         await db.execute(stmt_prev)
 
     elif entity_type == "import_batch":
-        from carefold.db.models import ImportBatch
+        from carefold_health.models import ImportBatch
 
         stmt_batch = select(ImportBatch).where(
             ImportBatch.id == entity_id,
@@ -511,7 +510,7 @@ async def execute_single_click_undo_async(
                     pass
 
     elif entity_type == "school_form":
-        from carefold.db.models import SchoolForm
+        from carefold_health.models import SchoolForm
 
         stmt_sf = select(SchoolForm).where(
             SchoolForm.id == entity_id,

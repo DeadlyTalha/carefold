@@ -20,11 +20,11 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from carefold.audit.logger import record_audit
-from carefold.db.models import Appointment
-from carefold.logging import get_logger
+from yarvelle_core.audit.logger import record_audit
+from carefold_health.models import Appointment
+from yarvelle_core.logging import get_logger
 
-logger = get_logger("carefold.clinical.appointments")
+logger = get_logger("carefold_health.clinical.appointments")
 
 
 # ============================================================================
