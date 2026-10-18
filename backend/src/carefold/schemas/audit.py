@@ -42,6 +42,9 @@ class AuditEvent(BaseModel):
     decision: Optional[str] = None
     payload_hash: Optional[str] = None
     external_ref: Optional[str] = None
+    scope: Optional[str] = None
+    pack_id: Optional[str] = None
+    risk_tier: Optional[str] = None
 
 
 class AuditListResponse(BaseModel):

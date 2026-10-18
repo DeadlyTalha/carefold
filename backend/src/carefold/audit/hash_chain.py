@@ -27,8 +27,33 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from carefold.db.models import AuditEventRecord
+from carefold.scope.context import DEFAULT_SCOPE
 
 GENESIS_HASH: str = "GENESIS"
+
+
+def compute_audit_entry_hash_v1(
+    prev_hash: str,
+    event_id: str,
+    profile_id: Optional[str],
+    event: str,
+    tool: Optional[str],
+    risk: Optional[str],
+    decision: Optional[str],
+    payload_hash: Optional[str],
+) -> str:
+    """Legacy 8-field SHA-256 hash for backwards compatibility with pre-migration records."""
+    canonical = (
+        f"{prev_hash or GENESIS_HASH}|"
+        f"{event_id}|"
+        f"{profile_id or ''}|"
+        f"{event}|"
+        f"{tool or ''}|"
+        f"{risk or ''}|"
+        f"{decision or ''}|"
+        f"{payload_hash or ''}"
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def compute_audit_entry_hash(
@@ -40,11 +65,14 @@ def compute_audit_entry_hash(
     risk: Optional[str],
     decision: Optional[str],
     payload_hash: Optional[str],
+    scope: Optional[str] = DEFAULT_SCOPE,
+    pack_id: Optional[str] = DEFAULT_SCOPE,
+    risk_tier: Optional[str] = None,
 ) -> str:
-    """Computes a deterministic SHA-256 hex digest over canonical audit event fields.
+    """Computes a deterministic SHA-256 hex digest over canonical audit event fields (11 fields).
 
     Canonical preimage format:
-        `{prev_hash or GENESIS_HASH}|{event_id}|{profile_id or ''}|{event}|{tool or ''}|{risk or ''}|{decision or ''}|{payload_hash or ''}`
+        `{prev_hash or GENESIS_HASH}|{event_id}|{profile_id or ''}|{event}|{tool or ''}|{risk or ''}|{decision or ''}|{payload_hash or ''}|{scope or DEFAULT_SCOPE}|{pack_id or DEFAULT_SCOPE}|{risk_tier or ''}`
     """
     canonical = (
         f"{prev_hash or GENESIS_HASH}|"
@@ -54,7 +82,10 @@ def compute_audit_entry_hash(
         f"{tool or ''}|"
         f"{risk or ''}|"
         f"{decision or ''}|"
-        f"{payload_hash or ''}"
+        f"{payload_hash or ''}|"
+        f"{scope or DEFAULT_SCOPE}|"
+        f"{pack_id or DEFAULT_SCOPE}|"
+        f"{risk_tier or ''}"
     )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
@@ -74,6 +105,9 @@ async def append_chained_audit_event(
     external_ref: Optional[str] = None,
     detail_redacted: Optional[str] = None,
     event_id: Optional[str] = None,
+    scope: str = DEFAULT_SCOPE,
+    pack_id: Optional[str] = None,
+    risk_tier: Optional[str] = None,
 ) -> AuditEventRecord:
     """Appends a cryptographically chained `AuditEventRecord` to the profile's hash chain."""
     clean_profile_id = str(profile_id).strip() if profile_id else None
@@ -86,6 +120,7 @@ async def append_chained_audit_event(
         )
         .order_by(AuditEventRecord.ts.desc(), AuditEventRecord.id.desc())
         .limit(1)
+        .execution_options(include_all_scopes=True)
     )
     result = await session.execute(stmt)
     latest = result.scalar_one_or_none()
@@ -99,6 +134,9 @@ async def append_chained_audit_event(
         if now_utc <= latest_ts:
             now_utc = latest_ts + timedelta(microseconds=1)
 
+    effective_scope = (scope or DEFAULT_SCOPE).strip()
+    effective_pack_id = (pack_id or DEFAULT_SCOPE).strip()
+
     entry_hash = compute_audit_entry_hash(
         prev_hash=prev_hash,
         event_id=new_id,
@@ -108,6 +146,9 @@ async def append_chained_audit_event(
         risk=risk,
         decision=decision,
         payload_hash=payload_hash,
+        scope=effective_scope,
+        pack_id=effective_pack_id,
+        risk_tier=risk_tier,
     )
 
     record = AuditEventRecord(
@@ -126,6 +167,9 @@ async def append_chained_audit_event(
         detail_redacted=detail_redacted,
         prev_hash=prev_hash,
         entry_hash=entry_hash,
+        scope=effective_scope,
+        pack_id=effective_pack_id,
+        risk_tier=risk_tier,
     )
     session.add(record)
     await session.flush()
@@ -150,6 +194,7 @@ async def verify_profile_audit_chain(
             AuditEventRecord.entry_hash.is_not(None),
         )
         .order_by(AuditEventRecord.ts.asc(), AuditEventRecord.id.asc())
+        .execution_options(include_all_scopes=True)
     )
     result = await session.execute(stmt)
     rows = list(result.scalars().all())
@@ -175,16 +220,31 @@ async def verify_profile_audit_chain(
             risk=row.risk,
             decision=row.decision,
             payload_hash=row.payload_hash,
+            scope=row.scope,
+            pack_id=row.pack_id,
+            risk_tier=row.risk_tier,
         )
         if row.entry_hash != recomputed_hash:
-            return {
-                "profile_id": clean_profile_id,
-                "valid": False,
-                "checked_count": idx + 1,
-                "head_hash": None,
-                "broken_at_event_id": row.id,
-                "reason": "hash_mismatch",
-            }
+            # Fallback to checking legacy 8-field hash for pre-migration records
+            legacy_hash = compute_audit_entry_hash_v1(
+                prev_hash=row.prev_hash or GENESIS_HASH,
+                event_id=row.id,
+                profile_id=row.profile_id,
+                event=row.event,
+                tool=row.tool,
+                risk=row.risk,
+                decision=row.decision,
+                payload_hash=row.payload_hash,
+            )
+            if row.entry_hash != legacy_hash:
+                return {
+                    "profile_id": clean_profile_id,
+                    "valid": False,
+                    "checked_count": idx + 1,
+                    "head_hash": None,
+                    "broken_at_event_id": row.id,
+                    "reason": "hash_mismatch",
+                }
 
         expected_prev = row.entry_hash
 

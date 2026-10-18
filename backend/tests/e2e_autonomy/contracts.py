@@ -144,7 +144,10 @@ def resolve_kek(
     kek_env_file = kek_file_path or os.environ.get("CAREFOLD_VAULT_KEK_FILE")
     if kek_env_file and os.path.exists(kek_env_file):
         with open(kek_env_file, "rb") as f:
-            content = f.read().strip()
+            raw_content = f.read()
+            if len(raw_content) == 32:
+                return raw_content
+            content = raw_content.strip()
             if len(content) >= 32:
                 return content[:32]
             if len(content) > 0:

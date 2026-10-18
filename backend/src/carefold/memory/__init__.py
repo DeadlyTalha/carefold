@@ -33,6 +33,10 @@ from carefold.memory.factory import (
     set_catalog_port,
     set_memory_port,
 )
+from carefold.memory.namespace import (
+    build_memory_namespace,
+    parse_memory_namespace,
+)
 from carefold.memory.ports import (
     CatalogPort,
     MemoryPort,
@@ -40,6 +44,8 @@ from carefold.memory.ports import (
 )
 
 __all__ = [
+    "build_memory_namespace",
+    "parse_memory_namespace",
     "CatalogPort",
     "MemoryPort",
     "MemoryTier",

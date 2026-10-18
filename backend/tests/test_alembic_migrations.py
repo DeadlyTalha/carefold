@@ -81,6 +81,10 @@ EXPECTED_AUTONOMY_BATCH_6_TABLES = {
     "companion_devices",
 }
 
+EXPECTED_AUTONOMY_BATCH_8_TABLES = {
+    "scope_grants",
+}
+
 EXPECTED_HEAD_TABLES = (
     EXPECTED_BASELINE_TABLES
     | {
@@ -94,6 +98,7 @@ EXPECTED_HEAD_TABLES = (
     | EXPECTED_AUTONOMY_BATCH_4_TABLES
     | EXPECTED_AUTONOMY_BATCH_5_TABLES
     | EXPECTED_AUTONOMY_BATCH_6_TABLES
+    | EXPECTED_AUTONOMY_BATCH_8_TABLES
 )
 
 EXPECTED_ATTACHMENT_CAS_COLUMNS = {
@@ -123,7 +128,7 @@ def test_upgrade_head_fresh_sqlite():
         expected_audit_cols = {
             "id", "ts", "profile_id", "actor_user_id", "principal",
             "run_id", "event", "tool", "risk", "decision", "payload_hash",
-            "external_ref", "detail_redacted",
+            "external_ref", "detail_redacted", "scope", "pack_id", "tier",
         }
         assert expected_audit_cols.issubset(audit_cols)
 
@@ -164,12 +169,19 @@ def test_upgrade_head_fresh_sqlite():
         }
         assert expected_job_cols.issubset(job_cols)
 
-        # Assert 34 tables at head
-        assert len(EXPECTED_HEAD_TABLES) == 34
+        # Assert 35 tables at head
+        assert len(EXPECTED_HEAD_TABLES) == 35
 
-        # Assert head revision is 0010_i18n_and_locale_storage
+        # Assert head revision is 0011_scopes
         curr_ver = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        assert curr_ver == "0010_i18n_and_locale_storage"
+        assert curr_ver == "0011_scopes"
+
+        # Assert scope_grants table exists and has expected columns
+        sg_cols = {c["name"] for c in insp.get_columns("scope_grants")}
+        expected_sg_cols = {
+            "id", "user_id", "profile_id", "scope", "access_level", "granted_at", "expires_at", "granted_by",
+        }
+        assert expected_sg_cols.issubset(sg_cols)
 
         # Assert BCP 47 locale columns exist on users, profiles, notes, attachments, health_resources
         user_cols_map = {c["name"]: c for c in insp.get_columns("users")}
@@ -181,6 +193,7 @@ def test_upgrade_head_fresh_sqlite():
         notes_cols = {c["name"]: c for c in insp.get_columns("notes")}
         assert notes_cols["profile_id"]["nullable"] is False
         assert "locale" in notes_cols
+        assert "scope" in notes_cols
 
         thread_cols = {c["name"]: c for c in insp.get_columns("chat_threads")}
         assert thread_cols["profile_id"]["nullable"] is False
@@ -281,6 +294,43 @@ def test_upgrade_head_fresh_sqlite():
         assert notes_cols["linked_appointment_id"]["nullable"] is True
 
 
+def test_downgrade_to_0010_i18n_and_locale_storage():
+    """Tests downgrading from 0011_scopes to 0010_i18n_and_locale_storage and re-upgrading."""
+    engine = create_engine("sqlite:///:memory:", poolclass=StaticPool)
+    with engine.connect() as conn:
+        cfg = get_alembic_config(conn)
+        alembic.command.upgrade(cfg, "head")
+
+        curr_ver = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
+        assert curr_ver == "0011_scopes"
+
+        alembic.command.downgrade(cfg, "0010_i18n_and_locale_storage")
+        curr_ver_down = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
+        assert curr_ver_down == "0010_i18n_and_locale_storage"
+
+        insp = inspect(conn)
+        tables_down = set(insp.get_table_names())
+        assert "scope_grants" not in tables_down
+
+        notes_cols_down = {c["name"] for c in insp.get_columns("notes")}
+        assert "scope" not in notes_cols_down
+
+        audit_cols_down = {c["name"] for c in insp.get_columns("audit_events")}
+        assert "scope" not in audit_cols_down
+        assert "pack_id" not in audit_cols_down
+        assert "tier" not in audit_cols_down
+
+        alembic.command.upgrade(cfg, "head")
+        curr_ver_up = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
+        assert curr_ver_up == "0011_scopes"
+
+        insp_up = inspect(conn)
+        tables_up = set(insp_up.get_table_names())
+        assert "scope_grants" in tables_up
+        notes_cols_up = {c["name"]: c for c in insp_up.get_columns("notes")}
+        assert "scope" in notes_cols_up
+
+
 def test_downgrade_to_0008_routines_mcp_and_drafts():
     """Tests downgrading from 0009_companion_and_handover to 0008_routines_mcp_and_drafts and re-upgrading."""
     engine = create_engine("sqlite:///:memory:", poolclass=StaticPool)
@@ -289,7 +339,7 @@ def test_downgrade_to_0008_routines_mcp_and_drafts():
         alembic.command.upgrade(cfg, "head")
 
         curr_ver = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        assert curr_ver == "0010_i18n_and_locale_storage"
+        assert curr_ver == "0011_scopes"
 
         alembic.command.downgrade(cfg, "0008_routines_mcp_and_drafts")
         curr_ver_down = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
@@ -306,7 +356,7 @@ def test_downgrade_to_0008_routines_mcp_and_drafts():
 
         alembic.command.upgrade(cfg, "head")
         curr_ver_up = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        assert curr_ver_up == "0010_i18n_and_locale_storage"
+        assert curr_ver_up == "0011_scopes"
 
 
 def test_downgrade_to_0007_connectors_and_consent():
@@ -317,7 +367,7 @@ def test_downgrade_to_0007_connectors_and_consent():
         alembic.command.upgrade(cfg, "head")
 
         curr_ver = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        assert curr_ver == "0010_i18n_and_locale_storage"
+        assert curr_ver == "0011_scopes"
 
         alembic.command.downgrade(cfg, "0007_connectors_and_consent")
         curr_ver_down = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
@@ -335,10 +385,11 @@ def test_downgrade_to_0007_connectors_and_consent():
 
         alembic.command.upgrade(cfg, "head")
         curr_ver_up = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        assert curr_ver_up == "0010_i18n_and_locale_storage"
+        assert curr_ver_up == "0011_scopes"
         insp_up = inspect(conn)
         tables_up = set(insp_up.get_table_names())
         assert EXPECTED_AUTONOMY_BATCH_6_TABLES.issubset(tables_up)
+        assert EXPECTED_AUTONOMY_BATCH_8_TABLES.issubset(tables_up)
 
 
 def test_downgrade_to_0006_preventive_and_school_forms():
@@ -349,7 +400,7 @@ def test_downgrade_to_0006_preventive_and_school_forms():
         alembic.command.upgrade(cfg, "head")
 
         curr_ver = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        assert curr_ver == "0010_i18n_and_locale_storage"
+        assert curr_ver == "0011_scopes"
 
         alembic.command.downgrade(cfg, "0006_preventive_and_school_forms")
         curr_ver_down = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
@@ -366,10 +417,11 @@ def test_downgrade_to_0006_preventive_and_school_forms():
 
         alembic.command.upgrade(cfg, "head")
         curr_ver_up = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        assert curr_ver_up == "0010_i18n_and_locale_storage"
+        assert curr_ver_up == "0011_scopes"
         insp_up = inspect(conn)
         tables_up = set(insp_up.get_table_names())
         assert EXPECTED_AUTONOMY_BATCH_5_TABLES.issubset(tables_up)
+        assert EXPECTED_AUTONOMY_BATCH_8_TABLES.issubset(tables_up)
 
 
 def test_downgrade_to_0005_clinical_domain_records():
@@ -380,7 +432,7 @@ def test_downgrade_to_0005_clinical_domain_records():
         alembic.command.upgrade(cfg, "head")
 
         curr_ver = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        assert curr_ver == "0010_i18n_and_locale_storage"
+        assert curr_ver == "0011_scopes"
 
         alembic.command.downgrade(cfg, "0005_clinical_domain_records")
         curr_ver_down = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
@@ -397,12 +449,13 @@ def test_downgrade_to_0005_clinical_domain_records():
 
         alembic.command.upgrade(cfg, "head")
         curr_ver_up = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        assert curr_ver_up == "0010_i18n_and_locale_storage"
+        assert curr_ver_up == "0011_scopes"
         insp_up = inspect(conn)
         tables_up = set(insp_up.get_table_names())
         assert EXPECTED_AUTONOMY_BATCH_4_TABLES.issubset(tables_up)
         assert EXPECTED_AUTONOMY_BATCH_5_TABLES.issubset(tables_up)
         assert EXPECTED_AUTONOMY_BATCH_6_TABLES.issubset(tables_up)
+        assert EXPECTED_AUTONOMY_BATCH_8_TABLES.issubset(tables_up)
 
 
 def test_downgrade_to_0004_policy_gate_and_vault():
@@ -494,7 +547,7 @@ def test_downgrade_to_0004_policy_gate_and_vault():
         # Re-upgrade to head (0009_companion_and_handover)
         alembic.command.upgrade(cfg, "head")
         curr_ver_up = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        assert curr_ver_up == "0010_i18n_and_locale_storage"
+        assert curr_ver_up == "0011_scopes"
 
         insp_up = inspect(conn)
         tables_up = set(insp_up.get_table_names())
@@ -502,6 +555,7 @@ def test_downgrade_to_0004_policy_gate_and_vault():
         assert EXPECTED_AUTONOMY_BATCH_4_TABLES.issubset(tables_up)
         assert EXPECTED_AUTONOMY_BATCH_5_TABLES.issubset(tables_up)
         assert EXPECTED_AUTONOMY_BATCH_6_TABLES.issubset(tables_up)
+        assert EXPECTED_AUTONOMY_BATCH_8_TABLES.issubset(tables_up)
 
         notes_cols_up = {c["name"]: c for c in insp_up.get_columns("notes")}
         assert "linked_appointment_id" in notes_cols_up
@@ -647,6 +701,7 @@ def test_downgrade_to_baseline_sqlite_batch_rebuild():
         assert "preventive_records" not in tables
         assert "import_batches" not in tables
         assert "school_forms" not in tables
+        assert "scope_grants" not in tables
 
         # Baseline tables should still exist
         assert EXPECTED_BASELINE_TABLES.issubset(tables)

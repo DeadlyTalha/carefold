@@ -24,6 +24,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship as sa_relationshi
 
 
 from carefold.db.base import Base
+from carefold.scope.context import DEFAULT_SCOPE
+from carefold.scope.mixin import ScopedMixin
 
 
 def utc_now() -> datetime:
@@ -1002,6 +1004,12 @@ class Profile(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    scope_grants: Mapped[List[ScopeGrant]] = sa_relationship(
+        "ScopeGrant",
+        back_populates="profile",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     def __repr__(self) -> str:
         return f"<Profile id={self.id!r} name={self.name!r} relationship={self.relationship!r} role={self.role!r}>"
@@ -1147,6 +1155,76 @@ class ProfileConsent(Base):
         return f"<ProfileConsent profile_id={self.profile_id!r} allow_clinical={self.allow_clinical}>"
 
 
+class ScopeGrant(Base):
+    """Direct scope authorization grant for multi-domain access control."""
+
+    __tablename__ = "scope_grants"
+    __table_args__ = (
+        UniqueConstraint("profile_id", "user_id", "scope", "access_level", name="uq_scope_grants_profile_user_scope_level"),
+        Index("ix_scope_grants_profile_id", "profile_id"),
+        Index("ix_scope_grants_user_id", "user_id"),
+        Index("ix_scope_grants_scope", "scope"),
+    )
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+        doc="Unique scope grant UUID",
+    )
+    profile_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("profiles.id", ondelete="CASCADE"),
+        nullable=False,
+        doc="CareProfile identifier",
+    )
+    user_id: Mapped[Optional[str]] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=True,
+        doc="Grantee user UUID",
+    )
+    scope: Mapped[str] = mapped_column(
+        String(64),
+        nullable=False,
+        doc="Granted scope pattern (e.g. domain.* or specific scope identifier)",
+    )
+    access_level: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default="read",
+        server_default="read",
+        doc="Access level: read, write, approve",
+    )
+    granted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=utc_now,
+        doc="Timestamp grant was issued",
+    )
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        doc="Optional expiration timestamp",
+    )
+    granted_by: Mapped[Optional[str]] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        doc="User UUID who granted the scope",
+    )
+
+    profile: Mapped[Profile] = relationship("Profile", back_populates="scope_grants")
+    user: Mapped[Optional[User]] = relationship("User", foreign_keys=[user_id])
+    grantor: Mapped[Optional[User]] = relationship("User", foreign_keys=[granted_by])
+
+    def __repr__(self) -> str:
+        return (
+            f"<ScopeGrant id={self.id!r} profile_id={self.profile_id!r} "
+            f"user_id={self.user_id!r} scope={self.scope!r} level={self.access_level!r}>"
+        )
+
+
 class ViewerInvite(Base):
     """Pending or accepted read-only invitation for household viewer access."""
 
@@ -1267,7 +1345,7 @@ class ViewerInvite(Base):
         )
 
 
-class Note(Base):
+class Note(ScopedMixin, Base):
     """Note entity for user clinical visit notes, prep items, and summaries."""
 
     __tablename__ = "notes"
@@ -1384,7 +1462,7 @@ class Note(Base):
         return f"<Note id={self.id!r} slug={self.slug!r} title={self.title!r}>"
 
 
-class Attachment(Base):
+class Attachment(Base, ScopedMixin):
     """Attachment document entity uploaded by users."""
 
     __tablename__ = "attachments"
@@ -1617,7 +1695,7 @@ class Attachment(Base):
         )
 
 
-class ChatThread(Base):
+class ChatThread(Base, ScopedMixin):
     """Conversation thread tracking entity for session persistence and access control."""
 
     __tablename__ = "chat_threads"
@@ -1674,7 +1752,7 @@ class ChatThread(Base):
         return f"<ChatThread id={self.id!r} agent_id={self.agent_id!r} user_id={self.user_id!r}>"
 
 
-class AuditEventRecord(Base):
+class AuditEventRecord(Base, ScopedMixin):
     """Database-backed audit logging entity for clinical safety and tool execution auditing."""
 
     __tablename__ = "audit_events"
@@ -1766,15 +1844,39 @@ class AuditEventRecord(Base):
         index=True,
         doc="Tamper-evident SHA-256 hash chaining this audit record to prev_hash",
     )
+    pack_id: Mapped[Optional[str]] = mapped_column(
+        String(64),
+        nullable=True,
+        default=DEFAULT_SCOPE,
+        server_default=DEFAULT_SCOPE,
+        index=True,
+        doc="Owning pack identifier",
+    )
+    risk_tier: Mapped[Optional[str]] = mapped_column(
+        "tier",
+        String(32),
+        nullable=True,
+        doc="Risk tier classification: read, write_local, write_external, irreversible",
+    )
 
     profile: Mapped[Optional[Profile]] = relationship("Profile")
     actor: Mapped[Optional[User]] = relationship("User")
+
+    @property
+    def tier(self) -> Optional[str]:
+        return self.risk_tier
+
+    @tier.setter
+    def tier(self, value: Optional[str]) -> None:
+        self.risk_tier = value
 
     def __init__(self, **kwargs: Any) -> None:
         if "id" not in kwargs:
             kwargs["id"] = str(uuid.uuid4())
         if "ts" not in kwargs:
             kwargs["ts"] = utc_now()
+        if "tier" in kwargs and "risk_tier" not in kwargs:
+            kwargs["risk_tier"] = kwargs.pop("tier")
         super().__init__(**kwargs)
 
     def __repr__(self) -> str:
@@ -2116,7 +2218,7 @@ class ProfileKey(Base):
         return f"<ProfileKey id={self.id!r} profile_id={self.profile_id!r} dek_version={self.dek_version}>"
 
 
-class Approval(Base):
+class Approval(Base, ScopedMixin):
     """Human-in-the-loop tool execution approval record with single-use token semantics (AU-18)."""
 
     __tablename__ = "approvals"
@@ -2243,7 +2345,7 @@ class Approval(Base):
         return f"<Approval id={self.id!r} tool={self.tool_name!r} status={self.status!r} risk={self.risk_tier!r}>"
 
 
-class Job(Base):
+class Job(Base, ScopedMixin):
     """Wall-clock scheduled and background routine job entity with atomic leasing (AU-21)."""
 
     __tablename__ = "jobs"
@@ -2381,7 +2483,7 @@ class Job(Base):
 # ---------------------------------------------------------------------------
 
 
-class HealthResource(Base):
+class HealthResource(Base, ScopedMixin):
     """Clinical health resource entity representing FHIR R4 Observations, vitals, and metrics."""
 
     __tablename__ = "health_resources"
@@ -2495,7 +2597,7 @@ class HealthResource(Base):
         return f"<HealthResource id={self.id!r} profile_id={self.profile_id!r} type={self.resource_type!r} status={self.status!r}>"
 
 
-class Appointment(Base):
+class Appointment(Base, ScopedMixin):
     """Clinical appointment and scheduling navigation entity."""
 
     __tablename__ = "appointments"
@@ -2614,7 +2716,7 @@ class Appointment(Base):
         return f"<Appointment id={self.id!r} profile_id={self.profile_id!r} title={self.title!r} status={self.status!r}>"
 
 
-class Reminder(Base):
+class Reminder(Base, ScopedMixin):
     """Clinical and administrative reminder entity supporting RFC 5545 RRULE recurrence."""
 
     __tablename__ = "reminders"
@@ -2727,7 +2829,7 @@ class Reminder(Base):
 # ---------------------------------------------------------------------------
 
 
-class PreventiveRecord(Base):
+class PreventiveRecord(Base, ScopedMixin):
     """Per-profile preventive screening and immunisation tracking entity (AU-36)."""
 
     __tablename__ = "preventive_records"
@@ -2817,7 +2919,7 @@ class PreventiveRecord(Base):
         )
 
 
-class ImportBatch(Base):
+class ImportBatch(Base, ScopedMixin):
     """Clinical and wearable file import staging and provenance batch entity (AU-38)."""
 
     __tablename__ = "import_batches"
@@ -2925,7 +3027,7 @@ class ImportBatch(Base):
         )
 
 
-class SchoolForm(Base):
+class SchoolForm(Base, ScopedMixin):
     """Pediatric and school health form tracking and draft prefill entity (AU-39)."""
 
     __tablename__ = "school_forms"
@@ -3357,7 +3459,7 @@ class SyncRun(Base):
 # ---------------------------------------------------------------------------
 
 
-class Routine(Base):
+class Routine(Base, ScopedMixin):
     """Named, scoped A2 standing routine with <=90-day expiry and fire-time re-check (AU-58)."""
 
     __tablename__ = "routines"
@@ -3587,7 +3689,7 @@ class McpToolPin(Base):
         )
 
 
-class EmailDraft(Base):
+class EmailDraft(Base, ScopedMixin):
     """Local-only email draft prepared by Carefold with no automatic send capability (AU-60)."""
 
     __tablename__ = "email_drafts"
@@ -3685,7 +3787,7 @@ class EmailDraft(Base):
         )
 
 
-class SchoolIcsFeed(Base):
+class SchoolIcsFeed(Base, ScopedMixin):
     """Per-child read-only school calendar ICS subscription feed (AU-61 / E4.4)."""
 
     __tablename__ = "school_ics_feeds"
@@ -3897,6 +3999,12 @@ class CompanionDevice(Base):
             f"<CompanionDevice id={self.id!r} profile_id={self.profile_id!r} "
             f"device_name={self.device_name!r} status={self.status!r}>"
         )
+
+
+# Register dual-write listeners after all models are loaded
+from carefold.scope.adapter import DualWriteAdapter
+
+DualWriteAdapter.register_listeners()
 
 
 

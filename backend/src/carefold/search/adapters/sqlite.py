@@ -18,7 +18,7 @@ import json
 import logging
 from pathlib import Path
 import re
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Sequence, Union
 
 import aiosqlite
 
@@ -27,6 +27,7 @@ from carefold.constants.defaults import (
     SQLITE_CONNECT_TIMEOUT_SECONDS,
     SQLITE_JOURNAL_MODE,
 )
+from carefold.scope.context import DEFAULT_SCOPE
 from carefold.search.base import SearchIndex, SearchResult
 from carefold.search.chunker import ClinicalChunker
 
@@ -87,17 +88,50 @@ class SqliteSearchIndex(SearchIndex):
             return self._conn
 
     async def _init_db(self, conn: aiosqlite.Connection) -> None:
-        await conn.execute("""
-        CREATE VIRTUAL TABLE IF NOT EXISTS document_chunks_fts USING fts5(
-            content,
-            metadata_json UNINDEXED,
-            profile_id UNINDEXED,
-            document_id UNINDEXED,
-            chunk_id UNINDEXED,
-            tokenize = 'unicode61'
-        );
-        """)
-        await conn.commit()
+        async with conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='document_chunks_fts';") as cur:
+            exists = await cur.fetchone() is not None
+
+        if not exists:
+            await conn.execute("""
+            CREATE VIRTUAL TABLE IF NOT EXISTS document_chunks_fts USING fts5(
+                content,
+                metadata_json UNINDEXED,
+                profile_id UNINDEXED,
+                document_id UNINDEXED,
+                chunk_id UNINDEXED,
+                scope UNINDEXED,
+                tokenize = 'unicode61'
+            );
+            """)
+            await conn.commit()
+            return
+
+        async with conn.execute("PRAGMA table_info(document_chunks_fts);") as cur:
+            cols = [row["name"] for row in await cur.fetchall()]
+
+        if "scope" not in cols:
+            logger.info("Migrating document_chunks_fts to add 'scope UNINDEXED' column...")
+            await conn.execute("""
+            CREATE VIRTUAL TABLE document_chunks_fts_v2 USING fts5(
+                content,
+                metadata_json UNINDEXED,
+                profile_id UNINDEXED,
+                document_id UNINDEXED,
+                chunk_id UNINDEXED,
+                scope UNINDEXED,
+                tokenize = 'unicode61'
+            );
+            """)
+            await conn.execute(f"""
+            INSERT INTO document_chunks_fts_v2 (content, metadata_json, profile_id, document_id, chunk_id, scope)
+            SELECT content, metadata_json, profile_id, document_id, chunk_id, '{DEFAULT_SCOPE}'
+            FROM document_chunks_fts;
+            """)
+            await conn.execute("DROP TABLE document_chunks_fts;")
+            await conn.execute("ALTER TABLE document_chunks_fts_v2 RENAME TO document_chunks_fts;")
+            await conn.execute("INSERT INTO document_chunks_fts(document_chunks_fts) VALUES('rebuild');")
+            await conn.commit()
+            logger.info("document_chunks_fts migration completed successfully.")
 
     async def index_document(
         self,
@@ -106,6 +140,7 @@ class SqliteSearchIndex(SearchIndex):
         metadata: Dict[str, Any],
         profile_id: str,
         user_id: Optional[str] = None,
+        scope: str = DEFAULT_SCOPE,
     ) -> None:
         """Chunks and indexes document text into SQLite FTS5 table."""
         if not profile_id or not str(profile_id).strip():
@@ -149,13 +184,14 @@ class SqliteSearchIndex(SearchIndex):
                 pid,
                 doc_id,
                 ch.chunk_id,
+                scope,
             ))
 
         async with conn.cursor() as cur:
             await cur.executemany(
                 """
-                INSERT INTO document_chunks_fts (content, metadata_json, profile_id, document_id, chunk_id)
-                VALUES (?, ?, ?, ?, ?);
+                INSERT INTO document_chunks_fts (content, metadata_json, profile_id, document_id, chunk_id, scope)
+                VALUES (?, ?, ?, ?, ?, ?);
                 """,
                 insert_rows,
             )
@@ -168,8 +204,9 @@ class SqliteSearchIndex(SearchIndex):
         limit: int = 10,
         mode: Union[Literal["hybrid", "lexical", "semantic"], str] = "hybrid",
         filters: Optional[Dict[str, Any]] = None,
+        scope: Optional[Union[str, Sequence[str]]] = None,
     ) -> List[SearchResult]:
-        """Executes lexical BM25 search with strict profile scoping."""
+        """Executes lexical BM25 search with strict profile and scope scoping."""
         if not profile_id or not str(profile_id).strip():
             raise ValueError("profile_id is required")
         pid = str(profile_id).strip()
@@ -181,20 +218,50 @@ class SqliteSearchIndex(SearchIndex):
         if not sanitized:
             return []
 
+        # Determine effective search scopes
+        if scope is None:
+            try:
+                from carefold.scope.context import current_scope_context, current_scope
+                ctx = current_scope_context()
+                if ctx is not None:
+                    effective_scopes = list(ctx.active_scopes)
+                else:
+                    effective_scopes = [current_scope()]
+            except Exception:
+                effective_scopes = [DEFAULT_SCOPE]
+        elif isinstance(scope, str):
+            effective_scopes = [scope]
+        else:
+            effective_scopes = list(scope)
+
         conn = await self._get_conn()
         fetch_limit = limit if not filters else max(limit * 3, 50)
 
-        query_sql = """
-        SELECT chunk_id, document_id, profile_id, content, metadata_json, rank
-        FROM document_chunks_fts
-        WHERE document_chunks_fts MATCH ?
-          AND profile_id = ?
-        ORDER BY rank
-        LIMIT ?;
-        """
+        if "*" in effective_scopes:
+            query_sql = """
+            SELECT chunk_id, document_id, profile_id, scope, content, metadata_json, rank
+            FROM document_chunks_fts
+            WHERE document_chunks_fts MATCH ?
+              AND profile_id = ?
+            ORDER BY rank
+            LIMIT ?;
+            """
+            params: tuple[Any, ...] = (sanitized, pid, fetch_limit)
+        else:
+            placeholders = ",".join("?" for _ in effective_scopes)
+            query_sql = f"""
+            SELECT chunk_id, document_id, profile_id, scope, content, metadata_json, rank
+            FROM document_chunks_fts
+            WHERE document_chunks_fts MATCH ?
+              AND profile_id = ?
+              AND scope IN ({placeholders})
+            ORDER BY rank
+            LIMIT ?;
+            """
+            params = (sanitized, pid, *effective_scopes, fetch_limit)
 
         results: List[SearchResult] = []
-        async with conn.execute(query_sql, (sanitized, pid, fetch_limit)) as cursor:
+        async with conn.execute(query_sql, params) as cursor:
             rows = await cursor.fetchall()
             for r in rows:
                 meta = {}
@@ -221,6 +288,7 @@ class SqliteSearchIndex(SearchIndex):
                 raw_rank = float(r["rank"])
                 relevance_score = -1.0 * raw_rank if raw_rank < 0 else raw_rank
 
+                scope_val = r["scope"] if "scope" in r.keys() else DEFAULT_SCOPE
                 results.append(
                     SearchResult(
                         document_id=r["document_id"],
@@ -231,6 +299,7 @@ class SqliteSearchIndex(SearchIndex):
                         semantic_score=0.0,
                         metadata=meta,
                         profile_id=r["profile_id"],
+                        scope=scope_val,
                         source=meta.get("source", "search"),
                     )
                 )

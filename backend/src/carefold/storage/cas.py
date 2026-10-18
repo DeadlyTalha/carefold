@@ -27,6 +27,7 @@ from typing import Optional, Tuple
 import uuid
 
 from carefold.logging import get_logger
+from carefold.scope.context import DEFAULT_SCOPE
 
 logger = get_logger("carefold.storage.cas")
 
@@ -52,10 +53,13 @@ def get_cas_path(
     user_id: Optional[str],
     profile_id: Optional[str],
     sha256_hash: str,
+    scope: Optional[str] = DEFAULT_SCOPE,
 ) -> Path:
     """Computes the canonical Content-Addressed Storage path for an attachment.
 
     Hierarchy:
+        <carefold_home>/data/files/<user_id>/<profile_id>/<scope>/<sha256>
+    or legacy (when scope is None):
         <carefold_home>/data/files/<user_id>/<profile_id>/<sha256>
     """
     clean_uid = sanitize_partition_segment(user_id)
@@ -65,7 +69,32 @@ def get_cas_path(
     if not SHA256_HEX_REGEX.match(clean_hash):
         raise ValueError(f"Invalid SHA-256 digest format: '{sha256_hash}'")
 
-    return carefold_home.resolve() / "data" / "files" / clean_uid / clean_pid / clean_hash
+    if scope is None:
+        return carefold_home.resolve() / "data" / "files" / clean_uid / clean_pid / clean_hash
+
+    clean_scope = sanitize_partition_segment(scope, default=DEFAULT_SCOPE)
+    return carefold_home.resolve() / "data" / "files" / clean_uid / clean_pid / clean_scope / clean_hash
+
+
+def resolve_cas_path(
+    carefold_home: Path,
+    user_id: Optional[str],
+    profile_id: Optional[str],
+    sha256_hash: str,
+    scope: Optional[str] = DEFAULT_SCOPE,
+) -> Path:
+    """Resolves existing CAS file with fallback to legacy path for default scope."""
+    scoped_path = get_cas_path(carefold_home, user_id, profile_id, sha256_hash, scope=scope)
+    if scoped_path.is_file():
+        return scoped_path
+
+    # Fallback to legacy path for default domain
+    if scope is None or scope == DEFAULT_SCOPE or scope.startswith(f"{DEFAULT_SCOPE}."):
+        legacy_path = get_cas_path(carefold_home, user_id, profile_id, sha256_hash, scope=None)
+        if legacy_path.is_file():
+            return legacy_path
+
+    return scoped_path
 
 
 def cas_file_exists(
@@ -73,10 +102,11 @@ def cas_file_exists(
     user_id: Optional[str],
     profile_id: Optional[str],
     sha256_hash: str,
+    scope: Optional[str] = DEFAULT_SCOPE,
 ) -> bool:
     """Checks whether the specified content-addressed file exists on disk."""
     try:
-        path = get_cas_path(carefold_home, user_id, profile_id, sha256_hash)
+        path = resolve_cas_path(carefold_home, user_id, profile_id, sha256_hash, scope=scope)
         return path.is_file()
     except ValueError:
         return False
@@ -88,8 +118,9 @@ def store_cas_file(
     user_id: Optional[str],
     profile_id: Optional[str],
     sha256_hash: Optional[str] = None,
+    scope: Optional[str] = DEFAULT_SCOPE,
 ) -> Tuple[Path, str, bool]:
-    """Stores content in canonical CAS layout with per-profile deduplication.
+    """Stores content in canonical CAS layout with per-profile, per-scope deduplication.
 
     Returns:
         Tuple of (canonical_path, sha256_digest, is_deduplicated).
@@ -99,9 +130,9 @@ def store_cas_file(
     else:
         computed_hash = str(sha256_hash).strip().lower()
 
-    canonical_path = get_cas_path(carefold_home, user_id, profile_id, computed_hash)
+    canonical_path = get_cas_path(carefold_home, user_id, profile_id, computed_hash, scope=scope)
 
-    # Per-profile deduplication: if exact CAS file exists, skip rewrite
+    # Scoped deduplication: if exact CAS file exists within this scope partition, skip rewrite
     if canonical_path.is_file() and canonical_path.stat().st_size == len(content):
         logger.debug(
             "cas_deduplication_hit",
@@ -109,6 +140,7 @@ def store_cas_file(
             sha256=computed_hash[:8],
             user_id=user_id,
             profile_id=profile_id,
+            scope=scope,
         )
         return canonical_path, computed_hash, True
 
@@ -136,6 +168,7 @@ def store_cas_file(
         sha256=computed_hash[:8],
         user_id=user_id,
         profile_id=profile_id,
+        scope=scope,
     )
     return canonical_path, computed_hash, False
 
@@ -145,9 +178,10 @@ def read_cas_file(
     user_id: Optional[str],
     profile_id: Optional[str],
     sha256_hash: str,
+    scope: Optional[str] = DEFAULT_SCOPE,
 ) -> bytes:
     """Reads content from CAS storage, raising FileNotFoundError if missing."""
-    canonical_path = get_cas_path(carefold_home, user_id, profile_id, sha256_hash)
+    canonical_path = resolve_cas_path(carefold_home, user_id, profile_id, sha256_hash, scope=scope)
     if not canonical_path.is_file():
         raise FileNotFoundError(f"CAS file '{sha256_hash}' not found at {canonical_path}")
     return canonical_path.read_bytes()
@@ -155,6 +189,7 @@ def read_cas_file(
 
 __all__ = [
     "get_cas_path",
+    "resolve_cas_path",
     "cas_file_exists",
     "store_cas_file",
     "read_cas_file",

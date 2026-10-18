@@ -14,9 +14,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Sequence, Union
 
 from pydantic import BaseModel, Field, computed_field, model_validator
+
+from carefold.scope.context import DEFAULT_SCOPE
 
 
 class SearchResult(BaseModel):
@@ -30,6 +32,7 @@ class SearchResult(BaseModel):
     semantic_score: float = Field(default=0.0, description="Dense vector cosine similarity score")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Document and chunk metadata attributes")
     profile_id: str = Field(default="", description="Care profile identifier owning this chunk")
+    scope: str = Field(default=DEFAULT_SCOPE, description="Domain scope owning this chunk")
     source: str = Field(default="search", description="Source modality: search, internal, upload, note, external")
 
     @model_validator(mode="before")
@@ -60,6 +63,7 @@ class SearchIndex(ABC):
         metadata: Dict[str, Any],
         profile_id: str,
         user_id: Optional[str] = None,
+        scope: str = DEFAULT_SCOPE,
     ) -> None:
         """Chunks and indexes document text into lexical and semantic stores.
 
@@ -69,6 +73,7 @@ class SearchIndex(ABC):
             metadata: Associated document attributes (filename, sha256, source, etc.).
             profile_id: Mandatory profile partition identifier.
             user_id: Optional user identifier.
+            scope: Domain scope identifier.
 
         Raises:
             ValueError: If profile_id is empty or whitespace.
@@ -83,6 +88,7 @@ class SearchIndex(ABC):
         limit: int = 10,
         mode: Union[Literal["hybrid", "lexical", "semantic"], str] = "hybrid",
         filters: Optional[Dict[str, Any]] = None,
+        scope: Optional[Union[str, Sequence[str]]] = None,
     ) -> List[SearchResult]:
         """Executes profile-scoped search against indexed chunks.
 

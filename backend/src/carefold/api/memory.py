@@ -72,7 +72,7 @@ def _validate_namespace(namespace: Optional[str]) -> str:
     if not namespace or not namespace.strip():
         return "default"
     clean_ns = namespace.strip()
-    if any(seq in clean_ns for seq in ("\x00", "..", "/", "\\")):
+    if any(seq in clean_ns for seq in ("\x00", "..", "\\")):
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
             detail="Memory namespace contains invalid characters or path traversal sequences.",

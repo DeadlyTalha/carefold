@@ -594,6 +594,42 @@ async def execute_tool_call(
             error=f"Tool '{spec.name}' has no valid executor.",
         )
 
+    # 2.5 Scope Authorization Verification
+    from carefold.scope.context import (
+        DEFAULT_HEALTH_GRANTED_SCOPES,
+        DEFAULT_SCOPE,
+        current_scope_context,
+        is_scope_granted,
+    )
+
+    raw_scopes = getattr(spec, "scopes", None) or getattr(spec, "scope", None) or {DEFAULT_SCOPE}
+    if isinstance(raw_scopes, str):
+        tool_scopes = {raw_scopes.strip()}
+    elif isinstance(raw_scopes, (list, tuple, set, frozenset)):
+        tool_scopes = {str(s).strip() for s in raw_scopes}
+    else:
+        tool_scopes = {DEFAULT_SCOPE}
+    if not tool_scopes:
+        tool_scopes = {DEFAULT_SCOPE}
+
+    scope_ctx = current_scope_context()
+    granted_scopes = scope_ctx.granted_scopes if scope_ctx is not None else DEFAULT_HEALTH_GRANTED_SCOPES
+    pack_declared = scope_ctx.pack_declared_scopes if scope_ctx is not None else DEFAULT_HEALTH_GRANTED_SCOPES
+
+    for required_s in tool_scopes:
+        if not is_scope_granted(required_s, granted_scopes) or not is_scope_granted(required_s, pack_declared):
+            dur_ms = round((time.time() - t0) * 1000, 2)
+            err_msg = (
+                f"SecurityViolation: Tool '{spec.name}' requires scope '{required_s}' "
+                f"which is not granted in the active ScopeContext (granted: {sorted(list(granted_scopes))})"
+            )
+            await _record_tool_audit(ctx, spec, False, dur_ms, err_msg)
+            return ToolResult(
+                success=False,
+                output=None,
+                error=err_msg,
+            )
+
     # 3. Network Egress Firewall Verification
     try:
         dest_hosts = verify_egress_firewall(spec, args)
@@ -782,6 +818,7 @@ async def _record_tool_audit(
         from carefold.config import settings
         from carefold.constants.paths import DEFAULT_AUDIT_LOG_FILE, LOGS_DIR
         from carefold.schemas.audit import AuditEvent
+        from carefold.scope.context import DEFAULT_SCOPE
 
         ws_root = getattr(ctx, "workspace_root", None) or Path(settings.workspace_root)
         log_path = (
@@ -809,6 +846,8 @@ async def _record_tool_audit(
                 actor_user_id=getattr(ctx, "user_id", None),
                 run_id=getattr(ctx, "run_id", None) or None,
                 risk=getattr(spec, "risk_tier", None),
+                risk_tier=getattr(spec, "risk_tier", None),
+                scope=getattr(spec, "scope", None) or DEFAULT_SCOPE,
             ),
             log_path=log_path,
             store_bodies=bool(settings.audit_store_bodies),

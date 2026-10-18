@@ -197,18 +197,24 @@ class TestContentAddressedStorage:
     """Verifies canonical path resolution, atomic writes, and deduplication in CAS."""
 
     def test_cas_path_canonical_structure(self, tmp_path: Path):
-        """Verifies layout: <home>/data/files/<user_id>/<profile_id>/<sha256>."""
+        """Verifies layout: <home>/data/files/<user_id>/<profile_id>/<scope>/<sha256> with legacy fallback."""
         user_id = "user-abc-123"
         profile_id = "prof-def-456"
         dummy_hash = "a" * 64
 
         cas_path = get_cas_path(tmp_path, user_id, profile_id, dummy_hash)
-        expected = tmp_path / "data" / "files" / user_id / profile_id / dummy_hash
+        expected = tmp_path / "data" / "files" / user_id / profile_id / "health" / dummy_hash
 
         assert cas_path == expected
         assert cas_path.name == dummy_hash
-        assert cas_path.parent.name == profile_id
-        assert cas_path.parent.parent.name == user_id
+        assert cas_path.parent.name == "health"
+        assert cas_path.parent.parent.name == profile_id
+        assert cas_path.parent.parent.parent.name == user_id
+
+        # Verify legacy unscoped fallback path
+        legacy_path = get_cas_path(tmp_path, user_id, profile_id, dummy_hash, scope=None)
+        expected_legacy = tmp_path / "data" / "files" / user_id / profile_id / dummy_hash
+        assert legacy_path == expected_legacy
 
     def test_cas_store_and_deduplicate(self, tmp_path: Path):
         """Identical content stored in the same profile is deduplicated to the same file."""

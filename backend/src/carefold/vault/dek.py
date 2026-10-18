@@ -28,10 +28,14 @@ import uuid
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 from carefold.db.models import ProfileKey
+from carefold.scope.context import DEFAULT_SCOPE, require_scope
 from carefold.vault.crypto import decrypt, encrypt
 from carefold.vault.errors import DecryptionError, VaultLockedError
+from carefold.vault.kek import DEFAULT_ARGON2_SALT
 
 DEK_LENGTH_BYTES = 32  # 256-bit AES key
 DEFAULT_DEK_VERSION = 1
@@ -292,3 +296,127 @@ async def delete_profile_keys(
     await db.delete(key_record)
     await db.commit()
     return True
+
+
+def derive_scope_dek(profile_dek: bytes, scope: str) -> bytes:
+    """Derives a scope-isolated Data Encryption Key (DEK) from the master profile DEK.
+
+    For backwards compatibility, the legacy default scope returns profile_dek directly.
+    For all other scopes (e.g. 'finance', 'education'), derives a distinct 256-bit sub-key
+    using HKDF-SHA256 with DEFAULT_ARGON2_SALT and info=b"scope:<clean_scope>".
+    """
+    if not isinstance(profile_dek, (bytes, bytearray)) or len(profile_dek) != DEK_LENGTH_BYTES:
+        raise ValueError(f"profile_dek must be exactly {DEK_LENGTH_BYTES} bytes")
+    if not scope or not isinstance(scope, str) or not scope.strip():
+        raise ValueError("scope must be a non-empty string")
+
+    clean_scope = scope.strip()
+    if clean_scope == DEFAULT_SCOPE:
+        return bytes(profile_dek)
+
+    hkdf = HKDF(
+        algorithm=hashes.SHA256(),
+        length=DEK_LENGTH_BYTES,
+        salt=DEFAULT_ARGON2_SALT,
+        info=f"scope:{clean_scope}".encode("utf-8"),
+    )
+    return hkdf.derive(bytes(profile_dek))
+
+
+def compute_scope_aad(profile_id: str, connection_id: str, dek_version: int, scope: str) -> bytes:
+    """Computes Authenticated Additional Data (AAD) for scoped credential encryption."""
+    base_aad = compute_aad_binding(profile_id, connection_id, dek_version)
+    clean_scope = (scope or DEFAULT_SCOPE).strip()
+    if clean_scope == DEFAULT_SCOPE:
+        return base_aad
+    return f"{base_aad.decode('utf-8')}|scope:{clean_scope}".encode("utf-8")
+
+
+def encrypt_scoped_credential(
+    dek: bytes,
+    payload: Union[bytes, str],
+    profile_id: str,
+    connection_id: str,
+    dek_version: int,
+    scope: str = DEFAULT_SCOPE,
+) -> bytes:
+    """Encrypts credential asserting cryptographic AAD binding including domain scope."""
+    if not isinstance(dek, (bytes, bytearray)) or len(dek) != DEK_LENGTH_BYTES:
+        raise ValueError(f"DEK must be exactly {DEK_LENGTH_BYTES} bytes")
+    if isinstance(payload, str):
+        payload = payload.encode("utf-8")
+    if not isinstance(payload, (bytes, bytearray)):
+        raise ValueError(f"payload must be bytes or str, got {type(payload)}")
+
+    aad = compute_scope_aad(profile_id, connection_id, dek_version, scope)
+    return encrypt(bytes(dek), bytes(payload), aad)
+
+
+def decrypt_scoped_credential(
+    dek: bytes,
+    ciphertext: Union[bytes, str],
+    profile_id: str,
+    connection_id: str,
+    dek_version: int,
+    scope: str = DEFAULT_SCOPE,
+) -> bytes:
+    """Decrypts credential asserting cryptographic AAD binding including domain scope."""
+    if not isinstance(dek, (bytes, bytearray)) or len(dek) != DEK_LENGTH_BYTES:
+        raise ValueError(f"DEK must be exactly {DEK_LENGTH_BYTES} bytes")
+
+    raw_ct = _extract_bytes(ciphertext)
+    aad = compute_scope_aad(profile_id, connection_id, dek_version, scope)
+    return decrypt(bytes(dek), raw_ct, aad)
+
+
+class ScopedVault:
+    """Per-profile, per-scope cryptographic vault wrapping AES-256-GCM."""
+
+    def __init__(self, profile_id: str, scope: str, scope_dek: bytes, dek_version: int):
+        if not profile_id or not isinstance(profile_id, str) or not profile_id.strip():
+            raise ValueError("profile_id must be a non-empty string")
+        if not scope or not isinstance(scope, str) or not scope.strip():
+            raise ValueError("scope must be a non-empty string")
+        if not isinstance(scope_dek, (bytes, bytearray)) or len(scope_dek) != DEK_LENGTH_BYTES:
+            raise ValueError(f"scope_dek must be exactly {DEK_LENGTH_BYTES} bytes")
+        if dek_version < 1:
+            raise ValueError(f"dek_version must be >= 1, got {dek_version}")
+
+        self.profile_id = profile_id.strip()
+        self.scope = scope.strip()
+        self.scope_dek = bytes(scope_dek)
+        self.dek_version = dek_version
+
+    def encrypt(self, payload: Union[bytes, str], connection_id: str) -> bytes:
+        aad = compute_scope_aad(self.profile_id, connection_id, self.dek_version, self.scope)
+        return encrypt(self.scope_dek, payload, aad)
+
+    def decrypt(self, ciphertext: Union[bytes, str], connection_id: str) -> bytes:
+        raw_ct = _extract_bytes(ciphertext)
+        aad = compute_scope_aad(self.profile_id, connection_id, self.dek_version, self.scope)
+        return decrypt(self.scope_dek, raw_ct, aad)
+
+
+async def get_vault_for_scope(
+    db: AsyncSession,
+    profile_id: str,
+    scope: str,
+    kek: bytes,
+) -> ScopedVault:
+    """Retrieves or derives a ScopedVault instance for the specified profile and scope.
+
+    Enforces that caller's active ScopeContext grants access to the requested scope.
+    """
+    clean_scope = (scope or DEFAULT_SCOPE).strip()
+    require_scope(clean_scope)
+
+    clean_profile_id = profile_id.strip()
+    raw_dek, dek_version = await get_or_create_dek(db, clean_profile_id, kek)
+    scope_dek = derive_scope_dek(raw_dek, clean_scope)
+    return ScopedVault(
+        profile_id=clean_profile_id,
+        scope=clean_scope,
+        scope_dek=scope_dek,
+        dek_version=dek_version,
+    )
+

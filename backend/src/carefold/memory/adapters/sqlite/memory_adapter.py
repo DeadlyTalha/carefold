@@ -228,6 +228,17 @@ class SqliteMemoryAdapter(MemoryPort):
         tier_val = tier.value if isinstance(tier, MemoryTier) else (str(tier) if tier else None)
         sanitized = _sanitize_fts_query(query)
 
+        # Cross-scope read authorization guard
+        from carefold.memory.namespace import parse_memory_namespace
+        target_scope, _, _ = parse_memory_namespace(namespace)
+        if target_scope is not None:
+            from carefold.scope.context import current_scope_context, is_scope_granted
+            ctx = current_scope_context()
+            if ctx is not None:
+                allowed = set(ctx.granted_scopes) | set(ctx.declared_reads)
+                if not is_scope_granted(target_scope, allowed):
+                    raise PermissionError(f"Cross-scope memory read denied for scope '{target_scope}'")
+
         async def _do_recall():
             async with self._lock:
                 if sanitized:

@@ -19,11 +19,17 @@ from carefold.vault.crypto import decrypt, encrypt
 from carefold.vault.dek import (
     compute_aad_binding,
     compute_dek_wrapping_aad,
+    compute_scope_aad,
     decrypt_credential,
+    decrypt_scoped_credential,
     delete_profile_keys,
+    derive_scope_dek,
     encrypt_credential,
+    encrypt_scoped_credential,
     get_or_create_dek,
+    get_vault_for_scope,
     rotate_dek,
+    ScopedVault,
 )
 from carefold.vault.errors import (
     DecryptionError,
@@ -42,12 +48,19 @@ __all__ = [
     "get_or_create_dek",
     "encrypt_credential",
     "decrypt_credential",
+    "encrypt_scoped_credential",
+    "decrypt_scoped_credential",
     "compute_aad_binding",
     "compute_dek_wrapping_aad",
+    "compute_scope_aad",
+    "derive_scope_dek",
     "rotate_dek",
     "delete_profile_keys",
+    "ScopedVault",
+    "get_vault_for_scope",
     "VaultError",
     "VaultLockedError",
     "DecryptionError",
     "KeyDerivationError",
 ]
+

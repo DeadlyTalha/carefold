@@ -42,6 +42,8 @@ from typing import (
 
 logger = logging.getLogger("carefold.engine.tool_registry")
 
+from carefold.scope.context import DEFAULT_SCOPE
+
 RiskTier = Literal["read", "write_local", "write_external", "irreversible"]
 TrustLevel = Literal["trusted", "untrusted"]
 
@@ -151,16 +153,14 @@ class ToolSpec:
         if self.metadata is None:
             object.__setattr__(self, "metadata", {})
 
-        # 4. Normalize scopes
+        # 4. Normalize domain scopes
         if not self.scopes:
-            default_scope = "read" if self.risk_tier == "read" else "write"
-            object.__setattr__(self, "scopes", frozenset({default_scope}))
+            object.__setattr__(self, "scopes", frozenset({DEFAULT_SCOPE}))
         elif isinstance(self.scopes, (set, frozenset, list, tuple)):
-            object.__setattr__(
-                self,
-                "scopes",
-                frozenset(str(s).strip() for s in self.scopes if str(s).strip()),
-            )
+            clean_scopes = {str(s).strip() for s in self.scopes if str(s).strip()}
+            if clean_scopes.issubset({"read", "write"}):
+                clean_scopes = {DEFAULT_SCOPE}
+            object.__setattr__(self, "scopes", frozenset(clean_scopes))
 
     def to_tool_definition(self) -> Dict[str, Any]:
         """Returns an OpenAI / LangChain bind_tools-compatible dictionary representation."""

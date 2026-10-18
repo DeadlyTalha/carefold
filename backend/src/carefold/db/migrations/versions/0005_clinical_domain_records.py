@@ -126,7 +126,13 @@ def upgrade() -> None:
     copy_notes = None
     if context.is_offline_mode():
         from carefold.db.base import Base
-        copy_notes = Base.metadata.tables.get("notes")
+        raw_notes = Base.metadata.tables.get("notes")
+        if raw_notes is not None:
+            copy_notes = sa.Table(
+                "notes",
+                sa.MetaData(),
+                *(sa.Column(c.name, c.type, nullable=c.nullable) for c in raw_notes.columns if c.name not in ("linked_appointment_id", "scope"))
+            )
 
     # 4. notes table evolution (AU-35)
     if "notes" in existing_tables or context.is_offline_mode():

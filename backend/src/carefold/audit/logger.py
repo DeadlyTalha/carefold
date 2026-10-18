@@ -78,6 +78,12 @@ async def _persist_to_db(record: AuditEventRecord, db: Optional[Any] = None, ses
             await db.commit()
             return
 
+        if session_factory is not None:
+            async with session_factory() as session:
+                session.add(record)
+                await session.commit()
+            return
+
         # Check for FastAPI dependency override (e.g. during pytest with in-memory SQLite)
         written = False
         try:
@@ -228,6 +234,12 @@ async def record_audit(
     else:
         event_ts = datetime.now(timezone.utc)
 
+    from carefold.scope.context import DEFAULT_SCOPE, current_scope, current_scope_context
+    ambient_scope_ctx = current_scope_context()
+    effective_scope = str(raw_data.get("scope") or getattr(safe_event, "scope", None) or (ambient_scope_ctx.scope if ambient_scope_ctx else current_scope()) or DEFAULT_SCOPE).strip()
+    effective_pack_id = raw_data.get("pack_id") or getattr(safe_event, "pack_id", None) or (ambient_scope_ctx.pack_id if ambient_scope_ctx else None)
+    effective_risk_tier = raw_data.get("risk_tier") or raw_data.get("tier") or getattr(safe_event, "risk_tier", None) or effective_risk
+
     record_id = raw_data.get("id") or str(uuid.uuid4())
 
     record = AuditEventRecord(
@@ -244,6 +256,9 @@ async def record_audit(
         payload_hash=effective_payload_hash,
         external_ref=str(effective_external_ref).strip() if effective_external_ref else None,
         detail_redacted=detail_redacted,
+        scope=effective_scope,
+        pack_id=str(effective_pack_id).strip() if effective_pack_id else None,
+        risk_tier=str(effective_risk_tier).strip() if effective_risk_tier else None,
     )
 
     # 1. Primary Sink: SQL Database persistence
