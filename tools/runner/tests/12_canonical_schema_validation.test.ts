@@ -25,7 +25,7 @@ import {
 
 function resolveWorkspaceRoot(): string {
   const cwd = process.cwd();
-  if (fs.existsSync(path.join(cwd, 'pnpm-workspace.yaml')) && fs.existsSync(path.join(cwd, 'packages', 'runner'))) {
+  if (fs.existsSync(path.join(cwd, 'pnpm-workspace.yaml')) && fs.existsSync(path.join(cwd, 'tools', 'runner'))) {
     return cwd;
   }
   const runnerParent = path.resolve(__dirname, '../../..');
@@ -36,12 +36,12 @@ function resolveWorkspaceRoot(): string {
 }
 
 const ROOT_DIR = resolveWorkspaceRoot();
-const HEALTH_PACK_YAML = path.join(ROOT_DIR, 'packs/health/pack.yaml');
+const HEALTH_PACK_YAML = path.join(ROOT_DIR, 'backend/src/carefold_health/pack.yaml');
 const AGENTS_DIR = path.join(ROOT_DIR, 'agents');
 const SKILLS_DIR = path.join(ROOT_DIR, 'skills');
 
 describe('12: Canonical Manifest Schema Validation', () => {
-  it('validates packs/health/pack.yaml strictly against PackManifestSchema', () => {
+  it('validates backend/src/carefold_health/pack.yaml strictly against PackManifestSchema', () => {
     expect(fs.existsSync(HEALTH_PACK_YAML)).toBe(true);
     const rawYaml = fs.readFileSync(HEALTH_PACK_YAML, 'utf8');
     const parsed = yaml.parse(rawYaml);

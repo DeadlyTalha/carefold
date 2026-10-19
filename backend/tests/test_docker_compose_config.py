@@ -31,16 +31,18 @@ from carefold.model.factory import resolve_base_url
 
 
 def _get_compose_path() -> Path:
-    """Find docker/docker-compose.yml relative to repo root or backend root."""
+    """Find docker-compose.yml relative to repo root or backend root."""
     cwd = Path.cwd().resolve()
     candidates = [
+        cwd / "deploy" / "docker" / "docker-compose.yml",
+        cwd.parent / "deploy" / "docker" / "docker-compose.yml",
         cwd / "docker" / "docker-compose.yml",
         cwd.parent / "docker" / "docker-compose.yml",
     ]
     for c in candidates:
         if c.is_file():
             return c
-    raise FileNotFoundError("docker/docker-compose.yml not found")
+    raise FileNotFoundError("docker-compose.yml not found in deploy/docker/ or docker/")
 
 
 def _parse_compose_env_list(env_list: List[str]) -> Dict[str, str]:

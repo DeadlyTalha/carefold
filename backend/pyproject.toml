@@ -72,7 +72,6 @@ testpaths = ["tests"]
 pythonpath = [
     "src",
     "../libs/connectors",
-    "../packs/health/src",
     "../../yarvelle-core/src",
 ]
 markers = [

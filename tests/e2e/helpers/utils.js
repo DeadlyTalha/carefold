@@ -23,7 +23,7 @@ import { execSync, spawnSync } from 'node:child_process';
 import http from 'node:http';
 
 export const REPO_ROOT = path.resolve(process.cwd());
-export const CLI_BIN = path.join(REPO_ROOT, 'packages', 'cli', 'bin', 'carefold.js');
+export const CLI_BIN = path.join(REPO_ROOT, 'tools', 'cli', 'bin', 'carefold.js');
 export const PYTHON_BIN = path.join(REPO_ROOT, 'backend', '.venv', 'bin', 'python3');
 
 export function runCli(args, options = {}) {

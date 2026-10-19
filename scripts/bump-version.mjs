@@ -75,9 +75,9 @@ function updateTextFile(filePath, updater, label) {
 // 1. Update Node package.json files
 const packageFiles = [
   path.join(ROOT_DIR, 'package.json'),
-  path.join(ROOT_DIR, 'apps/web/package.json'),
-  path.join(ROOT_DIR, 'packages/cli/package.json'),
-  path.join(ROOT_DIR, 'packages/runner/package.json'),
+  path.join(ROOT_DIR, 'frontend/package.json'),
+  path.join(ROOT_DIR, 'tools/cli/package.json'),
+  path.join(ROOT_DIR, 'tools/runner/package.json'),
 ];
 
 for (const pkgPath of packageFiles) {
