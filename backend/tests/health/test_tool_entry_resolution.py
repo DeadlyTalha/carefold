@@ -23,16 +23,16 @@ from yarvelle_core.engine.tool_registry import ToolSpec
 
 def _find_pack_yaml() -> Path:
     candidates = [
-        Path("backend/src/carefold_health/pack.yaml"),
-        Path("src/carefold_health/pack.yaml"),
-        Path(__file__).resolve().parent.parent.parent / "src/carefold_health/pack.yaml",
-        Path(__file__).resolve().parent.parent / "src/carefold_health/pack.yaml",
+        Path("backend/src/carefold/pack.yaml"),
+        Path("src/carefold/pack.yaml"),
+        Path(__file__).resolve().parent.parent.parent / "src/carefold/pack.yaml",
+        Path(__file__).resolve().parent.parent / "src/carefold/pack.yaml",
         Path(__file__).resolve().parent.parent / "pack.yaml",
     ]
     for c in candidates:
         if c.is_file():
             return c.resolve()
-    raise FileNotFoundError(f"Could not locate carefold_health/pack.yaml. Checked: {candidates}")
+    raise FileNotFoundError(f"Could not locate carefold/pack.yaml. Checked: {candidates}")
 
 
 @pytest.fixture(scope="module")
@@ -47,6 +47,7 @@ def pack_manifest() -> Dict[str, Any]:
 def test_manifest_declares_exact_17_tools(pack_manifest: Dict[str, Any]):
     tools = pack_manifest.get("provides", {}).get("tools", [])
     assert len(tools) == 17, f"Expected exactly 17 tools declared in pack.yaml, found {len(tools)}"
+    assert "ui" not in pack_manifest, "Backend pack.yaml must not contain frontend 'ui' definitions"
 
 
 def test_all_17_manifest_tool_entries_resolve(pack_manifest: Dict[str, Any]):
@@ -125,7 +126,7 @@ def test_all_17_manifest_tool_entries_resolve(pack_manifest: Dict[str, Any]):
 
 
 def test_native_get_health_tool_specs_factory():
-    from carefold_health.tools import get_health_tool_specs
+    from carefold.tools import get_health_tool_specs
 
     specs = get_health_tool_specs()
     assert isinstance(specs, list)
@@ -159,17 +160,17 @@ def test_native_get_health_tool_specs_factory():
         assert "health.clinical" in spec.scopes
 
 
-def test_isolated_resolution_without_carefold_on_path():
-    class BlockCarefoldMetaPathFinder:
+def test_isolated_resolution_without_app_main():
+    class BlockAppMainMetaPathFinder:
         def find_spec(self, fullname, path, target=None):
-            if fullname == "carefold" or fullname.startswith("carefold."):
-                raise ImportError(f"Adversarial test: blocked access to monolithic '{fullname}'")
+            if fullname == "carefold.main" or fullname.startswith("carefold.main."):
+                raise ImportError(f"Adversarial test: blocked access to app shell '{fullname}'")
             return None
 
-    finder = BlockCarefoldMetaPathFinder()
+    finder = BlockAppMainMetaPathFinder()
     sys.meta_path.insert(0, finder)
     try:
-        import carefold_health.tools as cht
+        import carefold.tools as cht
         tools = cht.get_health_tool_specs()
         assert len(tools) == 17
         for t in tools:
@@ -177,3 +178,4 @@ def test_isolated_resolution_without_carefold_on_path():
     finally:
         if finder in sys.meta_path:
             sys.meta_path.remove(finder)
+

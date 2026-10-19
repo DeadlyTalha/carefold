@@ -572,7 +572,7 @@ async def test_gmail_send_message_requires_explicit_approval_and_updates_draft(b
     gmail_manifest_path = (
         Path(__file__).resolve().parents[1]
         / "src"
-        / "carefold_health"
+        / "carefold"
         / "connectors"
         / "starters"
         / "manifests"

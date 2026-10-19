@@ -9,22 +9,45 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Backward-compatibility re-export shim for carefold_health.safety.prompt."""
+"""Safety preamble builder for injecting immutable system safety constraints.
+
+Preamble templates and forbidden intent categories are externalized to
+ResourceLoader (prompts.yaml and refusal_patterns.yaml).
+Zero hardcoded preamble text or negative constraint strings in Python code.
+"""
 
 from __future__ import annotations
 
-import sys
-from typing import Any
-
-from carefold_health.safety.prompt import *  # noqa: F401, F403
-import carefold_health.safety.prompt as _target_module
-
-sys.modules[__name__] = _target_module
+from typing import Sequence
+from yarvelle_core.constants.defaults import DEFAULT_FORBIDDEN_INTENTS
+from carefold.resources.loader import get_resource_loader
+from yarvelle_core.schemas.manifest import AgentManifest, SkillManifest
 
 
-def __getattr__(name: str) -> Any:
-    return getattr(_target_module, name)
+def build_safety_preamble(
+    agent: AgentManifest,
+    skills: Sequence[SkillManifest] = (),
+) -> str:
+    """Builds the mandatory, immutable safety preamble for agent system prompts."""
+    loader = get_resource_loader()
+    preamble_template = loader.get_safety_preamble_template()
+
+    refusal_data = loader.get_refusal_patterns()
+    default_forbidden = refusal_data.get(
+        "default_forbidden_intents",
+        list(DEFAULT_FORBIDDEN_INTENTS),
+    )
+
+    forbidden_set = {
+        *(agent.forbidden or []),
+        *(f for s in skills for f in (s.forbidden or [])),
+        *default_forbidden,
+    }
+    forbidden_str = ", ".join(sorted(forbidden_set))
+
+    return preamble_template.format(forbidden_str=forbidden_str)
 
 
-def __dir__() -> list[str]:
-    return sorted(set(globals().keys()) | set(dir(_target_module)))
+__all__ = [
+    "build_safety_preamble",
+]

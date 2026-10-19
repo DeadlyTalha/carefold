@@ -147,7 +147,7 @@ def test_google_workspace_gmail_manifest_loads_and_validates() -> None:
     manifest_path = (
         Path(__file__).resolve().parents[1]
         / "src"
-        / "carefold_health"
+        / "carefold"
         / "connectors"
         / "starters"
         / "manifests"
@@ -213,7 +213,7 @@ async def test_mcp_tool_pinning_drift_detection_and_reapproval(
     manifest_path = (
         Path(__file__).resolve().parents[1]
         / "src"
-        / "carefold_health"
+        / "carefold"
         / "connectors"
         / "starters"
         / "manifests"
@@ -341,7 +341,7 @@ async def test_wrap_mcp_tool_as_spec_taints_context_and_wraps_untrusted(
     manifest_path = (
         Path(__file__).resolve().parents[1]
         / "src"
-        / "carefold_health"
+        / "carefold"
         / "connectors"
         / "starters"
         / "manifests"
@@ -602,7 +602,7 @@ async def test_routines_and_mcp_pins_rest_api_endpoints(
     manifest_path = (
         Path(__file__).resolve().parents[1]
         / "src"
-        / "carefold_health"
+        / "carefold"
         / "connectors"
         / "starters"
         / "manifests"

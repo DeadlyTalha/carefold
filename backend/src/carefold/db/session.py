@@ -653,15 +653,11 @@ def run_pack_migrations(
 
 def resolve_health_migrations_dir() -> Path:
     """Resolves health pack migration directory across packaging modes."""
-    try:
-        import carefold_health.db.migrations as ch_mig
-        return Path(ch_mig.__file__).resolve().parent
-    except ImportError:
-        repo_root = Path(__file__).resolve().parents[4]
-        candidate = repo_root / "packs" / "health" / "src" / "carefold_health" / "db" / "migrations"
-        if candidate.is_dir():
-            return candidate
-        return repo_root / "backend" / "src" / "carefold" / "db" / "migrations"
+    health_mig_dir = Path(__file__).resolve().parent / "health_migrations"
+    if health_mig_dir.is_dir():
+        return health_mig_dir
+    return Path(__file__).resolve().parent / "migrations"
+
 
 
 def run_all_migrations(connection: Connection, enabled_packs: Optional[list[str]] = None) -> None:

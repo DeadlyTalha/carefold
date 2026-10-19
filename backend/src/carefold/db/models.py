@@ -12,7 +12,7 @@
 """Declarative SQLAlchemy models for Carefold (slim composition and re-exports).
 
 Re-exports core models from `yarvelle_core.db.models` and health domain models
-from `carefold_health.db.models`, dynamically attaching health relationships to
+from `carefold.models.health`, dynamically attaching health relationships to
 `Profile` for 100% backwards compatibility with tests and application code.
 """
 
@@ -29,9 +29,9 @@ from yarvelle_core.scope.mixin import ScopedMixin  # noqa: F401
 from yarvelle_core.db.models import *  # noqa: F401, F403
 import yarvelle_core.db.models as _core_models
 
-# 2. Re-export all 7 health pack models from carefold_health.db.models
+# 2. Re-export all 7 health pack models from carefold.models.health
 try:
-    from carefold_health.db.models import (
+    from carefold.models.health import (
         HealthResource,
         Appointment,
         PreventiveRecord,
@@ -40,7 +40,7 @@ try:
         SchoolIcsFeed,
         CompanionDevice,
     )
-    import carefold_health.db.models as _health_models
+    import carefold.models.health as _health_models
 except ImportError:
     _health_models = None
 

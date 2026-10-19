@@ -9,22 +9,17 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Backward-compatibility re-export shim for carefold.platform.email_drafts."""
+"""Backward-compatibility re-export shim for yarvelle_core.platform.email_drafts."""
 
-from __future__ import annotations
-
-import sys
-from typing import Any
-
-from carefold.platform.email_drafts import *  # noqa: F401, F403
-import carefold.platform.email_drafts as _target_module
-
-sys.modules[__name__] = _target_module
-
-
-def __getattr__(name: str) -> Any:
-    return getattr(_target_module, name)
-
-
-def __dir__() -> list[str]:
-    return sorted(set(globals().keys()) | set(dir(_target_module)))
+from yarvelle_core.platform.email_drafts import *  # noqa: F401, F403
+from yarvelle_core.platform.email_drafts import (
+    NO_AUTO_SEND_NOTICE,
+    build_mailto_uri,
+    create_email_draft,
+    delete_email_draft,
+    execute_create_email_draft,
+    export_draft_as_eml,
+    get_email_draft,
+    list_email_drafts,
+    serialize_email_draft,
+)

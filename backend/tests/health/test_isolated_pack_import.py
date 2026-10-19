@@ -9,10 +9,10 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Automated Isolated Pack Import Test (M4 Autonomy Verification).
+"""Automated Pack Import & Single-Source Verification Test.
 
-Enforces that carefold_health operates 100% autonomously without importing
-or referencing any module from the monolithic carefold package.
+Enforces that `carefold` is the sole package in `backend/src/` and exposes `get_pack()`
+for the `yarvelle.packs` entry-point without booting the FastAPI server shell (`carefold.main`).
 """
 
 from pathlib import Path
@@ -21,53 +21,53 @@ import sys
 
 
 def test_isolated_pack_import():
-    """Verifies that carefold_health and all its subpackages import without monolithic carefold."""
+    """Verifies that carefold and all its health pack subpackages import without booting carefold.main."""
     script = """
 import sys
 
-class BlockMonolithicCarefoldFinder:
+class BlockAppMainFinder:
     def find_spec(self, fullname, path, target=None):
-        if fullname == "carefold" or fullname.startswith("carefold."):
+        if fullname == "carefold.main" or fullname.startswith("carefold.main."):
             raise ImportError(
-                f"Blocked reverse monolithic import of '{fullname}'. "
-                "carefold_health must operate 100% autonomously without carefold."
+                f"Blocked app-shell import of '{fullname}'. "
+                "carefold:get_pack() must operate as a pack without importing carefold.main."
             )
         return None
 
-sys.meta_path.insert(0, BlockMonolithicCarefoldFinder())
+sys.meta_path.insert(0, BlockAppMainFinder())
 
 # 1. Import pack root
-import carefold_health
-assert hasattr(carefold_health, "get_pack"), "carefold_health must expose get_pack()"
-assert hasattr(carefold_health, "__version__"), "carefold_health must expose __version__"
+import carefold
+assert hasattr(carefold, "get_pack"), "carefold must expose get_pack()"
+assert hasattr(carefold, "__version__"), "carefold must expose __version__"
 
 # 2. Discover pack via factory
-pack = carefold_health.get_pack()
+pack = carefold.get_pack()
 assert pack.id == "health"
 assert pack.domain == "health"
 assert pack.version == "0.5.0b1"
 
 # 3. Verify health ToolSpecs (17 tools)
-from carefold_health.tools import get_health_tool_specs
+from carefold.tools import get_health_tool_specs
 specs = get_health_tool_specs()
 assert len(specs) == 17, f"Expected 17 health tool specs, got {len(specs)}"
 assert len(pack.tools) == 17, f"Expected 17 tools in pack manifest, got {len(pack.tools)}"
 
 # 4. Verify health SafetyPolicy
-from carefold_health.safety import CarefoldHealthSafetyPolicy
+from carefold.safety import CarefoldHealthSafetyPolicy
 policy = CarefoldHealthSafetyPolicy()
 assert policy is not None
 assert pack.safety_policy is not None
 assert len(policy.get_forbidden_intents()) > 0
 
 # 5. Verify health Routers (9 routers)
-from carefold_health.routers import get_health_router_contributions
+from carefold.routers import get_health_router_contributions
 routers = get_health_router_contributions()
 assert len(routers) == 9, f"Expected 9 health router contributions, got {len(routers)}"
 assert len(pack.routers) == 9, f"Expected 9 routers in pack manifest, got {len(pack.routers)}"
 
 # 6. Verify Scoped Models (7 models)
-from carefold_health.models import (
+from carefold.models import (
     Appointment,
     CompanionDevice,
     HealthResource,
@@ -78,9 +78,9 @@ from carefold_health.models import (
 )
 assert len(pack.scoped_models) == 7
 
-# 7. Assert sys.modules contains zero monolithic carefold modules
-carefold_leaks = [m for m in sys.modules if m == "carefold" or m.startswith("carefold.")]
-assert not carefold_leaks, f"Detected reverse import leakage in sys.modules: {carefold_leaks}"
+# 7. Assert sys.modules contains zero carefold.main modules
+main_leaks = [m for m in sys.modules if m == "carefold.main" or m.startswith("carefold.main.")]
+assert not main_leaks, f"Detected app main leakage in sys.modules: {main_leaks}"
 
 print("ISOLATED_PACK_OK")
 """
@@ -99,35 +99,10 @@ print("ISOLATED_PACK_OK")
     assert "ISOLATED_PACK_OK" in proc.stdout
 
 
-def test_isolated_subprocess_execution():
-    """Runs a fresh Python subprocess with PYTHONPATH restricted strictly to pack and core."""
-    script = """
-import sys
-class BlockCarefold:
-    def find_spec(self, fullname, path, target=None):
-        if fullname == 'carefold' or fullname.startswith('carefold.'):
-            raise ImportError(f'Blocked monolithic import: {fullname}')
-        return None
-sys.meta_path.insert(0, BlockCarefold())
-
-import carefold_health
-pack = carefold_health.get_pack()
-assert pack.id == 'health'
-assert len(pack.tools) == 17
-assert len(pack.routers) == 9
-assert len(pack.scoped_models) == 7
-print('ISOLATED_PACK_OK')
-"""
+def test_single_source_directory_in_backend_src():
+    """Enforces that backend/src/ contains strictly ONE Python package folder (`carefold`)."""
     repo_root = Path(__file__).resolve().parents[3]
-    pythonpath = f"{repo_root}/backend/src"
-    proc = subprocess.run(
-        [sys.executable, "-c", script],
-        capture_output=True,
-        text=True,
-        env={
-            "PYTHONPATH": pythonpath,
-            "PATH": sys.exec_prefix + "/bin:/usr/bin:/bin",
-        },
-    )
-    assert proc.returncode == 0, f"Subprocess failed with code {proc.returncode}:\nSTDOUT: {proc.stdout}\nSTDERR: {proc.stderr}"
-    assert "ISOLATED_PACK_OK" in proc.stdout
+    src_dir = repo_root / "backend" / "src"
+    pkg_dirs = [p.name for p in src_dir.iterdir() if p.is_dir() and not p.name.startswith(".") and not p.name.endswith(".egg-info")]
+    assert pkg_dirs == ["carefold"], f"Expected only ['carefold'] in backend/src/, found: {pkg_dirs}"
+

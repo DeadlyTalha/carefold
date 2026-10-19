@@ -85,16 +85,17 @@ HEALTH_SKILLS = [
 def test_health_wheel_contains_all_agents_skills_and_entrypoints(tmp_path: Path):
     """Builds distribution wheel and inspects that all 24 specialist agents, 2 system agents, and 27 skills are bundled."""
     repo_root = Path(__file__).resolve().parent.parent.parent.parent
-    packaging_dir = repo_root / "backend" / "packaging" / "carefold-health"
+    packaging_dir = repo_root / "backend"
     out_dir = tmp_path / "wheel_dist"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1. Build wheel using python -m build --wheel
+    # 1. Build wheel using python -m build --wheel --no-isolation
     cmd = [
         sys.executable,
         "-m",
         "build",
         "--wheel",
+        "--no-isolation",
         str(packaging_dir),
         "--outdir",
         str(out_dir),
@@ -111,17 +112,17 @@ def test_health_wheel_contains_all_agents_skills_and_entrypoints(tmp_path: Path)
 
         # 2. Assert all 24 specialist agents are present
         for agent_name in SPECIALIST_AGENTS:
-            agent_manifest = f"carefold_health/_content/agents/{agent_name}/agent.yaml"
+            agent_manifest = f"carefold/_content/agents/{agent_name}/agent.yaml"
             assert agent_manifest in names, f"Built wheel is missing specialist agent: {agent_manifest}"
 
         # 3. Assert all 2 health system agents are present
         for sys_agent in HEALTH_SYSTEM_AGENTS:
-            sys_manifest = f"carefold_health/_content/agents/_system/{sys_agent}/agent.yaml"
+            sys_manifest = f"carefold/_content/agents/_system/{sys_agent}/agent.yaml"
             assert sys_manifest in names, f"Built wheel is missing health system agent: {sys_manifest}"
 
         # 4. Assert all 27 health skills are present
         for skill_name in HEALTH_SKILLS:
-            skill_manifest = f"carefold_health/_content/skills/{skill_name}/SKILL.md"
+            skill_manifest = f"carefold/_content/skills/{skill_name}/SKILL.md"
             assert skill_manifest in names, f"Built wheel is missing health skill: {skill_manifest}"
 
         # 5. Assert entry point in .dist-info
@@ -130,4 +131,5 @@ def test_health_wheel_contains_all_agents_skills_and_entrypoints(tmp_path: Path)
         ep_content = z.read(entry_points_files[0]).decode("utf-8")
 
         assert "[yarvelle.packs]" in ep_content
-        assert "health = carefold_health:get_pack" in ep_content
+        assert "health = carefold:get_pack" in ep_content
+

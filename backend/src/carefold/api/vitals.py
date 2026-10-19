@@ -9,15 +9,15 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Backward-compatibility re-export shim for carefold_health.routers.vitals."""
+"""Backward-compatibility re-export shim for carefold.routers.vitals."""
 
 from __future__ import annotations
 
 import sys
 from typing import Any
 
-from carefold_health.routers.vitals import *  # noqa: F401, F403
-import carefold_health.routers.vitals as _target_module
+from carefold.routers.vitals import *  # noqa: F401, F403
+import carefold.routers.vitals as _target_module
 
 sys.modules[__name__] = _target_module
 
