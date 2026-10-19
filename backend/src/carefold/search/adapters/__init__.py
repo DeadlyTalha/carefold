@@ -9,11 +9,27 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Search index adapter implementations for SQLite FTS5 and Spector Cognitive Search."""
+"""Backward-compatibility re-export shim for yarvelle_core.search.adapters."""
 
 from __future__ import annotations
 
-from carefold.search.adapters.spector import SpectorSearchIndex
-from carefold.search.adapters.sqlite import SqliteSearchIndex
+import sys
+from typing import Any
 
-__all__ = ["SpectorSearchIndex", "SqliteSearchIndex"]
+from yarvelle_core.search.adapters import *  # noqa: F401, F403
+import yarvelle_core.search.adapters as _target_module
+import yarvelle_core.search.adapters.spector as _spector_module
+import yarvelle_core.search.adapters.sqlite as _sqlite_module
+
+sys.modules[__name__] = _target_module
+sys.modules["carefold.search.adapters"] = _target_module
+sys.modules["carefold.search.adapters.sqlite"] = _sqlite_module
+sys.modules["carefold.search.adapters.spector"] = _spector_module
+
+
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

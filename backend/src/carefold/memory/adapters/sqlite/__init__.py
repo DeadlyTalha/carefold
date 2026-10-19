@@ -9,22 +9,23 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""SQLite adapter package implementing MemoryPort and CatalogPort."""
+"""Backward-compatibility re-export shim for yarvelle_core.memory.adapters.sqlite."""
 
 from __future__ import annotations
 
-from carefold.memory.adapters.sqlite.catalog_adapter import (
-    CANONICAL_DOMAINS,
-    SqliteCatalogAdapter,
-    build_category_tree_from_rows,
-    sanitize_fts_query,
-)
-from carefold.memory.adapters.sqlite.memory_adapter import SqliteMemoryAdapter
+import sys
+from typing import Any
 
-__all__ = [
-    "SqliteMemoryAdapter",
-    "SqliteCatalogAdapter",
-    "sanitize_fts_query",
-    "build_category_tree_from_rows",
-    "CANONICAL_DOMAINS",
-]
+from yarvelle_core.memory.adapters.sqlite import *  # noqa: F401, F403
+import yarvelle_core.memory.adapters.sqlite as _target_module
+
+sys.modules[__name__] = _target_module
+sys.modules["carefold.memory.adapters.sqlite"] = _target_module
+
+
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from typing import Sequence
 from yarvelle_core.constants.defaults import DEFAULT_FORBIDDEN_INTENTS
-from yarvelle_core.resources.loader import get_resource_loader
+from carefold_health.resources.loader import get_resource_loader
 from yarvelle_core.schemas.manifest import AgentManifest, SkillManifest
 
 

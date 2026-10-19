@@ -182,6 +182,11 @@ def get_engine(url: Optional[str] = None) -> AsyncEngine:
     global _engine
     if _engine is None:
         _engine = create_db_engine(url)
+    try:
+        import yarvelle_core.db.session as yc_session
+        yc_session._engine = _engine
+    except Exception:
+        pass
     return _engine
 
 
@@ -199,6 +204,12 @@ def get_session_factory(
             class_=AsyncSession,
             expire_on_commit=False,
         )
+    try:
+        import yarvelle_core.db.session as yc_session
+        yc_session._session_factory = _session_factory
+        yc_session._engine = _engine
+    except Exception:
+        pass
     return _session_factory
 
 
@@ -209,18 +220,17 @@ def reset_engine() -> None:
     _session_factory = None
     _init_db_lock = None
     _init_db_lock_loop = None
+    try:
+        import yarvelle_core.db.session as yc_session
+        yc_session._engine = None
+        yc_session._session_factory = None
+        yc_session._init_db_lock = None
+        yc_session._init_db_lock_loop = None
+    except Exception:
+        pass
 
 
-async def get_db() -> AsyncIterator[AsyncSession]:
-    """FastAPI dependency yielding an async session with auto-commit and rollback."""
-    session_factory = get_session_factory()
-    async with session_factory() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
+from yarvelle_core.db.session import get_db  # noqa: F401
 
 
 def _run_schema_migrations(connection) -> None:
@@ -696,6 +706,12 @@ async def init_db(engine: Optional[AsyncEngine] = None) -> None:
         dialect=target_engine.dialect.name,
         url=sanitize_db_url(target_engine.url),
     )
+    try:
+        import yarvelle_core.db.session as yc_session
+        yc_session._engine = target_engine
+        yc_session._session_factory = get_session_factory(target_engine)
+    except Exception:
+        pass
 
 
 async def close_db() -> None:
@@ -708,3 +724,11 @@ async def close_db() -> None:
         _session_factory = None
         _init_db_lock = None
         _init_db_lock_loop = None
+    try:
+        import yarvelle_core.db.session as yc_session
+        yc_session._engine = None
+        yc_session._session_factory = None
+        yc_session._init_db_lock = None
+        yc_session._init_db_lock_loop = None
+    except Exception:
+        pass

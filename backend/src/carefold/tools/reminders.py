@@ -19,6 +19,9 @@ from typing import Any
 from yarvelle_core.tools.reminders import *  # noqa: F401, F403
 import yarvelle_core.tools.reminders as _target_module
 
+if hasattr(_target_module, "register_reminder_category"):
+    _target_module.register_reminder_category("vitals")
+
 sys.modules[__name__] = _target_module
 
 

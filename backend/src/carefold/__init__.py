@@ -12,3 +12,13 @@
 """Carefold local-first AI and agentic runtime."""
 
 __version__ = "0.4.0b1"
+
+# Ensure domain extensions are registered on yarvelle_core at root package import
+try:
+    from yarvelle_core.schemas.manifest import AgentDomain
+
+    if hasattr(AgentDomain, "register") and not hasattr(AgentDomain, "CLINICAL"):
+        AgentDomain.CLINICAL = AgentDomain.register("clinical")
+except Exception:
+    pass
+

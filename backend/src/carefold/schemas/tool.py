@@ -9,27 +9,22 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Tool and execution context schemas."""
+"""Backward-compatibility re-export shim for yarvelle_core.schemas.tool."""
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Literal, Optional
-from pydantic import BaseModel, Field
+import sys
+from typing import Any
 
-ClosedToolName = Literal["attach-read", "workspace-note", "skill-docs"]
+from yarvelle_core.schemas.tool import *  # noqa: F401, F403
+import yarvelle_core.schemas.tool as _target_module
 
-
-class ToolResult(BaseModel):
-    success: bool
-    output: Any = None
-    error: Optional[str] = None
+sys.modules[__name__] = _target_module
 
 
-class ToolCallRecord(BaseModel):
-    tool: str
-    input: Dict[str, Any] = Field(default_factory=dict)
-    allowed: bool = True
-    duration_ms: float = 0.0
-    success: bool = True
-    output: Any = None
-    error: Optional[str] = None
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

@@ -9,42 +9,29 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Domain scoping and isolation package."""
+"""Backward-compatibility re-export shim for yarvelle_core.scope."""
 
 from __future__ import annotations
 
-from carefold.scope.context import (
-    DEFAULT_HEALTH_GRANTED_SCOPES,
-    DEFAULT_SCOPE,
-    ScopeAccessDeniedError,
-    ScopeContext,
-    ScopeError,
-    ScopeViolationError,
-    current_granted_scopes,
-    current_scope,
-    current_scope_context,
-    is_scope_granted,
-    matches_scope,
-    require_scope,
-    scope_context,
-)
-from carefold.scope.adapter import DualWriteAdapter
-from carefold.scope.mixin import ScopedMixin
+import sys
+from typing import Any
 
-__all__ = [
-    "DEFAULT_SCOPE",
-    "DEFAULT_HEALTH_GRANTED_SCOPES",
-    "ScopeError",
-    "ScopeAccessDeniedError",
-    "ScopeViolationError",
-    "matches_scope",
-    "is_scope_granted",
-    "ScopeContext",
-    "current_scope_context",
-    "current_scope",
-    "current_granted_scopes",
-    "scope_context",
-    "require_scope",
-    "ScopedMixin",
-    "DualWriteAdapter",
-]
+from yarvelle_core.scope import *  # noqa: F401, F403
+import yarvelle_core.scope as _target_module
+import yarvelle_core.scope.adapter as _adapter_module
+import yarvelle_core.scope.context as _context_module
+import yarvelle_core.scope.mixin as _mixin_module
+
+sys.modules[__name__] = _target_module
+sys.modules["carefold.scope"] = _target_module
+sys.modules["carefold.scope.adapter"] = _adapter_module
+sys.modules["carefold.scope.context"] = _context_module
+sys.modules["carefold.scope.mixin"] = _mixin_module
+
+
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

@@ -162,12 +162,14 @@ def _create_specialist_node(
 
             # Auto-infer dossier type only if missing from state
             if not dossier_type:
-                if any(k in prompt_text for k in ("insurance", "benefit", "deductible", "copay")):
+                combined_text = f"{prompt_text} {doc_text or ''}".lower()
+                if any(k in combined_text for k in ("insurance", "benefit", "deductible", "copay")):
                     dossier_type = "insurance"
-                elif any(k in prompt_text for k in ("visit", "physician", "doctor", "appointment")):
+                elif any(k in combined_text for k in ("visit", "physician", "doctor", "appointment")):
                     dossier_type = "clinical"
                 else:
                     dossier_type = "generic"
+
 
             dossiers = list(state.get("document_dossiers", []))
 

@@ -25,6 +25,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+import json
 import uuid
 
 from sqlalchemy import (
@@ -37,7 +38,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
 
 from yarvelle_core.db.base import Base
 from yarvelle_core.scope.mixin import ScopedMixin
@@ -59,6 +60,7 @@ class HealthResource(Base, ScopedMixin):
         ),
         Index("ix_health_resources_profile_type_effective", "profile_id", "resource_type", "effective_at"),
         Index("ix_health_resources_effective_at", "effective_at"),
+        {"extend_existing": True},
     )
 
     id: Mapped[str] = mapped_column(
@@ -169,6 +171,7 @@ class Appointment(Base, ScopedMixin):
         Index("ix_appointments_start_time", "start_time"),
         Index("ix_appointments_status", "status"),
         Index("ix_appointments_profile_start", "profile_id", "start_time"),
+        {"extend_existing": True},
     )
 
     id: Mapped[str] = mapped_column(
@@ -256,6 +259,14 @@ class Appointment(Base, ScopedMixin):
     )
 
     profile: Mapped[Any] = relationship("Profile")
+    notes: Mapped[List[Any]] = relationship(
+        "Note",
+        primaryjoin="Appointment.id == foreign(Note.linked_appointment_id)",
+        back_populates="appointment",
+        passive_deletes=True,
+    )
+
+
 
     def __init__(self, **kwargs: Any) -> None:
         if "id" not in kwargs:
@@ -284,6 +295,7 @@ class PreventiveRecord(Base, ScopedMixin):
             name="uq_preventive_records_profile_rule",
         ),
         Index("ix_preventive_records_profile_status", "profile_id", "status"),
+        {"extend_existing": True},
     )
 
     id: Mapped[str] = mapped_column(
@@ -370,6 +382,7 @@ class ImportBatch(Base, ScopedMixin):
     __tablename__ = "import_batches"
     __table_args__ = (
         Index("ix_import_batches_profile_status", "profile_id", "status"),
+        {"extend_existing": True},
     )
 
     id: Mapped[str] = mapped_column(
@@ -479,6 +492,7 @@ class SchoolForm(Base, ScopedMixin):
     __table_args__ = (
         Index("ix_school_forms_profile_status", "profile_id", "status"),
         Index("ix_school_forms_expires_at", "expires_at"),
+        {"extend_existing": True},
     )
 
     id: Mapped[str] = mapped_column(
@@ -601,6 +615,7 @@ class SchoolIcsFeed(Base, ScopedMixin):
     """Per-child read-only school calendar ICS subscription feed (AU-61 / E4.4)."""
 
     __tablename__ = "school_ics_feeds"
+    __table_args__ = {"extend_existing": True}
 
     id: Mapped[str] = mapped_column(
         String(36),
@@ -688,6 +703,7 @@ class CompanionDevice(Base):
     """Paired iOS companion device with pinned TLS certificate fingerprint and scoped profile permissions (AU-62)."""
 
     __tablename__ = "companion_devices"
+    __table_args__ = {"extend_existing": True}
 
     id: Mapped[str] = mapped_column(
         String(36),
@@ -783,23 +799,50 @@ class CompanionDevice(Base):
     def __init__(self, **kwargs: Any) -> None:
         if "id" not in kwargs:
             kwargs["id"] = str(uuid.uuid4())
+        if "allowed_categories" in kwargs and "allowed_categories_json" not in kwargs:
+            kwargs["allowed_categories_json"] = json.dumps(list(kwargs.pop("allowed_categories")))
+        elif "allowed_categories" in kwargs:
+            kwargs.pop("allowed_categories")
+        if "allowed_categories_json" not in kwargs:
+            kwargs["allowed_categories_json"] = '["vitals", "clinical_records", "reminders"]'
         if "status" not in kwargs:
             kwargs["status"] = "pending_pair"
         if "platform" not in kwargs:
             kwargs["platform"] = "ios"
-        if "allowed_categories_json" not in kwargs:
-            kwargs["allowed_categories_json"] = '["vitals", "clinical_records", "reminders"]'
         if "created_at" not in kwargs:
             kwargs["created_at"] = utc_now()
         if "updated_at" not in kwargs:
             kwargs["updated_at"] = utc_now()
         super().__init__(**kwargs)
 
+    @property
+    def allowed_categories(self) -> List[str]:
+        try:
+            return json.loads(self.allowed_categories_json or "[]")
+        except Exception:
+            return []
+
+    @allowed_categories.setter
+    def allowed_categories(self, value: List[str]) -> None:
+        self.allowed_categories_json = json.dumps(list(value))
+
     def __repr__(self) -> str:
         return (
             f"<CompanionDevice id={self.id!r} profile_id={self.profile_id!r} "
             f"device_name={self.device_name!r} status={self.status!r}>"
         )
+
+
+from yarvelle_core.db.models import Note
+from sqlalchemy.orm import synonym
+
+if not hasattr(Note, "appointment"):
+    Note.appointment = relationship(
+        "Appointment",
+        primaryjoin="foreign(Note.linked_appointment_id) == Appointment.id",
+        back_populates="notes",
+    )
+    Note.linked_appointment = synonym("appointment")
 
 
 __all__ = [

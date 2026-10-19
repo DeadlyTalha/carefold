@@ -9,45 +9,22 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Audit logging schemas."""
+"""Backward-compatibility re-export shim for yarvelle_core.schemas.audit."""
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import List, Literal, Optional
-from pydantic import BaseModel, Field
+import sys
+from typing import Any
 
-AuditEventType = Literal["run", "tool", "refuse", "error", "boundary_warning", "synthesis"]
+from yarvelle_core.schemas.audit import *  # noqa: F401, F403
+import yarvelle_core.schemas.audit as _target_module
 
-
-class AuditEvent(BaseModel):
-    ts: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    agent_id: str
-    skill_id: Optional[str] = None
-    skill_version: Optional[str] = None
-    event: AuditEventType
-    tool: Optional[str] = None
-    allowed: Optional[bool] = None
-    reason: Optional[str] = None
-    duration_ms: Optional[float] = None
-    prompt: Optional[str] = None      # Redacted unless store_bodies=True
-    completion: Optional[str] = None  # Redacted unless store_bodies=True
-    thread_id: Optional[str] = None
-    profile_id: Optional[str] = None
-    id: Optional[str] = None
-    actor_user_id: Optional[str] = None
-    principal: Optional[str] = None
-    run_id: Optional[str] = None
-    risk: Optional[str] = None
-    decision: Optional[str] = None
-    payload_hash: Optional[str] = None
-    external_ref: Optional[str] = None
-    scope: Optional[str] = None
-    pack_id: Optional[str] = None
-    risk_tier: Optional[str] = None
+sys.modules[__name__] = _target_module
 
 
-class AuditListResponse(BaseModel):
-    total: int
-    limit: int
-    events: List[AuditEvent]
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

@@ -19,7 +19,8 @@ from `carefold_health.db.models`, dynamically attaching health relationships to
 from __future__ import annotations
 
 from typing import Any
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import foreign, relationship, synonym
+
 
 # 1. Re-export all core models and primitives from yarvelle_core.db.models
 from yarvelle_core.db.base import Base  # noqa: F401
@@ -55,6 +56,8 @@ _HEALTH_RELATIONSHIPS = [
 ]
 
 if _health_models is not None:
+    from sqlalchemy.orm import foreign, synonym
+
     for rel_name, target in _HEALTH_RELATIONSHIPS:
         if not hasattr(Profile, rel_name):
             setattr(
@@ -67,6 +70,14 @@ if _health_models is not None:
                     passive_deletes=True,
                 ),
             )
+    if not hasattr(Note, "appointment"):
+        Note.appointment = relationship(
+            "Appointment",
+            primaryjoin="foreign(Note.linked_appointment_id) == Appointment.id",
+            back_populates="notes",
+        )
+        Note.linked_appointment = synonym("appointment")
+
 
 # 4. Register dual-write listeners after all models are loaded
 try:

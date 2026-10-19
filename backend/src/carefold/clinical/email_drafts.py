@@ -9,15 +9,15 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Backward-compatibility re-export shim for yarvelle_core.platform.email_drafts."""
+"""Backward-compatibility re-export shim for carefold.platform.email_drafts."""
 
 from __future__ import annotations
 
 import sys
 from typing import Any
 
-from yarvelle_core.platform.email_drafts import *  # noqa: F401, F403
-import yarvelle_core.platform.email_drafts as _target_module
+from carefold.platform.email_drafts import *  # noqa: F401, F403
+import carefold.platform.email_drafts as _target_module
 
 sys.modules[__name__] = _target_module
 

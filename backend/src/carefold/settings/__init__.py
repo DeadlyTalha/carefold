@@ -9,25 +9,32 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Settings subsystem providing hexagonal SettingsPort and SQL adapter."""
+"""Hexagonal SettingsPort and runtime configuration management for Carefold."""
 
-from carefold.settings.adapters.sql_adapter import SqlSettingsAdapter
-from carefold.settings.factory import (
-    create_settings_port,
-    get_settings_port,
-    reset_settings_port,
-    reset_settings_ports,
-    set_settings_port,
-)
-from carefold.settings.ports import SECRET_MASK, SettingsPort
+from __future__ import annotations
 
-__all__ = [
-    "SECRET_MASK",
-    "SettingsPort",
-    "SqlSettingsAdapter",
-    "create_settings_port",
-    "get_settings_port",
-    "reset_settings_port",
-    "reset_settings_ports",
-    "set_settings_port",
-]
+import sys
+from typing import Any
+
+import yarvelle_core.settings as _target_module
+import yarvelle_core.settings.adapters as _adapters
+import yarvelle_core.settings.adapters.sql_adapter as _sql
+import yarvelle_core.settings.factory as _factory
+import yarvelle_core.settings.ports as _ports
+
+sys.modules[__name__] = _target_module
+sys.modules["carefold.settings"] = _target_module
+sys.modules["carefold.settings.ports"] = _ports
+sys.modules["carefold.settings.factory"] = _factory
+sys.modules["carefold.settings.adapters"] = _adapters
+sys.modules["carefold.settings.adapters.sql_adapter"] = _sql
+
+from yarvelle_core.settings import *  # noqa: F401, F403
+
+
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

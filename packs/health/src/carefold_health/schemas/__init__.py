@@ -9,3 +9,14 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
+"""Carefold Health Pack specific Pydantic schemas and dossiers."""
+
+from __future__ import annotations
+
+from carefold_health.dossiers.clinical_visit import ClinicalVisitDossier
+from carefold_health.dossiers.insurance_benefits import InsuranceBenefitsDossier
+
+__all__ = [
+    "ClinicalVisitDossier",
+    "InsuranceBenefitsDossier",
+]

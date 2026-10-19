@@ -9,25 +9,23 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""ScopedMixin declarative ORM mixin enforcing domain scope partitioning."""
+"""Backward-compatibility re-export shim for yarvelle_core.scope.mixin."""
 
 from __future__ import annotations
 
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+import sys
+from typing import Any
+
+from yarvelle_core.scope.mixin import *  # noqa: F401, F403
+import yarvelle_core.scope.mixin as _target_module
+
+sys.modules[__name__] = _target_module
+sys.modules["carefold.scope.mixin"] = _target_module
 
 
-class ScopedMixin:
-    """Declarative ORM mixin enforcing domain scope partitioning."""
-
-    scope: Mapped[str] = mapped_column(
-        String(64),
-        nullable=False,
-        default="health",
-        server_default="health",
-        index=True,
-        doc="Domain scope partition identifier (e.g. 'health', 'health.clinical', 'finance.accounts')",
-    )
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
 
 
-__all__ = ["ScopedMixin"]
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

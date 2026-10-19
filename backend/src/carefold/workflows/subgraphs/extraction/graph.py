@@ -9,21 +9,22 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Alias module for carefold.workflows.subgraphs.extraction.subgraph.
+"""Backward-compatibility re-export shim for yarvelle_core.workflows.subgraphs.extraction.graph."""
 
-Kept so the extraction subgraph is importable from either module path.
-"""
+from __future__ import annotations
 
-from carefold.workflows.subgraphs.extraction.subgraph import (
-    build_extraction_subgraph,
-    create_extraction_node,
-    create_extraction_subgraph,
-    create_ingestion_node,
-)
+import sys
+from typing import Any
 
-__all__ = [
-    "build_extraction_subgraph",
-    "create_extraction_node",
-    "create_extraction_subgraph",
-    "create_ingestion_node",
-]
+from yarvelle_core.workflows.subgraphs.extraction.graph import *  # noqa: F401, F403
+import yarvelle_core.workflows.subgraphs.extraction.graph as _target_module
+
+sys.modules[__name__] = _target_module
+
+
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

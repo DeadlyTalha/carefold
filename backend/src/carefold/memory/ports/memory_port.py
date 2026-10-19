@@ -9,156 +9,23 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""MemoryPort interface and MemoryTier enumeration for hexagonal cognitive memory."""
+"""Backward-compatibility re-export shim for yarvelle_core.memory.ports.memory_port."""
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Any, Dict, List, Optional
+import sys
+from typing import Any
+
+from yarvelle_core.memory.ports.memory_port import *  # noqa: F401, F403
+import yarvelle_core.memory.ports.memory_port as _target_module
+
+sys.modules[__name__] = _target_module
+sys.modules["carefold.memory.ports.memory_port"] = _target_module
 
 
-class MemoryTier(str, Enum):
-    """Cognitive tiers for hierarchical agent memory.
-    
-    Tiers categorize memories based on temporal longevity, mutability, and cognitive role:
-    - WORKING: Ephemeral scratchpad, active task execution state, and session context.
-    - EPISODIC: Autobiographical turn interactions, event logs, chronological history with timestamps.
-    - SEMANTIC: Consolidated factual healthcare knowledge, patient profile, preferences, extracted concepts.
-    - PROCEDURAL: Clinical guidelines, step-by-step SOP execution rules, protocols, skill action steps.
-    """
-
-    WORKING = "working"
-    EPISODIC = "episodic"
-    SEMANTIC = "semantic"
-    PROCEDURAL = "procedural"
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
 
 
-class MemoryPort(ABC):
-    """Abstract port interface for cognitive memory operations across agent tiers.
-    
-    Provides isolation across namespaces (e.g., agent ID, user ID, session ID)
-    and supports salience reinforcement/decay and multi-tier cognitive recall.
-    """
-
-    @abstractmethod
-    async def remember(
-        self,
-        key: str,
-        value: Any,
-        tier: MemoryTier,
-        namespace: str = "default",
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> None:
-        """Stores or updates a memory record in the specified namespace and tier.
-        
-        Args:
-            key: Unique identifier for the memory within the namespace.
-            value: Memory payload (string, dict, or serializable structure).
-            tier: Cognitive memory tier (WORKING, EPISODIC, SEMANTIC, PROCEDURAL).
-            namespace: Isolation namespace (e.g. 'agent:visit-steward', 'user:patient_1').
-            metadata: Optional dictionary of attributes, tags, or provenance.
-        """
-        ...
-
-    @abstractmethod
-    async def recall(
-        self,
-        query: str,
-        tier: Optional[MemoryTier] = None,
-        namespace: str = "default",
-        limit: int = 10,
-    ) -> List[Dict[str, Any]]:
-        """Recalls memory records relevant to the query in the namespace.
-        
-        Args:
-            query: Natural language query string or search keywords. If empty,
-                   retrieves recent/salient memories.
-            tier: Optional tier filter. If None, searches across all tiers in the namespace.
-            namespace: Isolation namespace.
-            limit: Maximum number of records to return (defaults to 10).
-            
-        Returns:
-            List of memory record dictionaries ordered by relevance/salience descending.
-            Each dictionary contains: 'key', 'value', 'tier', 'namespace', 'metadata',
-            'salience', 'created_at', 'updated_at', and optionally 'score'.
-        """
-        ...
-
-    @abstractmethod
-    async def forget(
-        self,
-        key: str,
-        namespace: str = "default",
-    ) -> bool:
-        """Deletes a memory record identified by key in the specified namespace.
-        
-        Args:
-            key: Memory key to delete.
-            namespace: Isolation namespace.
-            
-        Returns:
-            True if the record existed and was deleted, False otherwise.
-        """
-        ...
-
-    @abstractmethod
-    async def reinforce(
-        self,
-        key: str,
-        namespace: str = "default",
-        delta: float = 0.1,
-    ) -> None:
-        """Adjusts the salience / retrieval weight of a memory record.
-        
-        Args:
-            key: Memory key to reinforce.
-            namespace: Isolation namespace.
-            delta: Salience change delta (positive to boost, negative to decay; defaults to 0.1).
-        """
-        ...
-
-    @abstractmethod
-    async def get(
-        self,
-        key: str,
-        namespace: str = "default",
-    ) -> Optional[Dict[str, Any]]:
-        """Retrieves a single memory record by key in the specified namespace.
-        
-        Args:
-            key: Memory key to retrieve.
-            namespace: Isolation namespace.
-            
-        Returns:
-            Dictionary of memory record if found, None otherwise.
-        """
-        ...
-
-    @abstractmethod
-    async def forget_all(
-        self,
-        namespace: str = "default",
-    ) -> int:
-        """Deletes all memory records within the specified namespace.
-        
-        Args:
-            namespace: Isolation namespace.
-            
-        Returns:
-            Number of deleted memory records.
-        """
-        ...
-
-    async def close(self) -> None:
-        """Closes any underlying resources (database connections, network sessions).
-        
-        Default implementation is a no-op; adapters override if cleanup is needed.
-        """
-        pass
-
-
-__all__ = [
-    "MemoryPort",
-    "MemoryTier",
-]
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -132,6 +132,15 @@ class Settings(BaseSettings):
 
     # Product Brand Customization
     _brand_config: BrandConfig = PrivateAttr(default_factory=BrandConfig)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        super().__setattr__(name, value)
+        try:
+            import yarvelle_core.config
+            if hasattr(yarvelle_core.config.settings, name):
+                setattr(yarvelle_core.config.settings, name, value)
+        except Exception:
+            pass
 
     @property
     def brand_config(self) -> BrandConfig:
@@ -298,3 +307,26 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Synchronize carefold settings with yarvelle_core settings
+try:
+    import yarvelle_core.config
+    for key in (
+        "workspace_root",
+        "home_dir",
+        "database_url",
+        "audit_log_path",
+        "catalog_db_path",
+        "db_path",
+        "auth_provider",
+        "cors_origins",
+        "secret_key",
+        "access_token_expire_minutes",
+        "algorithm",
+        "admin_email",
+        "admin_password",
+    ):
+        if hasattr(settings, key) and hasattr(yarvelle_core.config.settings, key):
+            setattr(yarvelle_core.config.settings, key, getattr(settings, key))
+except Exception:
+    pass

@@ -9,35 +9,22 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Health status schemas."""
+"""Backward-compatibility re-export shim for yarvelle_core.schemas.health."""
 
 from __future__ import annotations
 
-from typing import List, Literal, Optional
-from pydantic import BaseModel, Field
+import sys
+from typing import Any
+
+from yarvelle_core.schemas.health import *  # noqa: F401, F403
+import yarvelle_core.schemas.health as _target_module
+
+sys.modules[__name__] = _target_module
 
 
-class OllamaHealthStatus(BaseModel):
-    status: Literal["connected", "unreachable", "error"]
-    endpoint: str
-    reachable: bool
-    activeModel: Optional[str] = None
-    availableModels: List[str] = Field(default_factory=list)
-    error: Optional[str] = None
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
 
 
-class WorkspaceInfo(BaseModel):
-    root: str
-    agentsCount: int
-    skillsCount: int
-
-
-class HealthResponse(BaseModel):
-    status: Literal["ok", "degraded", "error"]
-    version: str = "0.1.0"
-    uptime: float
-    timestamp: str
-    modelReachable: bool
-    workspace: WorkspaceInfo
-    ollama: OllamaHealthStatus
-    backendReachable: bool = True
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

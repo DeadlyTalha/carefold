@@ -27,7 +27,7 @@ import re
 from typing import Any, Dict, List, Optional
 
 from yarvelle_core.constants.defaults import FORBIDDEN_INTENT_PREFIX
-from yarvelle_core.resources.loader import RefusalPattern, get_resource_loader
+from carefold_health.resources.loader import RefusalPattern, get_resource_loader
 from carefold_health.safety.template import SAFE_REFUSAL_TEMPLATE
 
 

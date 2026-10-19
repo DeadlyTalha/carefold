@@ -11,54 +11,34 @@
 
 """Authentication subsystem providing hexagonal AuthPort and swappable adapters."""
 
-from carefold.auth.adapters.disabled_adapter import (
-    DEFAULT_STEWARD_USER,
-    DisabledAuthAdapter,
-)
-from carefold.auth.adapters.oidc_adapter import OidcAuthAdapter
-from carefold.auth.adapters.sql_adapter import SqlAuthAdapter
-from carefold.auth.factory import (
-    create_auth_port,
-    get_auth_port,
-    reset_auth_port,
-    reset_auth_ports,
-    set_auth_port,
-)
-from carefold.auth.ports import (
-    AuthPort,
-    AuthSession,
-    PaginatedUsers,
-    PasswordChangeRequest,
-    PasswordResetRequest,
-    RegisterUserRequest,
-    SessionRecord,
-    SessionToken,
-    UserProfile,
-    UserRecord,
-    UserUpdate,
-    ValidatedSession,
-)
+from __future__ import annotations
 
-__all__ = [
-    "AuthPort",
-    "AuthSession",
-    "DEFAULT_STEWARD_USER",
-    "DisabledAuthAdapter",
-    "OidcAuthAdapter",
-    "PaginatedUsers",
-    "PasswordChangeRequest",
-    "PasswordResetRequest",
-    "RegisterUserRequest",
-    "SessionRecord",
-    "SessionToken",
-    "SqlAuthAdapter",
-    "UserProfile",
-    "UserRecord",
-    "UserUpdate",
-    "ValidatedSession",
-    "create_auth_port",
-    "get_auth_port",
-    "reset_auth_port",
-    "reset_auth_ports",
-    "set_auth_port",
-]
+import sys
+from typing import Any
+
+import yarvelle_core.auth as _target_module
+import yarvelle_core.auth.adapters as _adapters
+import yarvelle_core.auth.adapters.disabled_adapter as _disabled
+import yarvelle_core.auth.adapters.oidc_adapter as _oidc
+import yarvelle_core.auth.adapters.sql_adapter as _sql
+import yarvelle_core.auth.factory as _factory
+import yarvelle_core.auth.ports as _ports
+
+sys.modules[__name__] = _target_module
+sys.modules["carefold.auth"] = _target_module
+sys.modules["carefold.auth.ports"] = _ports
+sys.modules["carefold.auth.factory"] = _factory
+sys.modules["carefold.auth.adapters"] = _adapters
+sys.modules["carefold.auth.adapters.disabled_adapter"] = _disabled
+sys.modules["carefold.auth.adapters.oidc_adapter"] = _oidc
+sys.modules["carefold.auth.adapters.sql_adapter"] = _sql
+
+from yarvelle_core.auth import *  # noqa: F401, F403
+
+
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

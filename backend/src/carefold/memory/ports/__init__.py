@@ -9,13 +9,23 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Port interfaces for Carefold hexagonal memory and catalog layer."""
+"""Backward-compatibility re-export shim for yarvelle_core.memory.ports."""
 
-from carefold.memory.ports.catalog_port import CatalogPort
-from carefold.memory.ports.memory_port import MemoryPort, MemoryTier
+from __future__ import annotations
 
-__all__ = [
-    "CatalogPort",
-    "MemoryPort",
-    "MemoryTier",
-]
+import sys
+from typing import Any
+
+from yarvelle_core.memory.ports import *  # noqa: F401, F403
+import yarvelle_core.memory.ports as _target_module
+
+sys.modules[__name__] = _target_module
+sys.modules["carefold.memory.ports"] = _target_module
+
+
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

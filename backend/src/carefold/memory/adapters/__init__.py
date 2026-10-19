@@ -9,24 +9,23 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Memory and Catalog storage adapters."""
+"""Backward-compatibility re-export shim for yarvelle_core.memory.adapters."""
 
 from __future__ import annotations
 
-from carefold.memory.adapters.spector import (
-    SpectorMemoryAdapter,
-    SpectorStore,
-)
-from carefold.memory.adapters.sqlite import (
-    SqliteCatalogAdapter,
-    SqliteMemoryAdapter,
-    sanitize_fts_query,
-)
+import sys
+from typing import Any
 
-__all__ = [
-    "SqliteMemoryAdapter",
-    "SqliteCatalogAdapter",
-    "sanitize_fts_query",
-    "SpectorMemoryAdapter",
-    "SpectorStore",
-]
+from yarvelle_core.memory.adapters import *  # noqa: F401, F403
+import yarvelle_core.memory.adapters as _target_module
+
+sys.modules[__name__] = _target_module
+sys.modules["carefold.memory.adapters"] = _target_module
+
+
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

@@ -205,7 +205,7 @@ def _load_vitals_thresholds_yaml() -> Dict[str, Any]:
     """Loads vitals thresholds YAML from resources directory with robust fallbacks."""
     # 1. Try via cached ResourceLoader
     try:
-        from yarvelle_core.resources.loader import get_resource_loader
+        from carefold_health.resources.loader import get_resource_loader
         loader = get_resource_loader()
         data = loader.load_yaml("vitals_thresholds.yaml")
         if data:

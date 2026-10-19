@@ -9,135 +9,24 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""FastAPI dependency providers for Carefold runtime."""
+"""Backward-compatibility re-export shim for yarvelle_core.api.deps."""
 
 from __future__ import annotations
 
-from typing import Optional
+import sys
+from typing import Any
 
-from fastapi import Depends, HTTPException, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+from yarvelle_core.api.deps import *  # noqa: F401, F403
+import yarvelle_core.api.deps as _target_module
 
-from carefold.auth.adapters.disabled_adapter import (
-    DEFAULT_STEWARD_USER,
-    DisabledAuthAdapter,
-)
-from carefold.auth.adapters.sql_adapter import SqlAuthAdapter
-from carefold.auth.adapters.oidc_adapter import OidcAuthAdapter
-from carefold.auth.factory import get_auth_port
-from carefold.auth.ports import AuthPort, UserProfile
-from carefold.config import settings
-from carefold.db.session import get_db
-from carefold.memory.factory import get_memory_port
-from carefold.memory.ports.memory_port import MemoryPort
-from carefold.settings.factory import get_settings_port
-from carefold.settings.ports import SettingsPort
+sys.modules[__name__] = _target_module
+sys.modules["carefold.api.deps"] = _target_module
 
 
-def get_current_memory_port() -> MemoryPort:
-    """Dependency provider resolving the active MemoryPort adapter singleton.
-
-    Can be overridden in tests via app.dependency_overrides[get_current_memory_port].
-    """
-    return get_memory_port()
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
 
 
-def get_auth() -> AuthPort:
-    """Dependency provider resolving the active AuthPort adapter singleton."""
-    return get_auth_port()
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))
 
-
-def get_settings() -> SettingsPort:
-    """Dependency provider resolving the active SettingsPort adapter singleton."""
-    return get_settings_port()
-
-
-get_current_auth_port = get_auth
-get_current_settings_port = get_settings
-
-
-async def get_current_user(
-    request: Request,
-    auth: AuthPort = Depends(get_auth),
-    db: AsyncSession = Depends(get_db),
-) -> UserProfile:
-    """FastAPI dependency resolving the currently authenticated user profile.
-
-    If active auth port is DisabledAuthAdapter (or config.auth_provider == "disabled"),
-    returns DEFAULT_STEWARD_USER.
-    In local or OIDC mode, validates session token from cookie or Authorization header.
-    """
-    auth_port = auth if isinstance(auth, AuthPort) else get_auth_port()
-
-    # If active auth port is DisabledAuthAdapter (or config.auth_provider == "disabled"), return DEFAULT_STEWARD_USER
-    if isinstance(auth_port, DisabledAuthAdapter) or getattr(settings, "auth_provider", "local") == "disabled":
-        return DEFAULT_STEWARD_USER
-
-    # In local/oidc auth mode:
-    # Explicit Authorization header takes precedence over ambient cookie
-    token: Optional[str] = None
-    auth_header = request.headers.get("Authorization") or request.headers.get("authorization")
-    if auth_header:
-        if auth_header.startswith("Bearer "):
-            token = auth_header[7:].strip()
-        elif auth_header.startswith("bearer "):
-            token = auth_header[7:].strip()
-        else:
-            token = auth_header.strip()
-
-    if not token:
-        token = request.cookies.get("carefold_session")
-
-    if not token:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    validated = await auth_port.validate_session(token)
-    if validated is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired session",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    user = validated[0] if isinstance(validated, (tuple, list)) else validated
-    if user.status != "active":
-        raise HTTPException(status_code=403, detail="Account is disabled")
-
-    return user
-
-
-async def require_admin(
-    user: UserProfile = Depends(get_current_user),
-) -> UserProfile:
-    """FastAPI dependency requiring the current user to have administrative privileges."""
-    if user.role != "admin":
-        raise HTTPException(
-            status_code=403,
-            detail="Administrative privileges required",
-        )
-    return user
-
-
-def resolve_owner_user_id(user: Optional[UserProfile]) -> Optional[str]:
-    """Returns foreign key user_id for DB entities, or None if in disabled/offline single-user mode."""
-    if not user:
-        return None
-    if user.id == DEFAULT_STEWARD_USER.id or getattr(settings, "auth_provider", "local") == "disabled":
-        return None
-    return user.id
-
-
-__all__ = [
-    "get_current_memory_port",
-    "get_auth",
-    "get_settings",
-    "get_current_auth_port",
-    "get_current_settings_port",
-    "get_current_user",
-    "require_admin",
-    "resolve_owner_user_id",
-]

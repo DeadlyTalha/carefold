@@ -9,53 +9,23 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Canonical memory namespace helper utilities for scoped domain isolation (Step C2c)."""
+"""Backward-compatibility re-export shim for yarvelle_core.memory.namespace."""
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
+import sys
+from typing import Any
 
-from carefold.scope.context import DEFAULT_SCOPE
+from yarvelle_core.memory.namespace import *  # noqa: F401, F403
+import yarvelle_core.memory.namespace as _target_module
 
-
-def build_memory_namespace(
-    scope: str = DEFAULT_SCOPE,
-    profile_id: str = "default",
-    sub_namespace: str = "default",
-    tier: Optional[str] = None,
-) -> str:
-    """Builds a canonical scope-prefixed memory namespace.
-
-    Format:
-        scope:<scope>/profile:<profile_id>/<subnamespace>
-    """
-    clean_scope = str(scope).strip() or DEFAULT_SCOPE
-    clean_pid = str(profile_id).strip() or "default"
-    clean_sub = str(tier or sub_namespace).strip() or "default"
-    return f"scope:{clean_scope}/profile:{clean_pid}/{clean_sub}"
+sys.modules[__name__] = _target_module
+sys.modules["carefold.memory.namespace"] = _target_module
 
 
-def parse_memory_namespace(namespace: str) -> Tuple[Optional[str], Optional[str], str]:
-    """Parses scope, profile_id, and subnamespace from a memory namespace string.
-
-    Returns:
-        Tuple of (scope, profile_id, sub_namespace).
-    """
-    if not namespace or not namespace.startswith("scope:"):
-        return None, None, namespace
-
-    parts = namespace.split("/", 2)
-    scope = parts[0][len("scope:") :].strip() if len(parts) > 0 else None
-    profile_id = (
-        parts[1][len("profile:") :].strip()
-        if len(parts) > 1 and parts[1].startswith("profile:")
-        else None
-    )
-    sub = parts[2].strip() if len(parts) > 2 else "default"
-    return scope, profile_id, sub
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
 
 
-__all__ = [
-    "build_memory_namespace",
-    "parse_memory_namespace",
-]
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

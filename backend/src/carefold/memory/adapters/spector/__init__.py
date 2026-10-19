@@ -9,14 +9,23 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Spector Cognitive Memory adapters for LangGraph BaseStore and Carefold MemoryPort."""
+"""Backward-compatibility re-export shim for yarvelle_core.memory.adapters.spector."""
 
 from __future__ import annotations
 
-from carefold.memory.adapters.spector.memory_adapter import SpectorMemoryAdapter
-from carefold.memory.adapters.spector.store import SpectorStore
+import sys
+from typing import Any
 
-__all__ = [
-    "SpectorStore",
-    "SpectorMemoryAdapter",
-]
+from yarvelle_core.memory.adapters.spector import *  # noqa: F401, F403
+import yarvelle_core.memory.adapters.spector as _target_module
+
+sys.modules[__name__] = _target_module
+sys.modules["carefold.memory.adapters.spector"] = _target_module
+
+
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))

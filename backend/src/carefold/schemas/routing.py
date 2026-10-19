@@ -9,19 +9,22 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Domain routing and intent classification hints."""
+"""Backward-compatibility re-export shim for yarvelle_core.schemas.routing."""
 
 from __future__ import annotations
 
-from typing import Dict, Optional
-from pydantic import BaseModel, Field
+import sys
+from typing import Any
+
+from yarvelle_core.schemas.routing import *  # noqa: F401, F403
+import yarvelle_core.schemas.routing as _target_module
+
+sys.modules[__name__] = _target_module
 
 
-class RoutingHints(BaseModel):
-    """Declarative routing hints contributed by domain packs for orchestrator classification."""
+def __getattr__(name: str) -> Any:
+    return getattr(_target_module, name)
 
-    domain: str
-    description: str
-    default_agent: str
-    domains_info: Dict[str, str] = Field(default_factory=dict)
-    patterns_resource: Optional[str] = None
+
+def __dir__() -> list[str]:
+    return sorted(set(globals().keys()) | set(dir(_target_module)))
