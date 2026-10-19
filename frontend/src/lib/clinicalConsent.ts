@@ -56,8 +56,8 @@ import {
   FORBIDDEN_INTENT_DESCRIPTIONS,
   formatForbiddenIntent,
   describeForbiddenIntent
-} from '@/lib/utils';
-import { getScopedStorageKey, getStorageUserId } from '@/lib/storageNamespace';
+} from './utils';
+import { getScopedStorageKey, getStorageUserId } from './storageNamespace';
 
 export { FORBIDDEN_INTENT_DESCRIPTIONS, formatForbiddenIntent, describeForbiddenIntent };
 

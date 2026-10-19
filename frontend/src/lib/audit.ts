@@ -11,7 +11,7 @@
  * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
-import { AuditEvent, AuditListResponse, AuditFilterParams } from '@/types/api';
+import { AuditEvent, AuditListResponse, AuditFilterParams } from '../types/api';
 
 export class AuditApiError extends Error {
   status: number;

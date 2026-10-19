@@ -14,7 +14,7 @@
 import type {
   ActivityTimelineResponse,
   ActivityUndoResponse,
-} from '@/types/activity';
+} from '../types/activity';
 
 export interface ActivityQueryParams {
   limit?: number;

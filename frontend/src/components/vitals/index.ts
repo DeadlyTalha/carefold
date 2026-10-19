@@ -11,7 +11,4 @@
  * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
-export * from './VitalsSummaryCards';
-export * from './DiurnalTrendTable';
-export * from './BloodPressureTrendChart';
-export * from './LogVitalsModal';
+export * from '@/health-ui/vitals';

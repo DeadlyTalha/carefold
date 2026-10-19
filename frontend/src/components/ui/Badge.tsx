@@ -14,7 +14,7 @@
 'use client';
 
 import * as React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '../../lib/utils';
 
 export type BadgeVariant = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
 export type BadgeSize = 'sm' | 'md';

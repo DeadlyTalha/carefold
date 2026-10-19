@@ -20,7 +20,7 @@ import {
   CLINICAL_CONSENT_STORAGE_KEY_PREFIX,
   type ClinicalConsentMap,
   loadClinicalConsents
-} from '@/lib/clinicalConsent';
+} from './clinicalConsent';
 
 /**
  * Subscribes to the clinical consent store for a specific profile (defaults to 'me').

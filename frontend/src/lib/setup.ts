@@ -12,7 +12,7 @@
  */
 
 import { loadSettings, type CarefoldUserSettings } from './settings';
-import type { HealthResponse } from '@/types/api';
+import type { HealthResponse } from '../types/api';
 
 export const CAREFOLD_SETUP_STORAGE_KEY = 'carefold_setup_complete';
 

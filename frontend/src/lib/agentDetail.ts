@@ -11,8 +11,8 @@
  * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
-import type { AgentDetail, AgentSummary } from '@/lib/types';
-import { DEFAULT_FORBIDDEN_INTENTS } from '@/lib/clinicalConsent';
+import type { AgentDetail, AgentSummary } from './types';
+import { DEFAULT_FORBIDDEN_INTENTS } from './clinicalConsent';
 
 /** Maps a backend `GET /api/agents/{id}` payload into the agent detail view model. */
 export function toAgentDetail(data: any): AgentDetail {

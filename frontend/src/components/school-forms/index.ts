@@ -11,5 +11,4 @@
  * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
-export * from './SchoolFormPrefillSheet';
-export * from './SchoolFormsPanel';
+export * from '@/health-ui/school-forms';

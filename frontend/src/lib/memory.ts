@@ -19,7 +19,7 @@ import type {
   MemoryDeleteResponse,
   MemoryBulkDeleteResponse,
   MemoryUpdateRequest,
-} from '@/types/api';
+} from '../types/api';
 
 export type {
   MemoryRecord,
@@ -31,7 +31,7 @@ export type {
   MemoryUpdateRequest,
 };
 
-import { getScopedStorageKey } from '@/lib/storageNamespace';
+import { getScopedStorageKey } from './storageNamespace';
 
 export const SESSION_MEMORY_PAUSED_STORAGE_KEY = 'carefold_memory_paused_session';
 export const MEMORY_PAUSE_EVENT = 'carefold:memory-pause-changed';

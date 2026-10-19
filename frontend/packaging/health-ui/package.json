@@ -3,14 +3,18 @@
   "version": "0.5.0-beta.1",
   "description": "Carefold Health Pack UI modules and slot contributions",
   "license": "PolyForm-Noncommercial-1.0.0",
-  "main": "../../src/health-ui/index.ts",
-  "module": "../../src/health-ui/index.ts",
-  "types": "../../src/health-ui/index.ts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "../../src/health-ui/index.ts",
-      "types": "../../src/health-ui/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
+  },
+  "dependencies": {
+    "@yarvelle/ui": "file:../../../../yarvelle-core/frontend"
   },
   "peerDependencies": {
     "react": ">=19.0.0",

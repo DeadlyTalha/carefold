@@ -17,7 +17,7 @@ import type {
   VitalsTrendsResponse,
   LatestVitalsState,
   ClientSafetyEvaluation,
-} from '@/types/vitals';
+} from '../types/vitals';
 
 export function classifyBloodPressure(systolic?: number | null, diastolic?: number | null): string {
   if (!systolic || !diastolic) return 'Unknown';

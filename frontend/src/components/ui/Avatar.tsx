@@ -14,7 +14,7 @@
 'use client';
 
 import * as React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '../../lib/utils';
 
 export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 export type MemberColorSlot = 1 | 2 | 3 | 4 | 5 | 'auto';

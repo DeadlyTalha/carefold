@@ -14,9 +14,9 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import type { UserProfile, AuthProvidersInfo } from '@/types/api';
-import { setStorageUserId, getStorageUserId, detachUserSession } from '@/lib/storageNamespace';
-import { fetchHouseholdProfiles } from '@/lib/familyProfiles';
+import type { UserProfile, AuthProvidersInfo } from '../types/api';
+import { setStorageUserId, getStorageUserId, detachUserSession } from './storageNamespace';
+import { fetchHouseholdProfiles } from './familyProfiles';
 
 export const DEFAULT_STEWARD_USER: UserProfile = {
   id: '00000000-0000-0000-0000-000000000000',

@@ -20,7 +20,7 @@ import type {
   CreateConnectionResponse,
   DataFlowsInventory,
   SyncRunItem,
-} from '@/types/connections';
+} from '../types/connections';
 
 export async function fetchConnectorCatalog(): Promise<{
   connectors: ConnectorManifestSummary[];

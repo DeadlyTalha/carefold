@@ -145,9 +145,9 @@ async def _seed_active_connection(
 def test_google_workspace_gmail_manifest_loads_and_validates() -> None:
     """Verifies the starter Google Workspace Gmail curated MCP manifest loads cleanly."""
     manifest_path = (
-        Path(__file__).resolve().parents[2]
-        / "libs"
-        / "connectors"
+        Path(__file__).resolve().parents[1]
+        / "src"
+        / "carefold_health"
         / "connectors"
         / "starters"
         / "manifests"
@@ -211,9 +211,9 @@ async def test_mcp_tool_pinning_drift_detection_and_reapproval(
     """Verifies pinning allowlisted MCP tools, blocking on schema drift, and re-approving."""
     session, user, profile = db_ctx
     manifest_path = (
-        Path(__file__).resolve().parents[2]
-        / "libs"
-        / "connectors"
+        Path(__file__).resolve().parents[1]
+        / "src"
+        / "carefold_health"
         / "connectors"
         / "starters"
         / "manifests"
@@ -339,9 +339,9 @@ async def test_wrap_mcp_tool_as_spec_taints_context_and_wraps_untrusted(
     """Verifies wrapped MCP tools execute through execute_tool_call with untrusted taint propagation."""
     _session, user, profile = db_ctx
     manifest_path = (
-        Path(__file__).resolve().parents[2]
-        / "libs"
-        / "connectors"
+        Path(__file__).resolve().parents[1]
+        / "src"
+        / "carefold_health"
         / "connectors"
         / "starters"
         / "manifests"
@@ -600,9 +600,9 @@ async def test_routines_and_mcp_pins_rest_api_endpoints(
     conn2 = await _seed_active_connection(session, user.id, profile.id, "google-workspace-gmail")
 
     manifest_path = (
-        Path(__file__).resolve().parents[2]
-        / "libs"
-        / "connectors"
+        Path(__file__).resolve().parents[1]
+        / "src"
+        / "carefold_health"
         / "connectors"
         / "starters"
         / "manifests"

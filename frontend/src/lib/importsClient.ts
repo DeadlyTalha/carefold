@@ -15,7 +15,7 @@ import type {
   ImportBatchResponse,
   ImportBatchStatus,
   ImportFormat,
-} from '@/types/imports';
+} from '../types/imports';
 
 export async function stageClinicalImport(
   profileId: string,

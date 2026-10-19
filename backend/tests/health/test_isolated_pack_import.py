@@ -85,7 +85,7 @@ assert not carefold_leaks, f"Detected reverse import leakage in sys.modules: {ca
 print("ISOLATED_PACK_OK")
 """
     repo_root = Path(__file__).resolve().parents[3]
-    pythonpath = f"{repo_root}/backend/src:{repo_root}/libs/connectors"
+    pythonpath = f"{repo_root}/backend/src"
     proc = subprocess.run(
         [sys.executable, "-c", script],
         capture_output=True,
@@ -119,7 +119,7 @@ assert len(pack.scoped_models) == 7
 print('ISOLATED_PACK_OK')
 """
     repo_root = Path(__file__).resolve().parents[3]
-    pythonpath = f"{repo_root}/backend/src:{repo_root}/libs/connectors"
+    pythonpath = f"{repo_root}/backend/src"
     proc = subprocess.run(
         [sys.executable, "-c", script],
         capture_output=True,

@@ -14,7 +14,7 @@
 'use client';
 
 import * as React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '../../lib/utils';
 
 export type ChipVariant = 'neutral' | 'selected' | 'solid' | 'local' | 'warning' | 'info';
 export type ChipSize = 'sm' | 'md' | 'lg';

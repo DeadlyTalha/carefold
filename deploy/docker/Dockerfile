@@ -35,9 +35,8 @@ RUN apt-get update && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY libs/connectors/ ./libs/connectors/
 COPY backend/ ./backend/
-RUN pip install --no-cache-dir ./libs/connectors ./backend \
+RUN pip install --no-cache-dir ./backend \
     && pip cache purge \
     && rm -rf /root/.cache /usr/local/lib/python3.12/site-packages/pip* /usr/local/bin/pip*
 
@@ -138,9 +137,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /usr/lib/node_modules /usr/local/lib/node_modules /usr/bin/npm /usr/bin/npx /root/.npm
 
-COPY libs/connectors/ ./libs/connectors/
 COPY backend/ ./backend/
-RUN pip install --no-cache-dir ./libs/connectors ./backend \
+RUN pip install --no-cache-dir ./backend \
     && pip cache purge \
     && rm -rf /root/.cache /usr/local/lib/python3.12/site-packages/pip* /usr/local/bin/pip*
 

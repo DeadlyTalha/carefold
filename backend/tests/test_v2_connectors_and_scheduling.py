@@ -570,9 +570,9 @@ async def test_gmail_send_message_requires_explicit_approval_and_updates_draft(b
 
     # Verify google_workspace_gmail.yaml manifest declares gmail_send_message as irreversible
     gmail_manifest_path = (
-        Path(__file__).resolve().parents[2]
-        / "libs"
-        / "connectors"
+        Path(__file__).resolve().parents[1]
+        / "src"
+        / "carefold_health"
         / "connectors"
         / "starters"
         / "manifests"

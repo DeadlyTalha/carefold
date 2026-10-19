@@ -19,7 +19,7 @@ import type {
   PreventiveListResponse,
   PreventiveStatus,
   ScheduleSource,
-} from '@/types/preventive';
+} from '../types/preventive';
 
 export async function fetchPreventiveItems(
   profileId: string,

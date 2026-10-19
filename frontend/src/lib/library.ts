@@ -16,7 +16,7 @@ import type {
   AttachmentUploadResponse,
   WorkspaceNoteDetail,
   WorkspaceNoteSummary
-} from '@/types/api';
+} from '../types/api';
 
 /**
  * Formats byte size into human-readable string (e.g. "14.2 KB", "2.1 MB").

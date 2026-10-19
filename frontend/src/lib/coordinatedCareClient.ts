@@ -18,7 +18,7 @@ import type {
   SmartSchedulingSlotItem,
   V2ConnectorSummary,
   ZocdocBookingPreview,
-} from '@/types/coordinatedCare';
+} from '../types/coordinatedCare';
 
 export interface VerifySmartHealthCardPayload {
   filename: string;

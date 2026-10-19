@@ -11,8 +11,8 @@
  * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
-import type { ChatMessage } from '@/lib/types';
-import type { AgentSummary, AgentDetailResponse } from '@/types/api';
+import type { ChatMessage } from './types';
+import type { AgentSummary, AgentDetailResponse } from '../types/api';
 
 export const NON_CLINICAL_DISCLAIMER_TEXT =
   'Carefold AI agents provide educational context, visit preparation checklists, formulary navigation, and benefits explanation. Agents never provide formal medical diagnoses, drug dosage adjustments, clinical treatment decisions, or acute triage replacement. If you are experiencing a medical emergency, please call 911 or your local emergency services immediately.';

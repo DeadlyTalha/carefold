@@ -11,5 +11,4 @@
  * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
-export * from './ScheduleSourceSelector';
-export * from './PreventiveChecklist';
+export * from '@/health-ui/preventive';

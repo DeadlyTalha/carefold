@@ -19,7 +19,7 @@ import type {
   ReminderItem,
   ReminderListResponse,
   SnoozeInterval,
-} from '@/types/schedule';
+} from '../types/schedule';
 
 // ---------------------------------------------------------------------------
 // Appointments API

@@ -12,7 +12,7 @@
  */
 
 import type { ChecklistItemState } from './types';
-import { getScopedStorageKey } from '@/lib/storageNamespace';
+import { getScopedStorageKey } from './storageNamespace';
 
 export const CHECKLIST_STORAGE_PREFIX = 'carefold_checklist_';
 

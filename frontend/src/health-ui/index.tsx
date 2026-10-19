@@ -11,90 +11,114 @@
  * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
-import React from 'react';
+'use client';
 
-// Health UI components
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, Badge } from '@yarvelle/ui';
+import {
+  definePackUi,
+  type SlotId,
+  type SlotContribution,
+  type SlotProps,
+  type PackUi,
+} from '@yarvelle/ui/slots';
+
+// Detailed Health UI Components (physically housed in src/health-ui/)
 export {
   BloodPressureTrendChart,
   DiurnalTrendTable,
   LogVitalsModal,
   VitalsSummaryCards,
-} from '@/components/vitals';
+} from './vitals';
 
 export {
   AppointmentCard,
   HowToBookSheet,
   RemindersChecklist,
-} from '@/components/appointments';
+} from './appointments';
 
 export {
   PreventiveChecklist,
   ScheduleSourceSelector,
-} from '@/components/preventive';
+} from './preventive';
 
 export {
   ClinicalImportWizard,
   ImportStagingReviewTable,
-} from '@/components/imports';
+} from './imports';
 
 export {
   SchoolFormPrefillSheet,
   SchoolFormsPanel,
-} from '@/components/school-forms';
+} from './school-forms';
 
-export { VisitPrepCard } from '@/components/chat/VisitPrepCard';
-export { InsuranceBenefitsCard } from '@/components/chat/InsuranceBenefitsCard';
-export { EmergencyEscalationCard } from '@/components/chat/EmergencyEscalationCard';
-export { ClinicalConsentDialog } from '@/components/ClinicalConsentDialog';
+export { VisitPrepCard } from './VisitPrepCard';
+export { InsuranceBenefitsCard } from './InsuranceBenefitsCard';
+export { EmergencyEscalationCard } from './EmergencyEscalationCard';
+export { ClinicalConsentDialog } from './ClinicalConsentDialog';
 
-// Slot and Pack Types
-export type SlotId =
-  | 'dashboard.card'
-  | 'sidebar.item'
-  | 'profile.detail'
-  | 'chat.messageRenderer'
-  | 'chat.composerAction'
-  | 'chat.beforeSend'
-  | 'settings.section'
-  | 'onboarding.step';
+export { definePackUi, type SlotId, type SlotContribution, type SlotProps, type PackUi };
 
-export interface SlotContribution<P = Record<string, any>> {
-  id: string;
-  pack: string;
-  slot: SlotId;
-  title: string;
-  icon?: string;
-  order?: number;
-  route?: string;
-  requiredScopes: string[];
-  audiences?: ('adult' | 'teen' | 'child' | 'viewer')[];
-  messageKind?: string;
-  load?: () => Promise<{ default: React.ComponentType<P> }>;
-  component?: React.ComponentType<P>;
+// Slot-ready Dashboard & Settings Card Wrappers
+export function VitalsCard({ profileId }: SlotProps) {
+  return (
+    <Card data-testid="health-vitals-card" data-profile-id={profileId}>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Vitals & Biometrics</CardTitle>
+          <Badge variant="success">Recorded</Badge>
+        </div>
+        <CardDescription>Blood pressure, resting heart rate, glucose, and lab trends.</CardDescription>
+      </CardHeader>
+    </Card>
+  );
 }
 
-export interface SlotProps {
-  profileId: string;
-  scopes: string[];
-  density?: 'compact' | 'comfortable';
+export function AppointmentsCard({ profileId }: SlotProps) {
+  return (
+    <Card data-testid="health-appointments-card" data-profile-id={profileId}>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Upcoming Care & Visits</CardTitle>
+          <Badge variant="info">Scheduled</Badge>
+        </div>
+        <CardDescription>Clinical specialist visits, prep dossiers, and follow-up checklists.</CardDescription>
+      </CardHeader>
+    </Card>
+  );
 }
 
-export interface PackUi {
-  pack: string;
-  contributions: SlotContribution[];
-  messages: Record<string, Record<string, string>>;
+export function PreventiveCard({ profileId }: SlotProps) {
+  return (
+    <Card data-testid="health-preventive-card" data-profile-id={profileId}>
+      <CardHeader>
+        <CardTitle>Preventive Guidelines</CardTitle>
+        <CardDescription>USPSTF preventive screenings, annual physicals, and immunization tracking.</CardDescription>
+      </CardHeader>
+    </Card>
+  );
 }
 
-export function definePackUi(def: {
-  pack: string;
-  contributions: SlotContribution[];
-  messages?: Record<string, Record<string, string>>;
-}): PackUi {
-  return {
-    pack: def.pack,
-    contributions: def.contributions,
-    messages: def.messages || {},
-  };
+export function SchoolFormsCard({ profileId }: SlotProps) {
+  return (
+    <Card data-testid="health-school-forms-card" data-profile-id={profileId}>
+      <CardHeader>
+        <CardTitle>Health & Immunization Forms</CardTitle>
+        <CardDescription>Vaccination records, sports physical clearance, and camp health forms.</CardDescription>
+      </CardHeader>
+    </Card>
+  );
+}
+
+export function ClinicalConsentSection({ profileId }: SlotProps) {
+  return (
+    <Card data-testid="health-consent-section" data-profile-id={profileId}>
+      <CardHeader>
+        <CardTitle>Clinical Assist Consents</CardTitle>
+        <CardDescription>Patient consent verification and non-clinical informational boundaries.</CardDescription>
+      </CardHeader>
+    </Card>
+  );
 }
 
 export const healthSlotContributions: SlotContribution[] = [
@@ -108,6 +132,7 @@ export const healthSlotContributions: SlotContribution[] = [
     route: '/vitals',
     requiredScopes: ['health.clinical'],
     audiences: ['adult', 'teen', 'viewer'],
+    component: VitalsCard,
   },
   {
     id: 'health.appointments.card',
@@ -119,6 +144,7 @@ export const healthSlotContributions: SlotContribution[] = [
     route: '/appointments',
     requiredScopes: ['health.clinical'],
     audiences: ['adult', 'teen', 'viewer'],
+    component: AppointmentsCard,
   },
   {
     id: 'health.preventive.card',
@@ -130,17 +156,19 @@ export const healthSlotContributions: SlotContribution[] = [
     route: '/preventive',
     requiredScopes: ['health.clinical'],
     audiences: ['adult', 'teen'],
+    component: PreventiveCard,
   },
   {
     id: 'health.school-forms.card',
     pack: 'health',
     slot: 'dashboard.card',
-    title: 'School & Camp Forms',
+    title: 'School & Activity Forms',
     icon: 'FileText',
     order: 40,
     route: '/schedule',
     requiredScopes: ['health.clinical'],
     audiences: ['adult', 'teen'],
+    component: SchoolFormsCard,
   },
   {
     id: 'health.dossier.renderer',
@@ -172,6 +200,7 @@ export const healthSlotContributions: SlotContribution[] = [
     title: 'Clinical Assist Consents',
     order: 50,
     requiredScopes: ['health.clinical'],
+    component: ClinicalConsentSection,
   },
 ];
 

@@ -12,7 +12,7 @@
  */
 
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '../../lib/utils';
 
 export interface CarefoldLogoProps {
   /** Pixel dimension of the square folded-care mark (default: 28) */

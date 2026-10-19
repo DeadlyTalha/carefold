@@ -21,7 +21,7 @@ dev:
 # Run full test suite across backend, penetration suite, and frontend
 test:
     @echo "Running backend test suite..."
-    PYTHONPATH=backend/src:libs/connectors backend/.venv/bin/pytest backend/tests/
+    PYTHONPATH=backend/src backend/.venv/bin/pytest backend/tests/
     @echo "Running security penetration test suite (47 attacks)..."
     PYTHONPATH=backend/src backend/.venv/bin/python backend/tests/penetration_suite.py
     @echo "Running frontend test suite..."

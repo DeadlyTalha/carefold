@@ -11,7 +11,7 @@
  * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
-import type { SchoolFormItem, SchoolFormType } from '@/types/schoolForms';
+import type { SchoolFormItem, SchoolFormType } from '../types/schoolForms';
 
 export async function listSchoolForms(
   profileId: string

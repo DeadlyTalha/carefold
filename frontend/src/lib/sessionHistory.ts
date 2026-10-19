@@ -11,7 +11,7 @@
  * Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
  */
 
-import { getScopedStorageKey, getStorageUserId } from '@/lib/storageNamespace';
+import { getScopedStorageKey, getStorageUserId } from './storageNamespace';
 
 export const CAREFOLD_THREADS_INDEX_KEY = 'carefold_threads_index_v1';
 export const MAX_INDEXED_SESSIONS = 50;

@@ -124,7 +124,7 @@ export interface CarefoldUserSettings {
   };
 }
 
-import { getScopedStorageKey, getStorageUserId } from '@/lib/storageNamespace';
+import { getScopedStorageKey, getStorageUserId } from './storageNamespace';
 
 export const CAREFOLD_SETTINGS_STORAGE_KEY = 'carefold_user_settings_v1';
 
