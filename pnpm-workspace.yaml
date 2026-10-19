@@ -1,6 +1,8 @@
 packages:
-  - 'packages/*'
-  - 'apps/*'
+  - 'frontend'
+  - 'frontend/packaging/*'
+  - 'tools/*'
+  - 'libs/*'
 allowBuilds:
   esbuild: true
 overrides:

@@ -1,0 +1,184 @@
+# Carefold — Healthcare AI Agent Marketplace & Runtime
+# Copyright 2026 Spectrayan
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Carefold Multi-Stage Dockerfile
+# Supports target 'backend', target 'web', and default 'all-in-one'
+# Build: docker build -f docker/Dockerfile .
+
+# ==========================================
+# Stage 1: Python FastAPI Backend
+# ==========================================
+FROM python:3.12-slim AS backend
+WORKDIR /app
+
+LABEL org.opencontainers.image.title="Carefold Backend" \
+      org.opencontainers.image.description="FastAPI & LangGraph multi-agent execution runtime for Carefold" \
+      org.opencontainers.image.url="https://github.com/spectrayan/carefold" \
+      org.opencontainers.image.source="https://github.com/spectrayan/carefold" \
+      org.opencontainers.image.documentation="https://github.com/spectrayan/carefold" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.vendor="Spectrayan"
+
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY libs/connectors/ ./libs/connectors/
+COPY backend/ ./backend/
+RUN pip install --no-cache-dir ./libs/connectors ./backend \
+    && pip cache purge \
+    && rm -rf /root/.cache /usr/local/lib/python3.12/site-packages/pip* /usr/local/bin/pip*
+
+COPY agents/ ./agents/
+COPY skills/ ./skills/
+
+ENV CAREFOLD_WORKSPACE_ROOT=/app \
+    CAREFOLD_WORKSPACE=/app \
+    CAREFOLD_DATA=/data \
+    PORT=8000 \
+    PYTHONPATH=/app/backend/src \
+    PYTHONUNBUFFERED=1
+
+RUN mkdir -p /data
+
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')" || exit 1
+
+CMD ["uvicorn", "carefold.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# ==========================================
+# Stage 2: Web Build & Runner
+# ==========================================
+FROM node:22-alpine AS web-builder
+WORKDIR /app
+
+# Enable pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* tsconfig.base.json ./
+COPY scripts/ ./scripts/
+COPY tools/ ./tools/
+COPY frontend/ ./frontend/
+RUN mkdir -p /app/frontend/public
+
+RUN pnpm install --frozen-lockfile || pnpm install
+RUN pnpm --filter @carefold/web build
+RUN pnpm prune --prod
+
+FROM node:22-alpine AS web
+WORKDIR /app
+
+LABEL org.opencontainers.image.title="Carefold Web" \
+      org.opencontainers.image.description="Next.js consultation UI & healthcare agent marketplace for Carefold" \
+      org.opencontainers.image.url="https://github.com/spectrayan/carefold" \
+      org.opencontainers.image.source="https://github.com/spectrayan/carefold" \
+      org.opencontainers.image.documentation="https://github.com/spectrayan/carefold" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.vendor="Spectrayan"
+
+ENV NODE_ENV=production \
+    PORT=3000
+
+# Remove unneeded npm, yarn, and corepack packages from runtime container image
+RUN apk upgrade --no-cache \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /opt/yarn* /usr/local/bin/yarn* /usr/local/bin/corepack
+
+COPY --from=web-builder /app/frontend/package.json ./frontend/
+COPY --from=web-builder /app/tools ./tools/
+COPY --from=web-builder /app/node_modules ./node_modules
+COPY --from=web-builder /app/frontend/node_modules ./frontend/node_modules
+COPY --from=web-builder /app/frontend/.next ./frontend/.next
+COPY --from=web-builder /app/frontend/public ./frontend/public
+COPY agents/ ./agents/
+COPY skills/ ./skills/
+
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -qO- http://127.0.0.1:3000/api/health || exit 1
+
+CMD ["/app/frontend/node_modules/.bin/next", "start", "frontend", "-p", "3000"]
+
+# ==========================================
+# Stage 3: Combined All-In-One Default Target
+# ==========================================
+FROM python:3.12-slim AS all-in-one
+WORKDIR /app
+
+LABEL org.opencontainers.image.title="Carefold" \
+      org.opencontainers.image.description="Local-first healthcare AI agent marketplace and execution runtime" \
+      org.opencontainers.image.url="https://github.com/spectrayan/carefold" \
+      org.opencontainers.image.source="https://github.com/spectrayan/carefold" \
+      org.opencontainers.image.documentation="https://github.com/spectrayan/carefold" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.vendor="Spectrayan"
+
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 22
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/lib/node_modules /usr/local/lib/node_modules /usr/bin/npm /usr/bin/npx /root/.npm
+
+COPY libs/connectors/ ./libs/connectors/
+COPY backend/ ./backend/
+RUN pip install --no-cache-dir ./libs/connectors ./backend \
+    && pip cache purge \
+    && rm -rf /root/.cache /usr/local/lib/python3.12/site-packages/pip* /usr/local/bin/pip*
+
+COPY agents/ ./agents/
+COPY skills/ ./skills/
+COPY evals/ ./evals/
+
+COPY --from=web-builder /app/frontend/package.json ./frontend/
+COPY --from=web-builder /app/tools ./tools/
+COPY --from=web-builder /app/node_modules ./node_modules
+COPY --from=web-builder /app/frontend/node_modules ./frontend/node_modules
+COPY --from=web-builder /app/frontend/.next ./frontend/.next
+COPY --from=web-builder /app/frontend/public ./frontend/public
+
+ENV CAREFOLD_WORKSPACE_ROOT=/app \
+    CAREFOLD_WORKSPACE=/app \
+    CAREFOLD_DATA=/data \
+    NODE_ENV=production \
+    PORT=3000 \
+    BACKEND_PORT=8000 \
+    BACKEND_URL=http://127.0.0.1:8000 \
+    PYTHONPATH=/app/backend/src \
+    PYTHONUNBUFFERED=1
+
+RUN mkdir -p /data
+
+EXPOSE 8000 3000
+
+# Copy startup script
+RUN printf '#!/bin/sh\n\
+uvicorn carefold.main:app --host 0.0.0.0 --port 8000 &\n\
+BACKEND_PID=$!\n\
+/app/frontend/node_modules/.bin/next start frontend -p 3000 &\n\
+WEB_PID=$!\n\
+trap "kill -TERM $BACKEND_PID $WEB_PID" INT TERM\n\
+wait $BACKEND_PID $WEB_PID\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')" || exit 1
+
+CMD ["/app/entrypoint.sh"]

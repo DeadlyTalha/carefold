@@ -1,0 +1,18 @@
+# Carefold Compatibility Matrix
+# Defines supported pairings of Carefold app, yarvelle-core, carefold-health, and @carefold/health-ui versions.
+
+matrix:
+  - app: "0.4.0-beta.1"
+    core: "0.1.0"
+    health_pack: "0.1.0"
+    health_ui: "0.1.0"
+    pack_api: 1
+    python: ">=3.12"
+    node: ">=20.0.0"
+    status: "active"
+    notes: "Carefold monorepo release with carefold-health pack and @carefold/health-ui"
+
+rules:
+  supported_pack_apis: [1]
+  minimum_python: "3.12.0"
+  minimum_node: "20.0.0"

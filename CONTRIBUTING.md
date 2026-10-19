@@ -12,6 +12,26 @@ All contributors and maintainers are expected to adhere to the [Carefold Code of
 
 ---
 
+## Which repo does my change belong in?
+
+The Yarvelle and Carefold ecosystem is organized across three repositories. Before opening a PR or issue, check the table below to make sure your changes belong in `carefold`:
+
+| Change | Target Repository / Path |
+|---|---|
+| Engine, safety gate, approvals, scopes, storage, vault, Pack API, connectors SDK, generic API routers | `yarvelle-core/backend` |
+| Generic UI component, design token, primitive, chat/notes/calendar/profiles/shell, API client, slot registry | `yarvelle-core/frontend` |
+| Manifest JSON Schemas (`pack.schema.json`, `agent.schema.json`, `skill.schema.json`) | `yarvelle-core/schemas` |
+| Starter agent/skill templates (`_template/`) and system agents (`_system/`) | `yarvelle-core/agents`, `yarvelle-core/skills` |
+| A health specialist agent or clinical skill | `carefold/agents`, `carefold/skills` |
+| Health tools, routers, clinical importers, HealthSafetyPolicy, health models/migrations | `carefold/backend/src/carefold_health` |
+| Health screens, visit preparation dossiers, and clinical chat renderers | `carefold/frontend/src/health-ui` |
+| Carefold application branding, routes, settings pages, and deployment manifests | `carefold/frontend/src/{app,theme}`, `carefold/deploy` |
+| Finance, education, or household agents/skills/tools/policies/views | `yarvelle/{agents,skills}`, `yarvelle/backend/src/yarvelle_<pack>`, `yarvelle/frontend/src/<pack>` |
+| Yarvelle branding, household shell, and deployment manifests | `yarvelle/frontend/src/{app,theme}`, `yarvelle/deploy` |
+| Changes that touch both core and a pack | Land the core change first (released), then the consumer PR that bumps the version |
+
+---
+
 ## Development Setup
 
 ### Prerequisites

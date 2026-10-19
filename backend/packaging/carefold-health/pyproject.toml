@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "carefold-health"
+version = "0.5.0b1"
+description = "Carefold Health Pack: clinical visit prep, health records, insurance navigation, and clinical specialist agents"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "PolyForm Noncommercial License 1.0.0 and Carefold Additional Terms" }
+authors = [
+    { name = "Spectrayan", email = "engineering@spectrayan.com" }
+]
+keywords = [
+    "healthcare",
+    "clinical",
+    "ehr",
+    "fhir",
+    "vitals",
+    "insurance",
+    "yarvelle-pack"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Healthcare Industry",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Medical Science Apps."
+]
+
+dependencies = [
+    "yarvelle-core>=0.1.0,<0.2.0",
+    "fhir.resources>=8.0.0",
+    "pydantic>=2.8.0",
+    "pyyaml>=6.0.2",
+    "cryptography>=43.0.0",
+    "defusedxml>=0.7.1",
+    "pypdf>=4.0.0",
+]
+
+[project.entry-points."yarvelle.packs"]
+health = "carefold_health:get_pack"
+
+[tool.hatch.build.targets.wheel]
+packages = ["carefold_health"]
+
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "hatch_build.py"

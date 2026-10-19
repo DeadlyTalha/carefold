@@ -44,19 +44,19 @@ try:
 except ImportError:
     _health_models = None
 
-# 3. Attach 7 health relationships onto Profile dynamically for Carefold runtime compatibility
-_HEALTH_RELATIONSHIPS = [
-    ("health_resources", "HealthResource"),
-    ("appointments", "Appointment"),
-    ("preventive_records", "PreventiveRecord"),
-    ("import_batches", "ImportBatch"),
-    ("school_forms", "SchoolForm"),
-    ("school_ics_feeds", "SchoolIcsFeed"),
-    ("companion_devices", "CompanionDevice"),
-]
-
 if _health_models is not None:
     from sqlalchemy.orm import foreign, synonym
+
+    # 3. Attach 7 health relationships onto Profile dynamically for Carefold runtime compatibility
+    _HEALTH_RELATIONSHIPS = [
+        ("health_resources", HealthResource),
+        ("appointments", Appointment),
+        ("preventive_records", PreventiveRecord),
+        ("import_batches", ImportBatch),
+        ("school_forms", SchoolForm),
+        ("school_ics_feeds", SchoolIcsFeed),
+        ("companion_devices", CompanionDevice),
+    ]
 
     for rel_name, target in _HEALTH_RELATIONSHIPS:
         if not hasattr(Profile, rel_name):
@@ -72,8 +72,8 @@ if _health_models is not None:
             )
     if not hasattr(Note, "appointment"):
         Note.appointment = relationship(
-            "Appointment",
-            primaryjoin="foreign(Note.linked_appointment_id) == Appointment.id",
+            Appointment,
+            primaryjoin=foreign(Note.linked_appointment_id) == Appointment.id,
             back_populates="notes",
         )
         Note.linked_appointment = synonym("appointment")

@@ -160,7 +160,9 @@ def test_package_json_scripts():
     assert "bash scripts/start.sh" in root_pkg["scripts"]["start"]
     assert "--port 8010" in root_pkg["scripts"]["dev:backend"]
 
-    web_pkg_path = REPO_ROOT / "apps" / "web" / "package.json"
+    web_pkg_path = REPO_ROOT / "frontend" / "package.json"
+    if not web_pkg_path.exists():
+        web_pkg_path = REPO_ROOT / "apps" / "web" / "package.json"
     web_pkg = json.loads(web_pkg_path.read_text(encoding="utf-8"))
     assert "--port 3010" in web_pkg["scripts"]["dev"]
     assert "--port 3010" in web_pkg["scripts"]["start"]
