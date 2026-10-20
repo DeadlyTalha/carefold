@@ -68,8 +68,16 @@ packages = ["src/carefold"]
 dev-mode-dirs = ["src"]
 artifacts = ["src/carefold/_content"]
 
-[tool.hatch.build.targets.wheel.hooks.custom]
+[tool.hatch.build.hooks.custom]
 path = "hatch_build.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/README.md",
+    "/hatch_build.py",
+]
 
 
 
