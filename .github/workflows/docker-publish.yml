@@ -18,19 +18,19 @@ name: Docker Build & Publish
 'on':
   push:
     branches: [main]
-    tags:
-      - 'v*'
+    paths:
+      - 'deploy/docker/**'
+      - '.github/workflows/docker-publish.yml'
   pull_request:
     branches: [main]
     paths:
       - 'deploy/docker/**'
-      - 'backend/**'
-      - 'frontend/**'
-      - 'tools/**'
-      - 'agents/**'
-      - 'skills/**'
       - '.github/workflows/docker-publish.yml'
   workflow_dispatch:
+
+concurrency:
+  group: docker-build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-all-in-one:

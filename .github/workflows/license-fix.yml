@@ -1,8 +1,6 @@
 name: Auto-fix License Headers
 
 'on':
-  pull_request:
-    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
 
 permissions:

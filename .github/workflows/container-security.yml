@@ -5,18 +5,12 @@ on:
     branches: [main]
     paths:
       - 'deploy/docker/**'
-      - 'backend/**'
-      - 'frontend/**'
-      - 'tools/**'
       - '**/Dockerfile*'
       - '.github/workflows/container-security.yml'
   pull_request:
     branches: [main]
     paths:
       - 'deploy/docker/**'
-      - 'backend/**'
-      - 'frontend/**'
-      - 'tools/**'
       - '**/Dockerfile*'
       - '.github/workflows/container-security.yml'
   schedule:

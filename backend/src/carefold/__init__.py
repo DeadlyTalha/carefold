@@ -97,6 +97,18 @@ from yarvelle_core.pack.spec import PackEvalsSpec, PackSpec, RouterContribution
 from yarvelle_core.schemas.routing import RoutingHints
 from yarvelle_core.workflows.subgraphs.extraction.dossiers import register_dossier_type
 
+try:
+    import yarvelle_core.engine.tool_exec as _core_tool_exec
+    from yarvelle_core.connectors.base import (
+        ToolContext as _ConnectorToolContext,
+        ToolSpec as _ConnectorToolSpec,
+    )
+
+    _core_tool_exec.ConnectorToolContext = _ConnectorToolContext
+    _core_tool_exec.ConnectorToolSpec = _ConnectorToolSpec
+except Exception:
+    pass
+
 logger = logging.getLogger("carefold_health")
 
 __version__ = "0.5.0b1"

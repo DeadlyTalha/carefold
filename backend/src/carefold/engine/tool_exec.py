@@ -18,6 +18,13 @@ from typing import Any
 
 from yarvelle_core.engine.tool_exec import *  # noqa: F401, F403
 import yarvelle_core.engine.tool_exec as _target_module
+from yarvelle_core.connectors.base import (
+    ToolContext as _ConnectorToolContext,
+    ToolSpec as _ConnectorToolSpec,
+)
+
+_target_module.ConnectorToolContext = _ConnectorToolContext
+_target_module.ConnectorToolSpec = _ConnectorToolSpec
 
 sys.modules[__name__] = _target_module
 

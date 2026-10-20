@@ -9,11 +9,13 @@
 #
 # Required Notice: Copyright 2026 Spectrayan (https://spectrayan.com)
 
-"""Backward-compatibility re-export shim for yarvelle_core.platform.email_drafts."""
+"""Backward-compatibility re-export shim for carefold.platform.email_drafts."""
 
-from yarvelle_core.platform.email_drafts import *  # noqa: F401, F403
-from yarvelle_core.platform.email_drafts import (
+from carefold.platform.email_drafts import *  # noqa: F401, F403
+from carefold.platform.email_drafts import (
+    NON_CLINICAL_EMAIL_HEADER_NOTE,
     NO_AUTO_SEND_NOTICE,
+    VALID_DRAFT_CATEGORIES,
     build_mailto_uri,
     create_email_draft,
     delete_email_draft,
