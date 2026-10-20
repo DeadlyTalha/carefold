@@ -38,8 +38,8 @@ lint:
 
 # Build release artifacts (backend wheels, frontend Next.js production build)
 build:
-    @echo "Building backend carefold-health wheel..."
-    python3 -m build --wheel backend/packaging/carefold-health
+    @echo "Building backend carefold wheel..."
+    python3 -m build --wheel backend
     @echo "Building frontend Next.js production app..."
     pnpm --filter @carefold/web build
 

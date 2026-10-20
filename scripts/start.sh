@@ -116,7 +116,7 @@ check_prerequisites() {
 }
 
 ensure_dependencies() {
-    if [ ! -d "${PROJECT_ROOT}/apps/web/node_modules" ]; then
+    if [ ! -d "${PROJECT_ROOT}/frontend/node_modules" ]; then
         log_info "Installing dependencies via pnpm..."
         cd "${PROJECT_ROOT}"
         pnpm install
@@ -192,7 +192,7 @@ start_backend() {
     py_bin="$(resolve_python_bin)"
 
     if [ "${bg_mode}" = "true" ]; then
-        nohup env PYTHONPATH="${PROJECT_ROOT}/backend/src:${PYTHONPATH:-}" \
+        nohup env PYTHONPATH="${PROJECT_ROOT}/backend/src:${PROJECT_ROOT}/../yarvelle-core/backend/src:${PYTHONPATH:-}" \
             CAREFOLD_BACKEND_HOST="${CAREFOLD_BACKEND_HOST}" \
             CAREFOLD_BACKEND_PORT="${CAREFOLD_BACKEND_PORT}" \
             PORT="${CAREFOLD_BACKEND_PORT}" \
@@ -205,7 +205,7 @@ start_backend() {
         echo "backend:${pid}" >> "${PID_FILE}"
         log_success "Backend running (PID: ${pid})"
     else
-        exec env PYTHONPATH="${PROJECT_ROOT}/backend/src:${PYTHONPATH:-}" \
+        exec env PYTHONPATH="${PROJECT_ROOT}/backend/src:${PROJECT_ROOT}/../yarvelle-core/backend/src:${PYTHONPATH:-}" \
             CAREFOLD_BACKEND_HOST="${CAREFOLD_BACKEND_HOST}" \
             CAREFOLD_BACKEND_PORT="${CAREFOLD_BACKEND_PORT}" \
             PORT="${CAREFOLD_BACKEND_PORT}" \
@@ -229,19 +229,22 @@ start_web() {
     ensure_dependencies
 
     log_info "Starting Next.js Web UI on http://${CAREFOLD_WEB_HOST}:${CAREFOLD_WEB_PORT}..."
-    cd "${PROJECT_ROOT}/apps/web"
+    cd "${PROJECT_ROOT}/frontend"
 
-    local next_bin="${PROJECT_ROOT}/apps/web/node_modules/.bin/next"
+    local next_bin="${PROJECT_ROOT}/frontend/node_modules/.bin/next"
+    if [ ! -x "${next_bin}" ] && [ -x "${PROJECT_ROOT}/node_modules/.bin/next" ]; then
+        next_bin="${PROJECT_ROOT}/node_modules/.bin/next"
+    fi
     local backend_url="http://${CAREFOLD_BACKEND_HOST}:${CAREFOLD_BACKEND_PORT}"
 
     if [ "${bg_mode}" = "true" ]; then
         if [ -x "${next_bin}" ]; then
-            nohup env NEXT_TELEMETRY_DISABLED=1 \
+            perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV' env NEXT_TELEMETRY_DISABLED=1 \
                 BACKEND_URL="${backend_url}" \
                 PORT="${CAREFOLD_WEB_PORT}" \
                 "${next_bin}" dev --port "${CAREFOLD_WEB_PORT}" </dev/null >"${log_out}" 2>"${log_err}" &
         else
-            nohup env NEXT_TELEMETRY_DISABLED=1 \
+            perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV' env NEXT_TELEMETRY_DISABLED=1 \
                 BACKEND_URL="${backend_url}" \
                 PORT="${CAREFOLD_WEB_PORT}" \
                 pnpm dev --port "${CAREFOLD_WEB_PORT}" </dev/null >"${log_out}" 2>"${log_err}" &

@@ -9,10 +9,10 @@
 /backend/ @spectrayan/carefold-maintainers-backend @spectrayan/ai-engineering
 
 # Frontend Next.js web application and consultation UI
-/apps/web/ @spectrayan/carefold-maintainers-frontend @spectrayan/ai-engineering
+/frontend/ @spectrayan/carefold-maintainers-frontend @spectrayan/ai-engineering
 
 # Core packages & CLI tooling
-/packages/ @spectrayan/carefold-maintainers-packages @spectrayan/ai-engineering
+/tools/ @spectrayan/carefold-maintainers-packages @spectrayan/ai-engineering
 
 # Specialist agents and manifest definitions
 /agents/ @spectrayan/carefold-clinical-ai @spectrayan/ai-engineering
@@ -29,5 +29,5 @@
 
 # CI/CD Workflows, GitHub actions, Docker, and automation scripts
 /.github/ @spectrayan/carefold-infra @spectrayan/ai-engineering
-/docker/ @spectrayan/carefold-infra @spectrayan/ai-engineering
+/deploy/ @spectrayan/carefold-infra @spectrayan/ai-engineering
 /scripts/ @spectrayan/carefold-infra @spectrayan/ai-engineering

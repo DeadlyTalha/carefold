@@ -3,8 +3,8 @@ name: "Carefold CodeQL Config"
 paths-ignore:
   - 'docs/**'
   - 'backend/tests/**'
-  - 'apps/web/tests/**'
-  - 'packages/runner/tests/**'
-  - 'packages/cli/tests/**'
+  - 'frontend/tests/**'
+  - 'tools/runner/tests/**'
+  - 'tools/cli/tests/**'
   - 'tests/**'
   - 'evals/**'

@@ -23,10 +23,10 @@ name: Docker Build & Publish
   pull_request:
     branches: [main]
     paths:
-      - 'docker/**'
+      - 'deploy/docker/**'
       - 'backend/**'
-      - 'apps/web/**'
-      - 'packages/**'
+      - 'frontend/**'
+      - 'tools/**'
       - 'agents/**'
       - 'skills/**'
       - '.github/workflows/docker-publish.yml'
@@ -44,7 +44,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build all-in-one target
-        run: docker build --target all-in-one -f docker/Dockerfile -t carefold/all-in-one:latest .
+        run: docker build --target all-in-one -f deploy/docker/Dockerfile -t carefold/all-in-one:latest .
 
   build-backend:
     name: Build Backend Container Image
@@ -57,5 +57,5 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build backend target
-        run: docker build --target backend -f docker/Dockerfile -t carefold/backend:latest .
+        run: docker build --target backend -f deploy/docker/Dockerfile -t carefold/backend:latest .
 
