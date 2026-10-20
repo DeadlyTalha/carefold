@@ -26,6 +26,8 @@ share/python-wheels/
 /MANIFEST
 backend/MANIFEST
 !packages/runner/src/manifest/
+!tools/runner/src/manifest/
+!frontend/src/health-ui/dist/
 
 # PyInstaller
 #   Usually these files are written by a python script from a template
