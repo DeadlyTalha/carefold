@@ -158,7 +158,7 @@ describe('08: Milestone 2 Bundled Reference Packs Validation Suite', () => {
           ).toBe(true);
         });
 
-        it('loads cleanly through @carefold/runner loadSkill() and validates carefold.yaml', async () => {
+        it('loads cleanly through @spectrayan/carefold-runner loadSkill() and validates carefold.yaml', async () => {
           const skill = await loadSkill(skillDir);
           expect(skill.id).toBe(skillId);
           expect(skill.name).toBe(skillId);
@@ -253,7 +253,7 @@ describe('08: Milestone 2 Bundled Reference Packs Validation Suite', () => {
           expect(content.trim().length).toBeGreaterThan(20);
         });
 
-        it('loads cleanly through @carefold/runner loadAgent()', async () => {
+        it('loads cleanly through @spectrayan/carefold-runner loadAgent()', async () => {
           const { agent, effectiveTools, skills } = await loadAgent(agentDir, SKILLS_DIR);
           expect(agent.id).toBe(agentId);
           expect(typeof agent.title).toBe('string');

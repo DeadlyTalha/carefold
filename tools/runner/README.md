@@ -1,4 +1,4 @@
-# @carefold/runner
+# @spectrayan/carefold-runner
 
 Core agent and skill runner, safety refusal gate, closed tool sandbox, and audit engine for Carefold.
 
@@ -20,13 +20,13 @@ Core agent and skill runner, safety refusal gate, closed tool sandbox, and audit
 ## Installation
 
 ```bash
-pnpm add @carefold/runner
+pnpm add @spectrayan/carefold-runner
 ```
 
 ## Usage
 
 ```typescript
-import { loadAgent, executeAgentRun } from '@carefold/runner';
+import { loadAgent, executeAgentRun } from '@spectrayan/carefold-runner';
 
 // Load agent and resolve declared skills
 const { agent, effectiveTools, skills } = await loadAgent('./agents/visit-steward', './skills');

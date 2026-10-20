@@ -45,7 +45,7 @@ export function getCliVersion(): string {
       }
     }
 
-    // Walk up looking for package.json with @carefold/cli or version
+    // Walk up looking for package.json with @spectrayan/carefold-cli or version
     let dir = currentDir;
     for (let i = 0; i < 6; i++) {
       const pkgPath = path.join(dir, 'package.json');

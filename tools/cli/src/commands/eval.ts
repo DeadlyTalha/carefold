@@ -15,7 +15,7 @@ import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import { executeAgentRun, SAFE_REFUSAL_TEMPLATE } from '@carefold/runner';
+import { executeAgentRun, SAFE_REFUSAL_TEMPLATE } from '@spectrayan/carefold-runner';
 import { findWorkspaceRoot, getWorkspacePaths, loadWorkspaceConfig } from '../utils/workspace.js';
 import { CliError, ExitCodes } from '../utils/errors.js';
 

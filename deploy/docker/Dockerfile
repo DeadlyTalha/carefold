@@ -74,7 +74,7 @@ COPY frontend/ ./frontend/
 RUN mkdir -p /app/frontend/public
 
 RUN pnpm install --frozen-lockfile || pnpm install
-RUN pnpm --filter @carefold/web build
+RUN pnpm --filter @spectrayan/carefold-web build
 RUN pnpm prune --prod
 
 FROM node:22-alpine AS web

@@ -23,7 +23,7 @@ import {
   type StreamChunk,
   type RunResult,
   type ModelClient
-} from '@carefold/runner';
+} from '@spectrayan/carefold-runner';
 import path from 'node:path';
 
 describe('09: Test Suite for CLI Run Execution', () => {

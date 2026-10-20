@@ -12,7 +12,7 @@
  */
 
 import path from 'node:path';
-import { readAuditEvents, type AuditEvent, type AuditEventType } from '@carefold/runner';
+import { readAuditEvents, type AuditEvent, type AuditEventType } from '@spectrayan/carefold-runner';
 import { findWorkspaceRoot, loadWorkspaceConfig } from '../utils/workspace.js';
 import { CliError, ExitCodes } from '../utils/errors.js';
 

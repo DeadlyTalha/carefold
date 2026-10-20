@@ -14,7 +14,7 @@
 import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import path from 'node:path';
-import { CarefoldConfigSchema, type CarefoldConfig } from '@carefold/runner';
+import { CarefoldConfigSchema, type CarefoldConfig } from '@spectrayan/carefold-runner';
 import { CliError, ExitCodes } from './errors.js';
 
 export interface WorkspacePaths {

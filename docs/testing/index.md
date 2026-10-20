@@ -79,8 +79,8 @@ pnpm --filter web build
 backend/.venv/bin/pytest backend/tests/e2e/test_boundaries.py -v
 
 # Runner and CLI packages
-pnpm --filter @carefold/runner test
-pnpm --filter @carefold/cli test
+pnpm --filter @spectrayan/carefold-runner test
+pnpm --filter @spectrayan/carefold-cli test
 
 # Workspace end-to-end suite
 pnpm run test:e2e

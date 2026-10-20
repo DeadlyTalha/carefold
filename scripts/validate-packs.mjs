@@ -14,7 +14,7 @@
 
 /**
  * Carefold Phase 0: Standalone Packs Validator
- * Validates all skills and agents in skills/ and agents/ using @carefold/runner.
+ * Validates all skills and agents in skills/ and agents/ using @spectrayan/carefold-runner.
  * Run directly with: node scripts/validate-packs.mjs
  */
 

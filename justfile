@@ -25,7 +25,7 @@ test:
     @echo "Running security penetration test suite (47 attacks)..."
     PYTHONPATH=backend/src backend/.venv/bin/python backend/tests/penetration_suite.py
     @echo "Running frontend test suite..."
-    pnpm --filter @carefold/web test --exclude "**/api/**"
+    pnpm --filter @spectrayan/carefold-web test --exclude "**/api/**"
 
 # Run all linters and integrity checks
 lint:
@@ -34,14 +34,14 @@ lint:
     @echo "Checking no git dependencies..."
     python3 scripts/check_no_git_deps.py
     @echo "Running frontend typecheck..."
-    pnpm --filter @carefold/web typecheck
+    pnpm --filter @spectrayan/carefold-web typecheck
 
 # Build release artifacts (backend wheels, frontend Next.js production build)
 build:
     @echo "Building backend carefold wheel..."
     python3 -m build --wheel backend
     @echo "Building frontend Next.js production app..."
-    pnpm --filter @carefold/web build
+    pnpm --filter @spectrayan/carefold-web build
 
 # Prepare release dry run
 release:

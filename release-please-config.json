@@ -11,7 +11,7 @@
     "frontend": {
       "component": "web",
       "release-type": "node",
-      "package-name": "@carefold/web",
+      "package-name": "@spectrayan/carefold-web",
       "changelog-path": "CHANGELOG.md",
       "tag-separator": "-v",
       "include-component-in-tag": true

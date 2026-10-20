@@ -14,7 +14,7 @@
 import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import path from 'node:path';
-import { loadSkill, type SkillManifest } from '@carefold/runner';
+import { loadSkill, type SkillManifest } from '@spectrayan/carefold-runner';
 import { findWorkspaceRoot, getWorkspacePaths, loadWorkspaceConfig } from '../utils/workspace.js';
 import { resolveBundledAssets, copyPackDirectory, BUNDLED_SKILLS } from '../utils/assets.js';
 import { formatTable, formatRiskBadge } from '../utils/format.js';

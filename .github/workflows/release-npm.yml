@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   publish-npm:
-    name: Build & Publish @carefold/* Packages to NPM
+    name: Build & Publish @spectrayan/carefold* Packages to NPM
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -34,7 +34,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 12.3.4
+          version: 10
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -42,10 +42,7 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install workspace dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Publish @carefold/health-ui
+      - name: Publish @spectrayan/carefold
         working-directory: frontend/src/health-ui
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -66,8 +63,14 @@ jobs:
             EXTRA_FLAGS="--dry-run"
           fi
           CURRENT_VER=$(node -p "require('./package.json').version")
-          if [ "${{ github.event.inputs.dryRun }}" != "true" ] && npm view "@carefold/health-ui@$CURRENT_VER" version >/dev/null 2>&1; then
-            echo "Version $CURRENT_VER of @carefold/health-ui is already published on npm. Skipping publish."
+          if [ "${{ github.event.inputs.dryRun }}" != "true" ] && npm view "@spectrayan/carefold@$CURRENT_VER" version >/dev/null 2>&1; then
+            echo "Version $CURRENT_VER of @spectrayan/carefold is already published on npm. Skipping publish."
           else
-            npm publish --access public $EXTRA_FLAGS
+            npm publish --access public $EXTRA_FLAGS 2>&1 | tee /tmp/npm-publish.log || {
+              if grep -qE "E409|EPUBLISHCONFLICT|previously published|previously staged" /tmp/npm-publish.log; then
+                echo "Version $CURRENT_VER of @spectrayan/carefold is already staged/published on npm. Skipping."
+              else
+                exit 1
+              fi
+            }
           fi

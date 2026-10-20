@@ -5,6 +5,8 @@ packages:
   - 'libs/*'
 allowBuilds:
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@yarvelle/ui@0.1.1'
 overrides:
   lodash-es: ^4.18.1
   happy-dom: ^20.9.0

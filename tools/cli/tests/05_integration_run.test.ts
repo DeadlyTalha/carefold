@@ -14,7 +14,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { runCli } from './helpers/cli-runner.js';
 import { createCliTestWorkspace, type CliTestWorkspace } from './helpers/test-workspace.js';
-import { SAFE_REFUSAL_TEMPLATE } from '@carefold/runner';
+import { SAFE_REFUSAL_TEMPLATE } from '@spectrayan/carefold-runner';
 
 describe('05: CLI Integration: carefold run', () => {
   let ws: CliTestWorkspace;

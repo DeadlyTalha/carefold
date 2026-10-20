@@ -15,7 +15,7 @@ import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import path from 'node:path';
 import yaml from 'yaml';
-import { loadAgent, AgentManifestSchema, PHASE_0_REGISTRY } from '@carefold/runner';
+import { loadAgent, AgentManifestSchema, PHASE_0_REGISTRY } from '@spectrayan/carefold-runner';
 import { findWorkspaceRoot, getWorkspacePaths, loadWorkspaceConfig } from '../utils/workspace.js';
 import { resolveBundledAssets, copyPackDirectory, BUNDLED_AGENTS } from '../utils/assets.js';
 import { formatTable, formatRiskBadge } from '../utils/format.js';

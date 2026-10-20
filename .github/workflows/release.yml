@@ -75,7 +75,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e backend
+          pip install --pre -e "backend[dev]"
           pip install -r backend/requirements-dev.txt
 
       - name: Run Backend Pytest Suite
@@ -85,24 +85,24 @@ jobs:
         run: PYTHONPATH=backend/src python backend/tests/penetration_suite.py
 
       - name: Frontend Typecheck
-        run: pnpm --filter web typecheck
+        run: pnpm --filter @spectrayan/carefold-web typecheck
 
       - name: Frontend Component & Unit Tests
-        run: pnpm --filter web test --exclude "**/api/**"
+        run: pnpm --filter @spectrayan/carefold-web test --exclude "**/api/**"
 
       - name: Frontend Production Build
-        run: pnpm --filter web build
+        run: pnpm --filter @spectrayan/carefold-web build
 
       - name: Build Packages
         run: |
-          pnpm --filter @carefold/runner build
-          pnpm --filter @carefold/cli build
+          pnpm --filter @spectrayan/carefold-runner build
+          pnpm --filter @spectrayan/carefold-cli build
 
       - name: CLI Package Tests
-        run: pnpm --filter @carefold/cli test
+        run: pnpm --filter @spectrayan/carefold-cli test
 
       - name: Runner Package Tests
-        run: pnpm --filter @carefold/runner test
+        run: pnpm --filter @spectrayan/carefold-runner test
 
   publish-docker:
     name: Build & Publish Image (${{ matrix.target }})

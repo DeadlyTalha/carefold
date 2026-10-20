@@ -24,7 +24,7 @@ import {
   SAFE_REFUSAL_TEMPLATE,
   type RunOptions,
   type AuditEvent
-} from '@carefold/runner';
+} from '@spectrayan/carefold-runner';
 import { findWorkspaceRoot, getWorkspacePaths, loadWorkspaceConfig } from '../utils/workspace.js';
 import { CliError, ExitCodes } from '../utils/errors.js';
 

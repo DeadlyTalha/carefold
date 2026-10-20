@@ -16,7 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runCli } from './helpers/cli-runner.js';
 import { createCliTestWorkspace, type CliTestWorkspace } from './helpers/test-workspace.js';
-import { SAFE_REFUSAL_TEMPLATE } from '@carefold/runner';
+import { SAFE_REFUSAL_TEMPLATE } from '@spectrayan/carefold-runner';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '../../..');
