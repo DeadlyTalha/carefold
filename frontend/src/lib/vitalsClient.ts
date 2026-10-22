@@ -336,7 +336,11 @@ export async function fetchVitalsObservations(
     credentials: 'include',
   });
   if (!res.ok) throw new Error(`Failed to fetch vitals (${res.status})`);
-  return res.json();
+  const data = await res.json();
+  return {
+    observations: data.observations || data.items || [],
+    total: data.total ?? 0,
+  };
 }
 
 export async function fetchVitalsTrends(
