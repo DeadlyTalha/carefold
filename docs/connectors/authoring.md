@@ -19,11 +19,13 @@
 
 Carefold connectors integrate external patient devices, calendars, and health record portals into the local-first runtime while preserving strict egress isolation, clinical provenance, and prompt-injection taint boundaries.
 
+![Carefold Scoped External Connections Hub](../assets/screenshots/scoped-connections.png)
+
 ---
 
 ## 1. Architecture Overview
 
-Every connector in `libs/connectors/` consists of two parts:
+Every connector in `carefold.connectors` (built on `yarvelle_core.connectors`) consists of two parts:
 
 1. **Metadata-Only Declarative Manifest (`*.yaml`)**: Validated by `ConnectorManifest` (`connectors.manifest`). Declares allowed outbound hosts, schemes, ports, authentication mechanism (`oauth2` with PKCE or `basic`), tool risk classifications, and data provenance trust level (`trusted` vs `untrusted`).
 2. **Protocol Implementation (`Connector`)**: A Python class implementing `manifest`, `streams()`, `fetch(ctx, stream, cursor, http)`, `map(page)`, and `tools()`.

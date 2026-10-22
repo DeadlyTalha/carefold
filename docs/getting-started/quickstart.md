@@ -1,114 +1,104 @@
 # Quickstart Guide
 
-This tutorial guides you through starting the Carefold services and executing your first patient navigation consultation in under five minutes.
+This tutorial guides you through starting the Carefold services and exploring your household health companion in under five minutes.
 
 ---
 
 ## Architecture Overview of Local Services
 
 Running Carefold locally spins up two coordinated processes:
-1. **FastAPI Backend (`backend/`)**: Serves REST APIs and Server-Sent Events (SSE) streaming on `http://localhost:8000`.
-2. **Next.js Web UI (`apps/web/`)**: Provides the marketplace catalog and consultation chat UI on `http://localhost:3000`.
+1. **FastAPI Backend (`backend/`)**: Serves REST APIs, health pack routes, and Server-Sent Events (SSE) streaming on `http://127.0.0.1:8010`.
+2. **Next.js Web UI (`frontend/`)**: Provides the household care dashboard, specialist marketplace, vitals tracker, and consultation studio on `http://localhost:3010`.
 
 ---
 
-## Step 1: Start the Backend Service
+## Step 1: Launch Carefold with `./start.sh`
 
-Activate your Python virtual environment and start the FastAPI server with Uvicorn:
-
-```bash
-# From the repository root
-source backend/.venv/bin/activate
-
-# Start backend server
-uvicorn carefold.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-You can verify the backend is running by querying the health check endpoint:
+From the repository root, start both the FastAPI backend (`:8010`) and Next.js frontend (`:3010`) using the unified coordinator script:
 
 ```bash
-curl http://localhost:8000/api/health
+# Start both services in the foreground (or use `./start.sh start` for background daemon mode)
+./start.sh
 ```
 
-Expected JSON response (abbreviated; see the [API Reference](../api/reference.md) for the full schema):
+You can inspect service health anytime using `./start.sh status` or by querying the backend health endpoint:
+
+```bash
+curl http://127.0.0.1:8010/api/v1/health
+```
+
+Expected JSON response (abbreviated):
 ```json
 {
   "status": "ok",
-  "version": "0.1.0",
+  "version": "0.5.0b2",
   "modelReachable": true,
   "workspace": {
     "root": "/path/to/carefold",
-    "agentsCount": 22,
-    "skillsCount": 24
+    "agentsCount": 25,
+    "skillsCount": 28
   }
 }
 ```
 
-`status` reports `degraded` until a model provider (for example a local Ollama server) is reachable. `agentsCount` and `skillsCount` report active specialist agents (22) and modular skill packs (24) in the workspace, excluding internal system helpers and starter templates.
+---
+
+## Step 2: Explore Your Household Care Dashboard
+
+Open your browser to `http://localhost:3010`. After signing in (or creating your local household steward account), you land on the **Household Care Dashboard**:
+
+![Carefold Household Care Dashboard](../assets/screenshots/dashboard.png)
+
+From the dashboard you can:
+- Review your **Next Visit Prep** checklist and progress bar for upcoming clinical appointments.
+- Launch a quick consultation using the **Ask about [Person]** composer and starter prompts.
+- Inspect **Recent Notes**, **Daily Routines**, and **Paperwork & Coverage** summaries.
+- Switch between family member profiles (`Self`, `Spouse`, `Child`, `Parent`) in the top-left profile switcher.
 
 ---
 
-## Step 2: Start the Next.js Frontend
+## Step 3: Browse the Specialist Agent Marketplace
 
-In a separate terminal window, launch the development frontend:
+Navigate to **Agents** (`/agents`) in the left navigation rail to explore all **25 specialist agents** across Clinical, Navigation, and Wellness domains:
 
-```bash
-# From the repository root
-pnpm --filter web dev
-```
+![Carefold Specialist Agent Marketplace](../assets/screenshots/agents-marketplace.png)
 
-The Next.js application will compile and become available at `http://localhost:3000`.
+Click on **Cardiology Navigator** (`cardiology-guide`) to review its clinical capabilities, declared skills (`cardiology-prep`), permitted tools, and plain-language non-clinical safety boundaries.
 
 ---
 
-## Step 3: Browse the Agent Marketplace
+## Step 4: Start a Specialist Consultation
 
-1. Open your browser and navigate to `http://localhost:3000`.
-2. You will see the **Carefold Agent Marketplace**, displaying the 20 specialist agents categorized into:
-   - **Organ-Specific Clinical Navigators** (e.g., Cardiology Guide, Nephrology Guide, Oncology Navigator).
-   - **Administrative Stewards & Companions** (e.g., Prior Auth Navigator, Claims Appeals Guide, Formulary Guide).
-3. Click on **Cardiology Guide** to inspect its manifest, clinical care stages, declared skills (`cardiology-prep`), and sandboxed tool permissions.
+Click **Chats** (`/p/<profileId>/chat?agent=cardiology-guide`) to open the **Consultation Studio**:
 
----
-
-## Step 4: Initiate a Consultation Session
-
-Click **"Try in Chat"** on the Cardiology Guide card to launch the consultation interface.
+![Carefold Consultation Studio](../assets/screenshots/chat-consultation.png)
 
 ### Example Prompt:
-> *"I've been noticing high blood pressure readings in the morning (around 145/95). My doctor wants me to track it for 2 weeks. How should I prepare for my upcoming appointment?"*
+> *"I've been tracking my morning blood pressure with my home cuff over the last two weeks (averaging 122/77 mmHg, heart rate 66 bpm). I have a follow-up with my cardiologist on Friday. What questions should I bring to make the most of our visit?"*
 
 ### What Happens Behind the Scenes:
-1. **Context Load**: The orchestrator checks for attached medical records or previous user notes.
-2. **Validation & Gating**: The input is checked against emergency red-flag patterns (no acute chest pain or radiation detected).
-3. **Plan & Provision**: The orchestrator matches the query to `cardiology-guide`, inspects its declared skill `cardiology-prep`, and provisions `hypertension_log_template.md` and `cardiology_visit_agenda.md` directly into the agent prompt.
-4. **Execution Dispatch**: The `cardiology-guide` specialist generates empathetic guidance and structures a two-week blood pressure logging agenda.
-5. **Synthesis & Guardrails**: Robotic preambles and duplicate disclaimers are removed, and the single canonical disclaimer footer is appended.
-6. **Streaming Delivery**: The response streams in real time via SSE to the web chat interface.
+1. **Context Load & Memory Recall**: Recalls relevant profile memories and attached records.
+2. **Input Guardrail & Red-Flag Gate**: Screens the message against multilingual emergency red-flag patterns.
+3. **Two-Hop Orchestration & Skill Provisioning**: Routes to `cardiology-guide` and provisions `cardiology-prep` reference guidelines.
+4. **Specialist Execution & Synthesis**: Streams a structured visit preparation agenda via SSE and attaches the canonical non-clinical disclaimer and follow-up suggestion chips.
 
 ---
 
-## Step 5: Verify the Audit Log
+## Step 5: Track Vitals, Visits & Preventive Care
 
-Carefold logs every consultation event to an append-only JSONL log with zero-body PII redaction by default.
+Carefold includes dedicated clinical tracking workspaces for every household profile:
 
-Inspect the latest audit entry:
+- **Vitals & Biometrics (`/p/<profileId>/vitals`)**: Record blood pressure, heart rate, blood glucose, SpO2, and weight/BMI with diurnal AM/PM trend analysis and real-time red-flag safety checks.
+  ![Carefold Vitals & Biometrics](../assets/screenshots/vitals-tracker.png)
+- **Schedule & Visit Prep (`/p/<profileId>/appointments`)**: Track upcoming appointments and generate pre-visit preparation packs.
+  ![Carefold Clinical Visits & Schedule](../assets/screenshots/appointments-schedule.png)
 
-```bash
-tail -n 1 logs/audit.jsonl | jq .
-```
+---
 
-Sample audit entry:
-```json
-{
-  "timestamp": "2026-10-02T04:15:32.184Z",
-  "event": "synthesis",
-  "agent_id": "cardiology-guide",
-  "allowed": true,
-  "target_agents": ["cardiology-guide"]
-}
-```
+## Step 6: Inspect the Activity & Safety Audit Log
 
-Notice that patient health prompts and completion bodies are omitted. Zero-body audit logging is designed to support privacy reviews by keeping health content out of the audit trail; on its own it does not make a deployment HIPAA compliant, and Carefold does not claim any compliance certification.
+Every tool call, consent grant, and safety guardrail check is recorded in a tamper-evident SHA-256 hash-chained audit log accessible under **Activity** (`/p/<profileId>/activity`):
+
+![Carefold Activity & Safety Audit Log](../assets/screenshots/activity-audit-log.png)
 
 Next, explore the [Architecture Overview](../architecture/overview.md) to learn how Carefold orchestrates multi-agent consultations.

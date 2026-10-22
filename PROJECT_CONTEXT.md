@@ -19,8 +19,8 @@
 
 Standard: Spector Living Project Context Standard  
 Target System: Carefold Healthcare AI Agent Marketplace & Local Runtime  
-Last Updated: 2026-10-14  
-Status: Active / Verified against Codebase  
+Last Updated: 2026-10-21  
+Status: Active / Verified against Codebase (v0.5.0-beta.2)  
 
 ---
 

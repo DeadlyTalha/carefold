@@ -14,8 +14,8 @@
 -->
 
 Specification compliance: [AGENTS.md v1.0.0](https://github.com/agent-infra/agents.md)  
-Runtime version: Carefold 0.4.0-beta.1
-Last updated: 2026-10-14  
+Runtime version: Carefold 0.5.0-beta.2
+Last updated: 2026-10-22  
 
 ---
 
@@ -57,15 +57,15 @@ carefold/
 │   │   ├── vault/      # Envelope encryption keyring vault (HKDF-SHA256 per-profile AES-256-GCM DEKs)
 │   │   └── workflows/  # LangGraph state machine, nodes, and extraction subgraphs
 │   └── tests/          # Pytest suite & 47-attack penetration test harness
-├── apps/web/           # Next.js 15 Tailwind CSS agent marketplace and consultation UI
+├── frontend/           # Next.js 16 Tailwind CSS agent marketplace and consultation UI (@spectrayan/carefold-web)
+│   ├── src/health-ui/  # @spectrayan/carefold clinical UI module (vitals, visits, preventive, school forms)
 │   └── src/i18n/       # Client BCP 47 / ICU MessageFormat, Intl formatters & bidirectional LTR/RTL support
-├── libs/
-│   └── connectors/     # Scoped Connector SDK, ScopedHttp egress sandbox & starter/v2 connectors
-├── packages/
-│   ├── cli/            # Carefold CLI for agent authoring and local execution
-│   └── runner/         # Standalone agent runtime sandbox
-├── agents/             # 23 Specialist clinical/navigational agents + 6 system agents
-├── skills/             # 24 Modular clinical skill packs with reference guidelines
+├── tools/
+│   ├── cli/            # Carefold CLI (@spectrayan/carefold-cli) for agent authoring and local execution
+│   └── runner/         # Standalone agent runtime sandbox (@spectrayan/carefold-runner)
+├── deploy/docker/      # Multi-arch Dockerfile and Docker Compose stack
+├── agents/             # 25 Specialist clinical/navigational/wellness agents + 6 system agents
+├── skills/             # 28 Modular clinical & administrative skill packs with reference guidelines
 ├── docs/               # Verified MkDocs Material documentation, Living ADRs & Compliance Packs
 │   ├── adr/            # Living Architecture Decision Records (0001–0009)
 │   ├── compliance/     # OAuth CASA Tier 2/3, OWASP ASVS L2, Threat Model & Regulatory Readiness Packs
@@ -73,9 +73,9 @@ carefold/
 └── .github/            # GitHub Actions CI/CD matrix, CodeQL, and community templates
 ```
 
-### 2.1 Specialist Agent Topology (23 Specialists)
+### 2.1 Specialist Agent Topology (25 Specialists)
 
-Carefold organizes clinical and administrative specialists under clear clinical risk classes (`admin`, `wellness`, `clinical_assist`, `education`):
+Carefold organizes clinical, administrative, and wellness specialists under clear clinical risk classes (`admin`, `wellness`, `clinical_assist`, `education`):
 
 | Agent Identifier | Domain | Category | Risk Class | Key Skills |
 |---|---|---|---|---|
@@ -93,6 +93,9 @@ Carefold organizes clinical and administrative specialists under clear clinical 
 | `eye-guide` | `clinical` | `ophthalmology` | `clinical_assist` | `vision-prep`, `clinical-safety-boundaries` |
 | `hematology-guide` | `clinical` | `hematology` | `clinical_assist` | `hematology-prep`, `emergency-red-flags`, `clinical-safety-boundaries` |
 | `oncology-navigator` | `clinical` | `oncology` | `clinical_assist` | `oncology-prep`, `emergency-red-flags`, `clinical-safety-boundaries` |
+| `oral-health-guide` | `clinical` | `dentistry` | `clinical_assist` | `oral-health-prep`, `emergency-red-flags`, `clinical-safety-boundaries` |
+| `podiatry-guide` | `clinical` | `podiatry` | `clinical_assist` | `podiatry-prep`, `emergency-red-flags`, `clinical-safety-boundaries` |
+| `vascular-guide` | `clinical` | `vascular` | `clinical_assist` | `vascular-prep`, `emergency-red-flags`, `clinical-safety-boundaries` |
 | `visit-steward` | `clinical` | `general` | `clinical_assist` | `visit-prep`, `emergency-red-flags`, `clinical-safety-boundaries` |
 | `benefits-guide` | `navigation` | `insurance` | `admin` | `benefits-explainer`, `records-management` |
 | `claims-appeals-guide` | `navigation` | `appeals` | `admin` | `claims-appeals-prep`, `benefits-explainer` |
@@ -100,6 +103,7 @@ Carefold organizes clinical and administrative specialists under clear clinical 
 | `formulary-guide` | `navigation` | `pharmacy` | `admin` | `formulary-navigation`, `benefits-explainer` |
 | `records-coordinator` | `navigation` | `records` | `admin` | `records-management` |
 | `habit-companion` | `wellness` | `habits` | `wellness` | `habit-checkin` |
+| `nutrition-dietitian-guide` | `wellness` | `nutrition` | `wellness` | `nutrition-prep`, `emergency-red-flags`, `clinical-safety-boundaries` |
 | `_template` | `clinical` | `template` | `education` | Starter template for community agents |
 
 ### 2.2 System Agents (`agents/_system`)

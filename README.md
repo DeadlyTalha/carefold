@@ -19,11 +19,11 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-PolyForm_Noncommercial_+_Additional_Terms-047857.svg?style=for-the-badge" alt="License" /></a>
-  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.12-3776AB.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python" /></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.12+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22_LTS-339933.svg?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node" /></a>
   <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-16_Turbopack-000000.svg?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" /></a>
   <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.115-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" /></a>
-  <a href="docker/docker-compose.yml"><img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Compose" /></a>
+  <a href="deploy/docker/docker-compose.yml"><img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Compose" /></a>
   <a href="https://github.com/spectrayan/carefold/actions"><img src="https://img.shields.io/github/actions/workflow/status/spectrayan/carefold/ci.yml?branch=main&style=for-the-badge" alt="Build" /></a>
   <a href="https://spectrayan.github.io/carefold/"><img src="https://img.shields.io/badge/Docs-MkDocs-blue?logo=materialformkdocs&style=for-the-badge" alt="Docs" /></a>
 </p>
@@ -34,15 +34,78 @@
 
 ---
 
-**Carefold** is a source-available, local-first personal and family health AI companion and specialist agent runtime. Designed to work alongside your doctors, care teams, and health plans, Carefold runs on your own hardware (or private household instance) to help you prepare for clinical visits, organize health records and vitals across family members, track preventive screenings and pediatric school forms, and understand health insurance benefits.
+**Carefold** is a source-available, local-first personal and family health AI companion and specialist agent runtime built on [`yarvelle-core`](https://github.com/yarvelle/yarvelle-core) and `@yarvelle/ui`. Designed to work alongside your doctors, care teams, and health plans, Carefold runs on your own hardware (or private household instance) to help you prepare for clinical visits, organize health records and physiological vitals across family members, track USPSTF/ACIP preventive screenings and pediatric school forms, and understand health insurance benefits.
 
-It pairs a **5-phase LangGraph orchestration engine** with **23 specialist clinical and administrative navigators**, **24 modular skill packs**, multi-profile household care with per-profile AES-256-GCM envelope encryption, scoped health and calendar connectors (`Epic SMART on FHIR`, `Withings`, `Google Calendar`, `CalDAV`, `Apple Health`, `FHIR R4`, `C-CDA`), multilingual support (`en-US`, `es-ES`, `fr-FR`, `hi-IN`, `ar-SA` with `RTL`), and a two-tier clinical safety guardrail system.
+It pairs a **5-phase LangGraph orchestration engine** with **25 specialist clinical, administrative, and wellness navigators**, **28 modular clinical skill packs**, multi-profile household care with per-profile AES-256-GCM envelope encryption, scoped health and calendar connectors (`Epic SMART on FHIR`, `Withings`, `Google Calendar`, `CalDAV`, `Google Workspace Gmail MCP`, `Microsoft 365 Graph`, `Apple Health`, `FHIR R4`, `C-CDA`, `SMART Health Cards`), multilingual support (`en-US`, `es-ES`, `fr-FR`, `hi-IN`, `ar-SA` with `RTL`), and a two-tier clinical safety guardrail system.
+
+### 🖥️ Household Care Dashboard
+
+<p align="center">
+  <img src="docs/assets/screenshots/dashboard.png" alt="Carefold Household Care Dashboard" width="100%" />
+</p>
 
 <details>
-  <summary>📸 <strong>Preview Carefold Web Marketplace UI</strong> (Click to expand)</summary>
+  <summary>📸 <strong>Explore More Carefold Screens</strong> — Consultation Studio, Specialist Marketplace, Vitals & Biometrics, Clinical Visits, Preventive Care, Scoped Connectors, Household Profiles & Diagnostics (Click to expand)</summary>
   <br />
+
+  <h4>1. Specialist Consultation Studio (Streaming SSE & Clinical Preparation Agenda)</h4>
   <p align="center">
-    <img src="assets/carefold-marketplace-preview.png" alt="Carefold Web Marketplace UI" width="100%" />
+    <img src="docs/assets/screenshots/chat-consultation.png" alt="Carefold Specialist Consultation Studio" width="100%" />
+  </p>
+
+  <h4>2. Specialist Agent Marketplace (25 Clinical, Insurance & Wellness Navigators)</h4>
+  <p align="center">
+    <img src="docs/assets/screenshots/agents-marketplace.png" alt="Carefold Specialist Agent Marketplace" width="100%" />
+  </p>
+
+  <h4>3. Specialist Agent Detail & Plain-Language Clinical Safety Boundaries</h4>
+  <p align="center">
+    <img src="docs/assets/screenshots/agent-detail.png" alt="Carefold Specialist Agent Detail" width="100%" />
+  </p>
+
+  <h4>4. Modular Clinical & Administrative Skills Catalog (28 Skill Packs)</h4>
+  <p align="center">
+    <img src="docs/assets/screenshots/skills-catalog.png" alt="Carefold Skills Catalog" width="100%" />
+  </p>
+
+  <h4>5. Vitals & Biometrics Tracker (FHIR R4 LOINC Observations & Diurnal BP Trends)</h4>
+  <p align="center">
+    <img src="docs/assets/screenshots/vitals-tracker.png" alt="Carefold Vitals & Biometrics Tracker" width="100%" />
+  </p>
+
+  <h4>6. Clinical Visits & Appointment Preparation Schedule</h4>
+  <p align="center">
+    <img src="docs/assets/screenshots/appointments-schedule.png" alt="Carefold Clinical Visits & Schedule" width="100%" />
+  </p>
+
+  <h4>7. Preventive Care Checklist (USPSTF / ACIP Guidelines) & Pediatric School Forms</h4>
+  <p align="center">
+    <img src="docs/assets/screenshots/preventive-care.png" alt="Carefold Preventive Care & School Forms" width="100%" />
+  </p>
+
+  <h4>8. Local Workspace Library (Sanitized Attachments & Visit Preparation Notes)</h4>
+  <p align="center">
+    <img src="docs/assets/screenshots/documents-library.png" alt="Carefold Documents & Notes Library" width="100%" />
+  </p>
+
+  <h4>9. Scoped External Data Connections, OAuth 2.0 PKCE & Consent Hub</h4>
+  <p align="center">
+    <img src="docs/assets/screenshots/scoped-connections.png" alt="Carefold Scoped External Connections Hub" width="100%" />
+  </p>
+
+  <h4>10. Family & Household Care Profiles</h4>
+  <p align="center">
+    <img src="docs/assets/screenshots/family-profiles.png" alt="Carefold Family & Household Profiles" width="100%" />
+  </p>
+
+  <h4>11. Tamper-Evident Activity & Safety Audit Log</h4>
+  <p align="center">
+    <img src="docs/assets/screenshots/activity-audit-log.png" alt="Carefold Activity & Safety Audit Log" width="100%" />
+  </p>
+
+  <h4>12. Runtime Health & Setup Diagnostics</h4>
+  <p align="center">
+    <img src="docs/assets/screenshots/settings-diagnostics.png" alt="Carefold System Health & Diagnostics" width="100%" />
   </p>
 </details>
 
@@ -75,17 +138,17 @@ Visit `http://localhost:3000` to browse specialist helpers and launch private ho
 > - **Legacy tags on Apple Silicon**: If pulling older single-architecture tags (e.g. `0.3.0-beta.1`), append `--platform linux/amd64` to `docker pull` and `docker run`.
 
 ### 2. Launch via Docker Compose (Build from Source)
-Images can also be built locally from [`docker/Dockerfile`](docker/Dockerfile):
+Images can also be built locally from [`deploy/docker/Dockerfile`](deploy/docker/Dockerfile):
 
 ```bash
 # From the repository root: build and start the FastAPI backend (:8000) and Next.js UI (:3000)
-docker compose -f docker/docker-compose.yml up -d --build
+docker compose -f deploy/docker/docker-compose.yml up -d --build
 
 # Or also start a local Ollama container for on-device LLM inference:
-docker compose -f docker/docker-compose.yml --profile ollama up -d --build
+docker compose -f deploy/docker/docker-compose.yml --profile ollama up -d --build
 
 # Pull the default model into the Ollama container (first run only)
-docker compose -f docker/docker-compose.yml exec ollama ollama pull llama3.2
+docker compose -f deploy/docker/docker-compose.yml exec ollama ollama pull llama3.2
 ```
 Visit `http://localhost:3000` to browse specialist helpers and launch private consultations.
 
@@ -98,38 +161,43 @@ Visit `http://localhost:3000` to browse specialist helpers and launch private co
 git clone https://github.com/spectrayan/carefold.git
 cd carefold
 
-# Install frontend dependencies
+# Install frontend and workspace dependencies
 pnpm install
 
-# Set up backend environment
+# Set up backend virtual environment
 python3 -m venv backend/.venv
 source backend/.venv/bin/activate
-pip install -e backend
+pip install -e "backend[dev]"
 pip install -r backend/requirements-dev.txt
 
-# Start backend server (Terminal 1)
-uvicorn carefold.main:app --host 127.0.0.1 --port 8000 --reload
+# Option A: Start both backend (:8010) and Next.js UI (:3010) with the unified launcher
+./start.sh
 
-# Start Next.js UI (Terminal 2)
-pnpm --filter web dev
+# Option B: Run in separate terminals
+# Terminal 1 — FastAPI Backend (:8010)
+PYTHONPATH=backend/src backend/.venv/bin/uvicorn carefold.main:app --host 127.0.0.1 --port 8010 --reload
+
+# Terminal 2 — Next.js Web UI (:3010)
+pnpm --filter @spectrayan/carefold-web dev
 ```
+Visit `http://localhost:3010` to open the Carefold Web UI.
 
 ---
 
-## 🏥 Specialist Agent Topology
+## 🏥 Specialist Agent Topology (25 Specialists & 28 Skills)
 
-Carefold features a modular catalog of 23 specialist clinical and administrative navigators, organized into three core domains:
+Carefold features a modular catalog of **25 specialist clinical, administrative, and wellness navigators** backed by **28 clinical and administrative skill packs**, organized into three core domains:
 
-- **Clinical Organ & Specialty Navigators (`clinical_assist`)**: Dedicated navigators for Cardiology, Pulmonology, Gastroenterology, Oncology, Neurology, Nephrology, Dermatology, Endocrinology, Orthopedics, Rheumatology, Urology, ENT, Vision, Hematology, Podiatry, Vascular Medicine, Oral Health, and General Visit Preparation. Each specialist helps you organize symptoms, review lab trends and vital signs, and prepare clear, prioritized questions to discuss with your clinician.
-- **Administrative & Insurance Stewards (`admin`)**: Stewards for Health Insurance Benefits & Coverage explanation, Prior Authorization preparation, Claims & Denials Appeals, Prescription Drug Formularies, and Multi-Provider Medical Records coordination.
-- **Wellness & Habit Companions (`wellness`)**: Daily companions for chronic care routines, hydration tracking, sleep hygiene, and lifestyle check-ins.
+- **Clinical Organ & Specialty Navigators (`clinical_assist` — 18 Specialists)**: Dedicated navigators for Cardiology (`cardiology-guide`), Pulmonology (`pulmonology-guide`), Gastroenterology (`gastro-guide`), Oncology (`oncology-navigator`), Neurology (`neurology-guide`), Nephrology (`nephrology-guide`), Dermatology (`derma-guide`), Endocrinology (`endocrinology-guide`), Orthopedics (`ortho-guide`), Rheumatology (`rheuma-guide`), Urology (`urology-guide`), ENT (`ent-guide`), Ophthalmology (`eye-guide`), Hematology (`hematology-guide`), Podiatry (`podiatry-guide`), Vascular Medicine (`vascular-guide`), Oral Health (`oral-health-guide`), and General Visit Preparation (`visit-steward`). Each specialist helps you organize symptoms, review lab trends and vital signs, and prepare clear, prioritized questions to discuss with your clinician.
+- **Administrative & Insurance Stewards (`admin` — 5 Specialists)**: Stewards for Health Insurance Benefits & Coverage explanation (`benefits-guide`), Prior Authorization preparation (`prior-auth-navigator`), Claims & Denials Appeals (`claims-appeals-guide`), Prescription Drug Formularies (`formulary-guide`), and Multi-Provider Medical Records coordination (`records-coordinator`).
+- **Wellness & Nutrition Companions (`wellness` — 2 Specialists)**: Daily companions for chronic care routines, hydration, and sleep check-ins (`habit-companion`) plus evidence-based dietary pattern planning and medical nutrition therapy visit preparation (`nutrition-dietitian-guide`).
 
 ### Exploring Available Agents
 
 You can explore, search, and interact with all specialist agents through:
-- **Web Consultation Studio**: Launch the web app (`pnpm dev:web` at `http://localhost:3000`) to browse and chat with any specialist helper.
+- **Web Consultation Studio**: Launch the web app (`./start.sh` or `pnpm dev:web` at `http://localhost:3010`) to browse and chat with any specialist helper.
 - **Living Documentation Catalog**: Read [`docs/agents/catalog.md`](docs/agents/catalog.md) for detailed descriptions, taxonomy classifications, and key capabilities.
-- **Carefold CLI & API**: Run `carefold list` or query `GET /api/agents` to inspect the runtime catalog programmatically.
+- **Carefold CLI & API**: Run `carefold agent list` or query `GET /api/v1/agents` to inspect the runtime catalog programmatically.
 
 ### System Infrastructure Agents (`agents/_system`)
 * **`orchestrator`**: Two-hop intent classification, dynamic skill provisioning, and multi-topology dispatch.
@@ -143,7 +211,7 @@ You can explore, search, and interact with all specialist agents through:
 
 ## 🧠 Cognitive Memory, Hybrid Retrieval & Household Isolation
 
-Carefold implements a hexagonal architecture for memory, search, and household data isolation:
+Carefold implements a hexagonal architecture for memory, search, and household data isolation on top of `yarvelle-core`:
 
 * **Per-Profile Household Scoping & Envelope Encryption**: Every family member profile (`Self`, `Child`, `Parent`, `Spouse`) is isolated at the database, Content-Addressed Storage (`CAS`), and cryptographic levels using per-profile `HKDF-SHA256` / `AES-256-GCM` Data Encryption Keys (`ADR-0005`, `ADR-0007`).
 * **`MemoryPort` & 3-Tier Consolidation**: Cognitive memory interface supporting working, episodic, and semantic memory tiers with salience ranking and decay (`ADR-0002`).
@@ -176,19 +244,19 @@ Carefold maintains rigorous verification standards across all code changes:
 pnpm run check:licenses
 
 # 2. Backend Pytest Suite
-PYTHONPATH=backend/src:libs/connectors backend/.venv/bin/pytest backend/tests/ libs/connectors/tests/
+PYTHONPATH=backend/src backend/.venv/bin/pytest backend/tests/
 
 # 3. Security Penetration Suite (47 Attack Vectors)
 PYTHONPATH=backend/src backend/.venv/bin/python backend/tests/penetration_suite.py
 
 # 4. Frontend Typecheck
-pnpm --filter web typecheck
+pnpm --filter @spectrayan/carefold-web typecheck
 
 # 5. Frontend Unit & Component Tests
-pnpm --filter web test --exclude "**/api/**"
+pnpm --filter @spectrayan/carefold-web test --exclude "**/api/**"
 
 # 6. Frontend Production Build
-pnpm --filter web build
+pnpm --filter @spectrayan/carefold-web build
 ```
 
 ---
@@ -199,11 +267,11 @@ Carefold documents all major architectural decisions in [`docs/adr/`](docs/adr/)
 * [ADR 0001: Orchestrator-Driven Agent Architecture](docs/adr/0001-orchestrator-driven-agent-architecture.md)
 * [ADR 0002: Hexagonal Memory and Catalog Ports](docs/adr/0002-hexagonal-memory-and-catalog-ports.md)
 * [ADR 0003: Progressive Disclosure & Skill Context Management](docs/adr/0003-progressive-disclosure-skill-context-management.md)
-* [ADR 0004: Tool Execution Gate, 4-Tier Risk Approvals & Taint Propagation](docs/adr/0004-tool-execution-gate-and-taint-propagation.md)
-* [ADR 0005: Keyring Vault & Per-Profile Envelope Encryption](docs/adr/0005-keyring-vault-and-envelope-encryption.md)
-* [ADR 0006: Deployment Modes (Mode L Local vs Mode S Shared Household)](docs/adr/0006-deployment-modes-and-security-posture.md)
-* [ADR 0007: Partitioned Content-Addressed Storage & Hybrid Search Index](docs/adr/0007-partitioned-cas-and-hybrid-search.md)
-* [ADR 0008: Scoped Connectors, OAuth Bounce Relay & Taint Tracking](docs/adr/0008-scoped-connectors-and-taint-tracking.md)
+* [ADR 0004: Policy Approvals & Resume](docs/adr/0004-policy-approvals-and-resume.md)
+* [ADR 0005: Vault Threat Model & Per-Profile Envelope Encryption](docs/adr/0005-vault-threat-model-and-kek-sources.md)
+* [ADR 0006: Deployment Modes & Requirement Tiers (Mode L vs Mode S)](docs/adr/0006-deployment-modes-and-requirement-tiers.md)
+* [ADR 0007: Content-Addressed Storage & Hybrid Search Index](docs/adr/0007-content-addressed-storage-and-hybrid-search.md)
+* [ADR 0008: Stateless OAuth 2.0 PKCE Bounce Relay & Scoped Connectors](docs/adr/0008-oauth-relay-and-stateless-callback.md)
 * [ADR 0009: End-to-End Internationalization & Multilingual Architecture](docs/adr/0009-internationalization-and-multilingual-architecture.md)
 
 ---

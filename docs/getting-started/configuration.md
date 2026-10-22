@@ -1,16 +1,19 @@
 # Configuration Reference
 
-Carefold is configured using Pydantic Settings via environment variables or a local `.env` file at the repository root. All settings use the `CAREFOLD_` environment variable prefix.
+Carefold is configured using Pydantic Settings via environment variables or a local `.env` file at the repository root. All backend settings use the `CAREFOLD_` environment variable prefix.
 
 ---
 
 ## Environment Variables
 
-The table below outlines all available configuration options, their types, defaults, and descriptions:
+The table below outlines key configuration options, their types, defaults, and descriptions:
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `CAREFOLD_WORKSPACE_ROOT` | `Path` | Root directory | Absolute path to the repository workspace containing `agents/`, `skills/`, and `attachments/`. |
+| `CAREFOLD_HOME_DIR` | `Path` | `~/.carefold` | Per-user runtime directory storing `carefold.db`, partitioned CAS blobs, and logs. |
+| `CAREFOLD_BACKEND_PORT` | `int` | `8010` | Default HTTP port for the FastAPI backend server. |
+| `CAREFOLD_WEB_PORT` | `int` | `3010` | Default HTTP port for the Next.js web application. |
 | `CAREFOLD_OLLAMA_URL` | `str` | `http://127.0.0.1:11434/v1` | Base URL for the local Ollama inference service (OpenAI-compatible v1 endpoint). |
 | `CAREFOLD_DEFAULT_MODEL` | `str` | `llama3.2` | Default LLM model identifier for agent execution. |
 | `CAREFOLD_MODEL_TIMEOUT_SECONDS`| `float` | `30.0` | Timeout in seconds for LLM model inference requests. |
@@ -18,11 +21,9 @@ The table below outlines all available configuration options, their types, defau
 | `CAREFOLD_LOG_JSON` | `bool` | `false` | When `true`, emits structured JSON log entries. |
 | `CAREFOLD_AUDIT_LOG_PATH` | `Path` | `logs/audit.jsonl` | Filepath where structured zero-body audit events are written. |
 | `CAREFOLD_AUDIT_STORE_BODIES` | `bool` | `false` | When `false` (recommended), redacts prompts and completion bodies in audit logs to protect PII. |
-| `CAREFOLD_DB_PATH` | `Path` | `None` | Path to SQLite checkpointer database for session state persistence. |
-| `CAREFOLD_MEMORY_BACKEND` | `str` | `sqlite` | Cognitive memory backend adapter. Only `sqlite` is implemented today; `spector` and `postgres` are reserved for planned adapters and currently raise a "not yet implemented" error. |
-| `CAREFOLD_SPECTOR_URL` | `str` | `http://localhost:7070` | Endpoint URL for future Spector MCP cognitive memory integration. |
-| `CAREFOLD_CATALOG_DB_PATH` | `Path` | `catalog.db` | Custom file path for SQLite catalog and memory storage (defaults to `${CAREFOLD_WORKSPACE_ROOT}/catalog.db`). |
-| `CAREFOLD_CORS_ORIGINS` | `List[str]` | `["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000", "http://127.0.0.1:8000"]` | Allowed CORS origins for browser web requests. |
+| `CAREFOLD_MEMORY_BACKEND` | `str` | `sqlite` | Cognitive memory backend adapter (`sqlite` or `spector`). |
+| `CAREFOLD_SPECTOR_URL` | `str` | `http://localhost:7070` | Endpoint URL for Spector MCP cognitive memory integration. |
+| `CAREFOLD_CORS_ORIGINS` | `List[str]` | `["http://localhost:3010", "http://127.0.0.1:3010", "http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8010", "http://127.0.0.1:8010"]` | Allowed CORS origins for browser web requests. |
 
 ---
 
@@ -47,39 +48,35 @@ CAREFOLD_MODEL_TIMEOUT_SECONDS=45.0
 
 # Cognitive Memory & Catalog Persistence
 CAREFOLD_MEMORY_BACKEND=sqlite
-CAREFOLD_CATALOG_DB_PATH=catalog.db
 
 # CORS Allowed Origins
-CAREFOLD_CORS_ORIGINS=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000", "http://127.0.0.1:8000"]
+CAREFOLD_CORS_ORIGINS=["http://localhost:3010", "http://127.0.0.1:3010", "http://localhost:8010", "http://127.0.0.1:8010"]
 ```
 
 ---
 
 ## Multi-Provider Support
 
-While Carefold defaults to local Ollama inference for maximum patient privacy, the engine supports external LLM providers via standard environment variables:
+While Carefold defaults to local Ollama inference for maximum patient privacy, the engine supports external LLM providers via standard environment variables or the in-app **Settings → Model & Provider** panel (`/settings/model`):
 
 ### 1. Ollama (Default Local)
 - No API key required.
 - Set `CAREFOLD_OLLAMA_URL` (default: `http://127.0.0.1:11434/v1`).
-- Supported models: `llama3.2`, `llama3.1`, `mistral`, `phi3`.
+- Supported models: `llama3.2`, `llama3.1`, `mistral`, `deepseek-r1`, `phi3`.
 
 ### 2. Google Gemini
-To utilize Google's Gemini models:
 ```bash
 export GOOGLE_API_KEY="your-google-api-key"
 export CAREFOLD_DEFAULT_MODEL="gemini-2.0-flash"
 ```
 
 ### 3. Anthropic Claude
-To utilize Anthropic's Claude models:
 ```bash
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
 export CAREFOLD_DEFAULT_MODEL="claude-3-5-sonnet-latest"
 ```
 
 ### 4. OpenAI
-To utilize OpenAI models:
 ```bash
 export OPENAI_API_KEY="your-openai-api-key"
 export CAREFOLD_DEFAULT_MODEL="gpt-4o"
@@ -87,32 +84,11 @@ export CAREFOLD_DEFAULT_MODEL="gpt-4o"
 
 ---
 
-## Directory Configuration & Workspace Resolution
+## Web App Environment Variables (`frontend/`)
 
-Carefold automatically locates workspace directories relative to `CAREFOLD_WORKSPACE_ROOT`:
-
-- **Agents Directory**: `${CAREFOLD_WORKSPACE_ROOT}/agents`
-- **Skills Directory**: `${CAREFOLD_WORKSPACE_ROOT}/skills`
-- **Attachments Sandbox**: `${CAREFOLD_WORKSPACE_ROOT}/attachments`
-- **User Notes Directory**: `${CAREFOLD_WORKSPACE_ROOT}/workspace/notes` (or `${CAREFOLD_WORKSPACE_ROOT}/notes`)
-- **Audit Logs**: `${CAREFOLD_WORKSPACE_ROOT}/logs/audit.jsonl`
-
-All file operations inside the sandbox are strictly guarded against path traversal attacks (`../`, null bytes, and symlink escapes).
-
----
-
-## Web App Environment Variables
-
-The Next.js web app (`apps/web`) reads two environment variables of its own. They are separate from the backend `CAREFOLD_*` settings above.
+The Next.js web application (`frontend/`) reads the following environment variables:
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `BACKEND_URL` | `str` | `http://127.0.0.1:8000` | Base URL of the Carefold backend that the web app's server routes call. Set it when the backend runs somewhere other than the default, such as a remote server. The Docker Compose `web` service already sets it to `http://backend:8000`. |
-| `CAREFOLD_WORKSPACE` | `Path` | Detected automatically | Location of the repository workspace. By default the app walks up from the current working directory to find the repo. Set it if the app starts from a place where it cannot find the repo on its own. |
-
-For example, to run the web app against a remote backend:
-
-```bash
-BACKEND_URL=https://carefold.example.com
-```
-
+| `BACKEND_URL` | `str` | `http://127.0.0.1:8010` | Base URL of the Carefold FastAPI backend that the web app's server routes proxy to. |
+| `CAREFOLD_WORKSPACE` | `Path` | Detected automatically | Location of the repository workspace. |

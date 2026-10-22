@@ -36,9 +36,9 @@ Carefold's end-to-end suites follow four tiers. Each tier answers a different qu
 | Backend end-to-end (Tiers 1–4) | `backend/tests/e2e/` | `test_features.py`, `test_boundaries.py`, `test_interactions.py`, `test_scenarios.py`, plus context and safety gating, multi-agent execution, response synthesis, persona purity, and specialty coverage. | ✅ |
 | Penetration suite | `backend/tests/penetration_suite.py` | 47 attacks covering path traversal, symlink escapes, shell injection, undeclared skill-doc access, and PII leakage. All 47 must pass. | ✅ |
 | Live Ollama integration | `backend/tests/integration/` | Multi-turn conversations against a real local model. Opt-in (see below). | — |
-| Web unit & component | `apps/web/tests/{components,lib,boundary}/` | Chat streaming, settings, marketplace, accessibility, and boundary UI inputs. | ✅ |
-| Web API integration | `apps/web/tests/api/` | Next.js route handlers against a running FastAPI backend. Excluded from CI because it needs a live backend. | — |
-| Runner & CLI packages | `packages/runner/tests/`, `packages/cli/tests/` | Manifest and skill-pack validation, tool permission unions, boundary manifests, the pack validator, streaming runs. | ✅ (release) |
+| Web unit & component | `frontend/tests/{components,lib,boundary,resilience}/` | Chat streaming, settings, marketplace, accessibility, and boundary UI inputs. | ✅ |
+| Web API integration | `frontend/tests/api/` | Next.js route handlers against a running FastAPI backend. Excluded from CI because it needs a live backend. | — |
+| Runner & CLI packages | `tools/runner/tests/`, `tools/cli/tests/` | Manifest and skill-pack validation, tool permission unions, boundary manifests, the pack validator, streaming runs. | ✅ (release) |
 | Workspace end-to-end (Tiers 1–4) | `tests/e2e/` | CLI scaffolding and commands, manifests, tools, safety refusal, audit logging, SSE, web pages, attachments, offline evals, and container packaging, from the outside in. | — |
 | Offline safety evals | `evals/` | Golden prompts in `evals/safety.golden.jsonl` scored for refusal correctness and grounding. | — |
 
@@ -63,13 +63,13 @@ backend/.venv/bin/pytest backend/tests/
 PYTHONPATH=backend/src backend/.venv/bin/python backend/tests/penetration_suite.py
 
 # 4. Frontend typecheck
-pnpm --filter web typecheck
+pnpm --filter @spectrayan/carefold-web typecheck
 
 # 5. Frontend unit and component tests
-pnpm --filter web test --exclude "**/api/**"
+pnpm --filter @spectrayan/carefold-web test --exclude "**/api/**"
 
 # 6. Frontend production build
-pnpm --filter web build
+pnpm --filter @spectrayan/carefold-web build
 ```
 
 ### Targeted runs
