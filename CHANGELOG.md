@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.5.0-beta.2] - 2026-10-21
+
+### Added
+- **Documentation Overhaul & High-Resolution UI Screenshots (`docs/`, `README.md`)**:
+  - Captured 13 high-resolution screenshots of the Carefold household web interface (`dashboard.png`, `chat-consultation.png`, `agents-marketplace.png`, `agent-detail.png`, `skills-catalog.png`, `vitals-tracker.png`, `appointments-schedule.png`, `preventive-care.png`, `documents-library.png`, `scoped-connections.png`, `activity-audit-log.png`, `family-profiles.png`, and `settings-diagnostics.png`).
+  - Updated `README.md` to showcase the Household Care Dashboard directly and organize all additional screen previews inside a collapsible `<details>` gallery.
+  - Updated MkDocs documentation (`docs/index.md`, `docs/getting-started/installation.md`, `docs/getting-started/quickstart.md`, `docs/getting-started/configuration.md`, `docs/architecture/overview.md`, `docs/agents/catalog.md`, `docs/connectors/authoring.md`, `docs/testing/index.md`) with embedded visual walkthroughs, updated monorepo paths (`frontend/`, `tools/cli`, `tools/runner`, `deploy/docker`), and complete 25-agent / 28-skill catalog tables.
+- **Nutrition & Dietitian Guide Specialist Agent & `nutrition-prep` Skill (`#238`)**:
+  - Added `nutrition-dietitian-guide` (`wellness.nutrition`) and modular `nutrition-prep` skill pack with evidence-based dietary pattern references (`DASH`, `Mediterranean`, cardiometabolic, and renal nutrition visit preparation).
+- **Specialty Clinical Navigators Expansion (`#162`–`#165`)**:
+  - Added `hematology-guide` (`hematology-prep`), `vascular-guide` (`vascular-prep`), `podiatry-guide` (`podiatry-prep`), and `oral-health-guide` (`oral-health-prep`), expanding the specialist catalog to 25 specialist agents and 28 modular skill packs.
+- **Household Care Platform, Vitals, Preventive Care, Scoped Connectors & Multilingual i18n (`ADR-0004`–`ADR-0009`)**:
+  - Extracted shared runtime foundation into `yarvelle-core` (`>=0.1.1`) and `@yarvelle/ui` (`^0.1.1`), registering the Carefold `health` domain pack (`carefold:get_pack`) and `@spectrayan/carefold` UI module (`frontend/src/health-ui`).
+  - Added HL7 FHIR R4 / LOINC-coded Vitals & Biometrics tracking (`/p/[profileId]/vitals`) with diurnal AM/PM blood pressure trend calculation, adult/pediatric CDC LMS BMI percentiles, and real-time red-flag safety screening.
+  - Added Clinical Visits & Appointment Scheduling (`/p/[profileId]/appointments`), USPSTF/ACIP Preventive Care rules & Pediatric School Forms (`/p/[profileId]/preventive`), and Scoped External Data Connections (`/p/[profileId]/connections`) with OAuth 2.0 PKCE, per-profile `HKDF-SHA256` / `AES-256-GCM` Vault encryption, and `ScopedHttp` egress allowlisting.
+  - Added 5-layer end-to-end internationalization (`en-US`, `es-ES`, `fr-FR`, `hi-IN`, `ar-SA` with `RTL`) and Living ADRs `0004`–`0009` plus OAuth CASA Tier 2/3, OWASP ASVS L2, and HIPAA/MHMDA/DPDP compliance readiness packs.
+
+### Fixed
+- **Security Hardening Across Approvals, Deletion, Storage & Exposure (`#240`)**:
+  - Hardened approval decision verification, profile cascade deletion, scoped browser storage isolation, and loopback bind safety.
+- **Frontend Connectors Proxy & Dashboard/Vitals Data Hydration**:
+  - Added `/api/connectors` and `/api/connectors/[...path]` Next.js route handlers so `/api/v1/connectors` proxies cleanly to the FastAPI backend.
+  - Normalized `fetchVitalsObservations` in `frontend/src/lib/vitalsClient.ts` to accept both `observations` and `items` response keys.
+  - Enhanced `frontend/src/app/p/[profileId]/page.tsx` to hydrate upcoming appointments, standing routines, and recent clinical notes on the Household Care Dashboard.
+
+---
+
+## [0.5.0-beta.1] - 2026-10-19
+
 ### Added
 - **"What Carefold Remembers About You": View, Edit, and Delete Episodic & Semantic Memories (Web & Engine)** (`#102`):
   - Fortified backend memory management REST APIs in `backend/src/carefold/api/memory.py`:

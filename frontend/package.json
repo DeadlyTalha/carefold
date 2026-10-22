@@ -1,6 +1,6 @@
 {
   "name": "@spectrayan/carefold-web",
-  "version": "0.5.0-beta.1",
+  "version": "0.5.0-beta.2",
   "private": true,
   "description": "Carefold local-first web marketplace and agent-scoped streaming chat interface",
   "license": "Apache-2.0",

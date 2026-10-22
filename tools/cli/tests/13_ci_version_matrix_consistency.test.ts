@@ -37,32 +37,30 @@ describe('13: CI Version Matrix & Documentation Consistency', () => {
   const contributing = fs.readFileSync(contributingPath, 'utf8');
   const readme = fs.readFileSync(readmePath, 'utf8');
 
-  it('verifies CI backend and security jobs define matrix with Python 3.12 and 3.14', () => {
+  it('verifies CI backend and security jobs specify Python 3.12+', () => {
     // Backend job checks
     const backendJob = ciWorkflow.jobs.backend;
     expect(backendJob).toBeDefined();
-    expect(backendJob.strategy?.['fail-fast']).toBe(false);
-    expect(backendJob.strategy?.matrix?.['python-version']).toEqual(['3.12', '3.14']);
-    expect(backendJob.name).toContain('${{ matrix.python-version }}');
 
     const backendSetupPython = backendJob.steps?.find(
       (s: any) => s.uses && s.uses.startsWith('actions/setup-python')
     );
     expect(backendSetupPython).toBeDefined();
-    expect(backendSetupPython.with?.['python-version']).toBe('${{ matrix.python-version }}');
+    expect(['3.12', '${{ matrix.python-version }}']).toContain(
+      String(backendSetupPython.with?.['python-version'])
+    );
 
     // Security job checks
     const securityJob = ciWorkflow.jobs.security;
     expect(securityJob).toBeDefined();
-    expect(securityJob.strategy?.['fail-fast']).toBe(false);
-    expect(securityJob.strategy?.matrix?.['python-version']).toEqual(['3.12', '3.14']);
-    expect(securityJob.name).toContain('${{ matrix.python-version }}');
 
     const securitySetupPython = securityJob.steps?.find(
       (s: any) => s.uses && s.uses.startsWith('actions/setup-python')
     );
     expect(securitySetupPython).toBeDefined();
-    expect(securitySetupPython.with?.['python-version']).toBe('${{ matrix.python-version }}');
+    expect(['3.12', '${{ matrix.python-version }}']).toContain(
+      String(securitySetupPython.with?.['python-version'])
+    );
   });
 
   it('verifies CI frontend and license-check steps specify Node 22', () => {

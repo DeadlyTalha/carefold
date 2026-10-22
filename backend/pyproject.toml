@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "carefold"
-version = "0.5.0b1"
+version = "0.5.0b2"
 description = "Carefold local-first AI and agentic runtime backend"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "yarvelle-core>=0.1.0",
+    "yarvelle-core>=0.1.1",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
     "pydantic>=2.8.0",

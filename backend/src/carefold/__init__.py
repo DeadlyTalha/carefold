@@ -111,7 +111,7 @@ except Exception:
 
 logger = logging.getLogger("carefold_health")
 
-__version__ = "0.5.0b1"
+__version__ = "0.5.0b2"
 
 # Eagerly register "clinical" on core AgentDomain when health pack is loaded
 try:

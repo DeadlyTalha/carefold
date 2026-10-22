@@ -76,6 +76,7 @@ function updateTextFile(filePath, updater, label) {
 const packageFiles = [
   path.join(ROOT_DIR, 'package.json'),
   path.join(ROOT_DIR, 'frontend/package.json'),
+  path.join(ROOT_DIR, 'frontend/src/health-ui/package.json'),
   path.join(ROOT_DIR, 'tools/cli/package.json'),
   path.join(ROOT_DIR, 'tools/runner/package.json'),
 ];
