@@ -157,7 +157,15 @@ export async function fetchHouseholdProfiles(): Promise<CareProfile[]> {
 
     const data = await res.json();
     if (Array.isArray(data)) {
-      const mapped = data.map(mapBackendProfileToCareProfile);
+      const existingById = new Map(loadHouseholdProfiles().map((p) => [p.id, p]));
+      const mapped = data.map((raw) => {
+        const profile = mapBackendProfileToCareProfile(raw);
+        const existing = existingById.get(profile.id);
+        if (existing?.stats && (!raw.stats || (profile.stats?.chats === 0 && profile.stats?.items === 0))) {
+          profile.stats = existing.stats;
+        }
+        return profile;
+      });
       saveHouseholdProfiles(mapped);
       return mapped;
     }

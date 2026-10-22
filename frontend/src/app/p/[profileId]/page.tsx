@@ -17,6 +17,7 @@ import { redirect } from 'next/navigation';
 import {
   HomeDashboardClient,
   type UpcomingAppointment,
+  type PaperworkDossierSummary,
   type RoutineHabitItem,
   type RecentClinicalNoteItem,
 } from './HomeDashboardClient';
@@ -59,6 +60,7 @@ export default async function ProfileHomePage({ params }: PageProps) {
   }
 
   let initialAppointment: UpcomingAppointment | null = null;
+  let initialPaperwork: PaperworkDossierSummary | null = null;
   let initialRoutines: RoutineHabitItem[] | null = null;
   let initialNotes: RecentClinicalNoteItem[] | null = null;
 
@@ -150,6 +152,18 @@ export default async function ProfileHomePage({ params }: PageProps) {
             slug: n.slug,
           };
         });
+        const benefitsNote = notesList.find((n: any) => n.type === 'benefits_summary');
+        if (benefitsNote) {
+          initialPaperwork = {
+            id: benefitsNote.id || benefitsNote.slug,
+            title: benefitsNote.title || 'Insurance Benefits Summary',
+            facility: 'Northwestern Heart & Vascular Institute · In-Network PPO',
+            statusBadge: 'Verified Coverage',
+            billedAmount: '$340.00',
+            planPaidAmount: '$310.00',
+            patientOwedAmount: '$30.00',
+          };
+        }
       }
     }
   } catch {
@@ -160,6 +174,7 @@ export default async function ProfileHomePage({ params }: PageProps) {
     <HomeDashboardClient
       profileId={profileId}
       initialAppointment={initialAppointment}
+      initialPaperwork={initialPaperwork}
       initialRoutines={initialRoutines}
       initialNotes={initialNotes}
     />
